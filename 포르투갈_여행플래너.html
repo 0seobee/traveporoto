@@ -1,0 +1,2537 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🇵🇹 포르투갈 7박 8일 여행 플래너 2026</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0f1a;--surface:#13162a;--card:#181c30;--border:#252940;
+  --text:#e8eaf6;--sub:#7b80a0;--accent:#5c6bc0;
+}
+body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;min-height:100vh}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);height:52px;display:flex;align-items:center;padding:0 24px;gap:4px}
+.map-section,.section,[id]{scroll-margin-top:60px}
+.nav-logo{font-size:18px;font-weight:700;margin-right:16px;white-space:nowrap}
+.nav-links{display:flex;gap:2px;overflow-x:auto}
+.nav-links::-webkit-scrollbar{display:none}
+.nav-links a{color:var(--sub);text-decoration:none;padding:5px 12px;border-radius:16px;font-size:13px;white-space:nowrap;transition:.2s}
+.nav-links a:hover,.nav-links a.on{background:rgba(92,107,192,.25);color:#9fa8da}
+
+/* ── HERO ── */
+.hero{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=1600&q=80') center/cover;filter:brightness(.35) saturate(.8)}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(13,15,26,.3) 0%,rgba(13,15,26,.7) 100%)}
+.hero-content{position:relative;text-align:center;padding:120px 24px 80px}
+.hero-emojis{font-size:52px;margin-bottom:20px;display:flex;justify-content:center;gap:12px}
+.hero-title{font-size:clamp(32px,6vw,72px);font-weight:900;letter-spacing:-1px;line-height:1.1;margin-bottom:12px}
+.hero-title span{color:#9fa8da}
+.hero-sub{color:#b0bec5;font-size:16px;margin-bottom:6px}
+.hero-route{color:var(--sub);font-size:14px;margin-bottom:36px}
+.hero-stats{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:40px}
+.stat-box{background:rgba(255,255,255,.08);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:16px 24px;text-align:center;min-width:90px}
+.stat-box .num{font-size:28px;font-weight:800}
+.stat-box .lbl{font-size:11px;color:var(--sub);margin-top:2px}
+.hero-btns{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+.btn-primary{background:#e53935;color:#fff;border:none;border-radius:28px;padding:14px 32px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
+.btn-primary:hover{background:#ef5350;transform:translateY(-1px)}
+.btn-secondary{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:28px;padding:14px 32px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;transition:.2s}
+.btn-secondary:hover{background:rgba(255,255,255,.18)}
+
+/* ── SECTIONS ── */
+.section{padding:72px 24px;max-width:1100px;margin:0 auto}
+.sec-eyebrow{font-size:12px;font-weight:700;letter-spacing:3px;color:#7986cb;text-transform:uppercase;margin-bottom:10px}
+.sec-title{font-size:clamp(22px,4vw,36px);font-weight:800;margin-bottom:8px}
+.sec-sub{color:var(--sub);font-size:14px;margin-bottom:36px}
+
+/* ── CONCEPT CARDS ── */
+.concept-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.concept-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px 18px;transition:.2s;cursor:default}
+.concept-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.concept-card .cc-icon{font-size:32px;margin-bottom:12px}
+.concept-card .cc-day{font-size:12px;font-weight:700;color:#7986cb;margin-bottom:6px}
+.concept-card .cc-name{font-size:15px;font-weight:700;margin-bottom:8px}
+.concept-card .cc-flow{font-size:12px;color:var(--sub);line-height:1.6}
+
+/* ── MAP ── */
+.map-section{background:var(--surface);padding:72px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.map-inner{max-width:1100px;margin:0 auto;padding:0 24px}
+.map-filter{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;justify-content:center}
+.mf-btn{border:none;border-radius:24px;padding:8px 20px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;transition:.2s;opacity:.55}
+.mf-btn.on{opacity:1;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+.mf-d0{background:#5c6bc0;color:#fff}
+.mf-d1{background:#e53935;color:#fff}
+.mf-d2{background:#43a047;color:#fff}
+.mf-d3b{background:#fb8c00;color:#fff}
+.mf-d4{background:#1e88e5;color:#fff}
+.mf-d5{background:#ff7043;color:#fff}
+.mf-d6{background:#e91e63;color:#fff}
+.mf-d7{background:#fdd835;color:#222}
+.mf-dk{background:#546e7a;color:#fff}
+.mf-btn:not(.on){opacity:0.35;filter:grayscale(60%)}
+.map-wrap{border-radius:16px;overflow:hidden;border:1px solid var(--border);height:520px}
+.map-wrap iframe{width:100%;height:100%;display:block;border:none}
+#leaflet-map{width:100%;height:100%;min-height:520px}
+.map-foot{background:var(--card);padding:10px 16px;font-size:12px;color:var(--sub);display:flex;align-items:center;gap:8px}
+.map-foot a{color:#7986cb;text-decoration:none}
+
+/* ── FLIGHTS ── */
+.flight-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:600px){.flight-grid{grid-template-columns:1fr}}
+.flight-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px}
+.fc-header{font-size:12px;color:var(--sub);font-weight:600;margin-bottom:16px;letter-spacing:.5px}
+.fc-row{display:flex;align-items:center;gap:8px}
+.fc-airport{text-align:center}
+.fc-airport .code{font-size:28px;font-weight:900;letter-spacing:-1px}
+.fc-airport .city{font-size:11px;color:var(--sub);margin-top:2px}
+.fc-airport .time{font-size:14px;font-weight:700;margin-top:4px;color:#c5cae9}
+.fc-arrow{flex:1;text-align:center;position:relative}
+.fc-arrow .line{height:1px;background:var(--border);position:relative}
+.fc-arrow .plane{position:absolute;left:50%;top:-10px;transform:translateX(-50%);font-size:18px}
+.fc-arrow .dur{font-size:11px;color:var(--sub);margin-top:14px}
+.fc-meta{margin-top:16px;display:flex;flex-wrap:wrap;gap:6px}
+.fc-tag{background:rgba(92,107,192,.15);color:#9fa8da;border-radius:10px;padding:3px 10px;font-size:11px}
+
+/* ── TIMELINE ── */
+.day-tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:24px}
+.day-tabs::-webkit-scrollbar{display:none}
+.dt-btn{border:none;border-radius:12px;padding:10px 20px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;background:var(--card);color:var(--sub);border:1px solid var(--border);transition:.2s}
+.dt-btn.on{color:#fff;border-color:transparent}
+.dt-d0.on{background:#5c6bc0}
+.dt-d1.on{background:#e53935}
+.dt-d2.on{background:#00897b}
+.dt-d3.on{background:#1e88e5}
+.dt-d4.on{background:#7b1fa2}
+.dt-d5.on{background:#e65100}
+.dt-d6.on{background:#c62828}
+.dt-d7.on{background:#2e7d32}
+
+.day-panel{display:none}
+.day-panel.show{display:block}
+
+.day-hero{border-radius:14px 14px 0 0;padding:18px 22px;margin-bottom:0}
+.d0-h{background:linear-gradient(135deg,#3949ab,#283593)}
+.d1-h{background:linear-gradient(135deg,#c62828,#b71c1c)}
+.d2-h{background:linear-gradient(135deg,#00695c,#004d40)}
+.d3-h{background:linear-gradient(135deg,#1565c0,#0d47a1)}
+.d4-h{background:linear-gradient(135deg,#6a1b9a,#4a148c)}
+.d5-h{background:linear-gradient(135deg,#bf360c,#8d2302)}
+.d6-h{background:linear-gradient(135deg,#ad1457,#880e4f)}
+.d7-h{background:linear-gradient(135deg,#1b5e20,#003300)}
+.day-hero h3{font-size:18px;font-weight:800;margin-bottom:4px}
+.day-hero p{font-size:13px;opacity:.75}
+
+.timeline{background:var(--card);border:1px solid var(--border);border-top:none;border-radius:0 0 14px 14px;overflow:hidden}
+.tl-item{display:grid;grid-template-columns:90px 1fr auto;gap:0;border-bottom:1px solid var(--border);align-items:stretch}
+.tl-item:last-child{border-bottom:none}
+.tl-time{padding:16px 12px;text-align:center;border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px;background:rgba(0,0,0,.2)}
+.tl-time .t{font-size:13px;font-weight:800;color:#c5cae9}
+.tl-time .dur{font-size:10px;color:var(--sub)}
+.tl-body{padding:14px 16px}
+.tl-cats{display:flex;gap:5px;margin-bottom:6px;flex-wrap:wrap}
+.cat{border-radius:8px;padding:2px 8px;font-size:10px;font-weight:700}
+.cat-sight{background:rgba(79,142,247,.2);color:#90caf9}
+.cat-meal{background:rgba(255,152,0,.2);color:#ffcc80}
+.cat-move{background:rgba(92,107,192,.2);color:#b39ddb}
+.cat-hotel{background:rgba(0,188,212,.2);color:#80deea}
+.cat-tip{background:rgba(156,39,176,.2);color:#ce93d8}
+.cat-free{background:rgba(76,175,80,.2);color:#a5d6a7}
+.tl-place{font-size:15px;font-weight:700;margin-bottom:4px}
+.tl-desc{font-size:13px;color:#b0bec5;line-height:1.55}
+.tl-note{font-size:11px;color:var(--sub);margin-top:5px;line-height:1.5}
+.rest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-bottom:8px}
+.rest-day-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.rest-day-label{font-size:12px;font-weight:800;color:#7986cb;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.rest-row{display:flex;align-items:flex-start;gap:10px;padding:10px;border-radius:10px;transition:.15s}
+.rest-row.best{background:rgba(92,107,192,.1);border:1px solid rgba(92,107,192,.2)}
+.rest-row.alt{background:rgba(255,255,255,.03);border:1px solid var(--border)}
+.rest-stars{font-size:12px;font-weight:800;color:#ffd54f;white-space:nowrap;padding-top:2px}
+.rest-info{flex:1}
+.rest-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px}
+.rest-desc{font-size:11px;color:var(--sub);line-height:1.5}
+.rest-price{font-size:11px;font-weight:700;color:#a5d6a7;white-space:nowrap;text-align:right}
+.gs-loading{padding:40px;text-align:center;color:var(--sub);font-size:14px}
+.gs-err{padding:40px;text-align:center;color:#ef9a9a;font-size:14px}
+.cl-cat{border:none;border-radius:20px;padding:7px 16px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;background:var(--card);color:var(--sub);border:1px solid var(--border);transition:.2s}
+.cl-cat.on{background:#5c6bc0;color:#fff;border-color:transparent}
+.cl-item{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;transition:.2s;cursor:pointer}
+.cl-item:hover{border-color:#5c6bc0}
+.cl-item.done{opacity:.5}
+.cl-item.done .cl-text{text-decoration:line-through;color:var(--sub)}
+.cl-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;transition:.2s}
+.cl-item.done .cl-check{background:#5c6bc0;border-color:#5c6bc0}
+.cl-text{flex:1;font-size:14px;color:var(--text)}
+.cl-tag{font-size:11px;color:var(--sub);background:rgba(255,255,255,.06);border-radius:6px;padding:2px 8px;white-space:nowrap}
+.cl-del{background:none;border:none;color:var(--sub);cursor:pointer;font-size:16px;padding:4px;border-radius:6px;opacity:0;transition:.2s;line-height:1}
+.cl-item:hover .cl-del{opacity:1}
+.tl-actions{padding:12px 14px;display:flex;align-items:flex-start;justify-content:flex-end}
+.gmap-btn{background:rgba(66,133,244,.15);color:#90caf9;border:1px solid rgba(66,133,244,.3);border-radius:10px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;gap:4px;transition:.2s}
+.gmap-btn:hover{background:rgba(66,133,244,.3)}
+.cost-badge{background:rgba(165,214,167,.1);color:#a5d6a7;border-radius:8px;padding:2px 8px;font-size:11px;margin-top:6px;display:inline-block}
+
+.day-total{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 18px;margin-top:12px;font-size:13px;color:#a5d6a7;display:flex;align-items:center;gap:8px}
+.day-total strong{color:#c5cae9}
+
+/* ── INFO GRID ── */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:680px){.info-grid{grid-template-columns:1fr}}
+.icard{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.icard-head{padding:14px 18px;border-bottom:1px solid var(--border);font-size:14px;font-weight:700;background:rgba(0,0,0,.2)}
+.icard-body{padding:4px 0}
+.irow{display:flex;align-items:flex-start;gap:10px;padding:11px 18px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px}
+.irow:last-child{border-bottom:none}
+.irow .icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.irow .content{flex:1}
+.irow .content .name{font-weight:600;margin-bottom:2px}
+.irow .content .desc{font-size:12px;color:var(--sub);line-height:1.5}
+.irow .price{font-size:12px;color:#a5d6a7;white-space:nowrap;flex-shrink:0}
+
+/* ── TIPS ── */
+.tips-list{display:flex;flex-direction:column;gap:10px}
+.tip-item{background:var(--card);border:1px solid var(--border);border-left:3px solid #5c6bc0;border-radius:0 12px 12px 0;padding:14px 18px;font-size:13px;line-height:1.6}
+.tip-item strong{color:#9fa8da}
+.tip-item .tip-tag{display:inline-block;background:rgba(92,107,192,.2);color:#9fa8da;border-radius:6px;padding:1px 7px;font-size:10px;font-weight:700;margin-right:6px;margin-bottom:4px}
+
+/* ── BUDGET ── */
+.budget-table{width:100%;border-collapse:collapse}
+.budget-table th{background:rgba(0,0,0,.3);padding:10px 16px;font-size:12px;color:var(--sub);text-align:left;border-bottom:1px solid var(--border)}
+.budget-table td{padding:12px 16px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.04)}
+.budget-table tr:last-child td{border-bottom:none}
+.budget-table tr:hover td{background:rgba(255,255,255,.02)}
+/* ── Ledger ── */
+.ledger-block{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px}
+.ledger-title{font-size:16px;font-weight:700;color:#e8eaf6;margin-bottom:18px;letter-spacing:-.3px}
+.ledger-wrap{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:700px){.ledger-wrap{grid-template-columns:1fr}}
+.ledger-half{display:flex;flex-direction:column;gap:10px}
+.ledger-half-title{font-size:12px;font-weight:700;letter-spacing:.8px;padding:5px 14px;border-radius:20px;display:inline-block;align-self:flex-start}
+.ledger-half-title.in{background:rgba(165,214,167,.15);color:#a5d6a7;border:1px solid rgba(165,214,167,.3)}
+.ledger-half-title.out{background:rgba(239,154,154,.15);color:#ef9a9a;border:1px solid rgba(239,154,154,.3)}
+.ledger-table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
+.ledger-table{width:100%;border-collapse:collapse;min-width:340px}
+.ledger-table th{background:rgba(0,0,0,.25);padding:8px 10px;font-size:11px;color:var(--sub);text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+.ledger-table td{padding:0;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+.ledger-table tr:last-child td{border-bottom:none}
+.ledger-table tbody tr:hover{background:rgba(255,255,255,.025)}
+.ledger-cell{width:100%;min-height:34px;padding:7px 10px;font-size:13px;color:#e8eaf6;background:transparent;border:none;outline:none;display:block;box-sizing:border-box;font-family:inherit}
+.ledger-cell:focus{background:rgba(121,134,203,.12);outline:1px solid #7986cb;border-radius:0}
+.ledger-cell.amount{color:#ffe082;font-variant-numeric:tabular-nums}
+.ledger-del-btn{background:none;border:none;cursor:pointer;color:var(--sub);font-size:16px;padding:4px 8px;opacity:.4;transition:.15s;display:block;width:100%}
+.ledger-del-btn:hover{opacity:1;color:#ef9a9a}
+.ledger-add-btn{background:rgba(121,134,203,.12);border:1px dashed rgba(121,134,203,.35);border-radius:10px;color:#9fa8da;font-size:13px;padding:8px 16px;cursor:pointer;transition:.2s;align-self:flex-start}
+.ledger-add-btn:hover{background:rgba(121,134,203,.22);border-color:#7986cb;color:#c5cae9}
+.ledger-balance{margin-top:14px;text-align:right;font-size:13px;color:var(--sub);padding:10px 14px;background:rgba(0,0,0,.2);border-radius:10px}
+/* ── 여행경비 내역서 ── */
+.ledger-report-header{background:linear-gradient(135deg,#1a237e,#283593,#1565c0);border-radius:16px;padding:24px 28px;margin-bottom:20px;position:relative;overflow:hidden}
+.ledger-report-header::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.ledger-report-title{font-size:20px;font-weight:800;color:#fff;letter-spacing:-.3px;margin-bottom:6px}
+.ledger-report-meta{font-size:12px;color:rgba(255,255,255,.65)}
+.ledger-report-status{display:inline-block;margin-top:10px;font-size:11px;padding:3px 12px;border-radius:20px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.8)}
+.ledger-summary-bar{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+@media(max-width:500px){.ledger-summary-bar{grid-template-columns:1fr}}
+.ledger-summary-card{border-radius:14px;padding:18px 22px;display:flex;align-items:center;justify-content:space-between}
+.krw-card{background:linear-gradient(135deg,rgba(230,81,0,.25),rgba(245,124,0,.15));border:1px solid rgba(230,81,0,.35)}
+.eur-card{background:linear-gradient(135deg,rgba(21,101,192,.25),rgba(30,136,229,.15));border:1px solid rgba(21,101,192,.35)}
+.lsc-label{font-size:12px;color:var(--sub);font-weight:600;letter-spacing:.5px}
+.lsc-value{font-size:22px;font-weight:800;letter-spacing:-.5px}
+.krw-card .lsc-value{color:#ffb74d}
+.eur-card .lsc-value{color:#64b5f6}
+.ledger-section{border-radius:16px;overflow:hidden;margin-bottom:24px;border:1px solid var(--border)}
+.ledger-section-header{display:flex;align-items:center;gap:10px;padding:14px 20px;font-size:15px;font-weight:700;color:#fff;letter-spacing:-.2px}
+.krw-header{background:linear-gradient(90deg,#e65100,#f57c00)}
+.eur-header{background:linear-gradient(90deg,#1565c0,#1e88e5)}
+.ls-flag{background:rgba(255,255,255,.2);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800;letter-spacing:.5px}
+.ledger-section .ledger-wrap{padding:16px;gap:16px;background:var(--card)}
+.ledger-section .ledger-balance{margin:0 16px 16px;border-radius:10px}
+.ledger-foot-row td{padding:8px 10px;background:rgba(0,0,0,.15)}
+.ledger-foot-label{text-align:right;font-size:11px;color:var(--sub)}
+.ledger-foot-in{font-weight:700;color:#a5d6a7;font-size:13px}
+.ledger-foot-out{font-weight:700;color:#ef9a9a;font-size:13px}
+/* ── PDF 자료 모음 ── */
+.pdoc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;margin-top:28px}
+.pdoc-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:14px;transition:.2s}
+.pdoc-card:hover{border-color:rgba(121,134,203,.45)}
+.pdoc-icon{font-size:32px;line-height:1}
+.pdoc-name{font-size:15px;font-weight:700;color:#e8eaf6;margin-bottom:4px}
+.pdoc-meta{font-size:11px;color:var(--sub)}
+.pdoc-desc{font-size:12px;color:var(--sub);margin-top:4px;line-height:1.5}
+.pdoc-btns{display:flex;gap:10px;flex-wrap:wrap}
+.pdoc-preview-btn{background:rgba(121,134,203,.14);border:1px solid rgba(121,134,203,.3);border-radius:10px;color:#9fa8da;font-size:13px;font-weight:600;padding:8px 18px;cursor:pointer;transition:.2s}
+.pdoc-preview-btn:hover,.pdoc-preview-btn.open{background:rgba(121,134,203,.28);border-color:#7986cb;color:#c5cae9}
+.pdoc-preview-btn.open::after{content:' ▲'}
+.pdoc-preview-btn:not(.open)::after{content:' ▼'}
+.pdoc-dl-btn{background:linear-gradient(135deg,#5c6bc0,#7986cb);color:#fff;text-decoration:none;border-radius:10px;font-size:13px;font-weight:600;padding:8px 18px;display:inline-flex;align-items:center;white-space:nowrap}
+.pdoc-dl-btn:hover{opacity:.88}
+.pdoc-viewer{border-radius:12px;overflow:hidden;border:1px solid var(--border);margin-top:4px}
+.pdoc-hint{font-size:11px;color:var(--sub);text-align:center;margin:8px 0 0;padding-bottom:4px}
+.pdoc-hint a{color:#9fa8da}
+.bamt{color:#a5d6a7;font-weight:700}
+.btotal td{font-weight:800;color:#fff;background:rgba(92,107,192,.1)!important}
+
+/* ── MAP + PLACES LAYOUT ── */
+.map-places-wrap{display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start}
+@media(max-width:900px){.map-places-wrap{grid-template-columns:1fr}}
+.places-panel{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;max-height:560px;display:flex;flex-direction:column}
+.pp-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border);font-weight:700;font-size:14px}
+.pp-count{font-size:12px;color:var(--sub);background:rgba(255,255,255,.06);border-radius:10px;padding:2px 8px}
+.pp-tabs{display:flex;gap:4px;padding:10px 12px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.pp-tab{background:none;border:1px solid var(--border);color:var(--sub);border-radius:10px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s}
+.pp-tab.on{background:var(--accent);color:#fff;border-color:transparent}
+.pp-list{overflow-y:auto;flex:1}
+.pp-list::-webkit-scrollbar{width:4px}
+.pp-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.pp-item{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;transition:.15s}
+.pp-item:hover{background:rgba(255,255,255,.04)}
+.pp-item:last-child{border-bottom:none}
+.pp-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;margin-top:1px}
+.pp-info{flex:1;min-width:0}
+.pp-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pp-desc{font-size:11px;color:var(--sub);margin-top:2px;line-height:1.4}
+.pp-layer{font-size:10px;color:var(--sub);opacity:.6}
+.pp-gmap{color:#7986cb;font-size:11px;white-space:nowrap;flex-shrink:0;text-decoration:none;margin-top:2px}
+.pp-gmap:hover{color:#9fa8da}
+
+/* ── SCROLL ── */
+html{scroll-behavior:smooth;scroll-padding-top:60px}
+@media(max-width:640px){
+  .tl-item{grid-template-columns:70px 1fr}
+  .tl-actions{display:none}
+  .section{padding:48px 16px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">🇵🇹 포르투갈 2026</div>
+  <div class="nav-links">
+    <a href="#map" onclick="navOn(this,event)">🗺️ 지도</a>
+    <a href="#schedule" onclick="navOn(this,event)" class="on">📅 일정</a>
+    <a href="#flights" onclick="navOn(this,event)">✈️ 항공</a>
+    <a href="#restaurants" onclick="navOn(this,event)">🍽️ 맛집</a>
+    <a href="#hotels" onclick="navOn(this,event)">🏨 숙소</a>
+    <a href="#transport" onclick="navOn(this,event)">🚆 교통</a>
+    <a href="#budget" onclick="navOn(this,event)">🏦 여행경비</a>
+    <a href="#tips" onclick="navOn(this,event)">💡 꿀팁</a>
+    <a href="#gifts" onclick="navOn(this,event)">🎁 선물</a>
+    <a href="#checklist" onclick="navOn(this,event)">🎒 준비물</a>
+    <a href="#lisboacard" onclick="navOn(this,event)">📋 리스보아카드</a>
+    <a href="#travel-docs" onclick="navOn(this,event)">📁 여행자료</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="hero-emojis">🏰🍷🌊</div>
+    <div class="hero-title">포르투갈 <span>7박 8일</span></div>
+    <p class="hero-sub">2026년 7월 31일 ~ 8월 7일 · 부부 2인 · 대한항공 직항</p>
+    <p class="hero-route">리스본(3박) → 포르투(3박) → 리스본(1박)</p>
+    <div class="hero-stats">
+      <div class="stat-box"><div class="num">8</div><div class="lbl">총 일수</div></div>
+      <div class="stat-box"><div class="num">20+</div><div class="lbl">관광지</div></div>
+      <div class="stat-box"><div class="num">10+</div><div class="lbl">맛집</div></div>
+      <div class="stat-box"><div class="num">2</div><div class="lbl">도시</div></div>
+      <div class="stat-box"><div class="num">1</div><div class="lbl">직항</div></div>
+    </div>
+    <div class="hero-btns">
+      <button class="btn-primary" onclick="document.getElementById('schedule').scrollIntoView({behavior:'smooth'})">📅 일정 보기</button>
+      <button class="btn-secondary" onclick="document.getElementById('map').scrollIntoView({behavior:'smooth'})">🗺️ 지도 보기</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONCEPT CARDS -->
+<div class="section" id="concept">
+  <div class="sec-eyebrow">OVERVIEW</div>
+  <div class="sec-title">이 여행의 흐름</div>
+  <div class="sec-sub">리스본의 골목과 파두 → 신트라 세계유산 → 포르투의 도우루강과 와인 → 아베이루 운하</div>
+  <div class="concept-grid">
+    <div class="concept-card"><div class="cc-icon">✈️</div><div class="cc-day">D-1 · 7/31</div><div class="cc-name">인천 출발</div><div class="cc-flow">오전 공항 → 12:45 탑승<br>→ 기내 숙박</div></div>
+    <div class="concept-card"><div class="cc-icon">🏙️</div><div class="cc-day">D1 · 8/1</div><div class="cc-name">리스본 벨렝 + 코메르시우</div><div class="cc-flow">에그타르트 원조 → 제로니무스 수도원 → 벨렝탑 → Ramiro 저녁</div></div>
+    <div class="concept-card"><div class="cc-icon">🏰</div><div class="cc-day">D2 · 8/2</div><div class="cc-name">알파마 + LX팩토리</div><div class="cc-flow">상 조르즈 성 → 알파마 골목 → <span style="color:#ef9a9a">비카 케이블카⚠️폐쇄확인필요</span> → LX팩토리 → 벨렘 저녁</div></div>
+    <div class="concept-card"><div class="cc-icon">🌊</div><div class="cc-day">D3 · 8/3</div><div class="cc-name">신트라 → 포르투 이동</div><div class="cc-flow">페나 궁전 → 무어인 성 → 레갈레이라 → 17:00 CP 기차 → 포르투 히베이라</div></div>
+    <div class="concept-card"><div class="cc-icon">🍷</div><div class="cc-day">D4 · 8/4</div><div class="cc-name">포르투 구시가 + 포트와인</div><div class="cc-flow">렐루 서점 → 클레리구스 탑 → 동루이스 다리 → 포트와인 셀러 → 카페 산티아고</div></div>
+    <div class="concept-card"><div class="cc-icon">🏪</div><div class="cc-day">D5 · 8/5</div><div class="cc-name">볼량 시장 + 마토지뉴스</div><div class="cc-flow">볼량 시장 → Brasão Aliados 프란세지냐 → 마토지뉴스 → O Valentim 카타플라나</div></div>
+    <div class="concept-card"><div class="cc-icon">🛶</div><div class="cc-day">D6 · 8/6</div><div class="cc-name">아베이루 당일치기</div><div class="cc-flow">몰리세이루 배 투어 → 파스테이스 드 오보 → 포르투 귀환 → Pedro dos Frangos</div></div>
+    <div class="concept-card"><div class="cc-icon">🚆</div><div class="cc-day">D7 · 8/7</div><div class="cc-name">포르투 → 리스본 → 귀국</div><div class="cc-flow">14:40 캄파냐 출발 → 17:22 리스본 오리엔트 → 메트로 → 22:00 대한항공</div></div>
+  </div>
+</div>
+
+<!-- MAP -->
+<div class="map-section" id="map">
+  <div class="map-inner">
+    <div style="text-align:center;margin-bottom:28px">
+      <div class="sec-eyebrow" style="text-align:center">INTERACTIVE MAP</div>
+      <div class="sec-title" style="text-align:center">🗺️ 인터랙티브 여행 지도</div>
+      <div class="sec-sub" style="text-align:center">Google Maps · 한국어 라벨 · 날짜별 직선 경로</div>
+    </div>
+    <div class="map-filter">
+      <button class="mf-btn mf-d1 on" data-layer="d1" onclick="toggleLayer(this)">🔴 8/1(토) 동선</button>
+      <button class="mf-btn mf-d2 on" data-layer="d2" onclick="toggleLayer(this)">🟢 8/2(일) 동선</button>
+      <button class="mf-btn mf-d3b on" data-layer="d3" onclick="toggleLayer(this)">🟠 8/3(월) 동선</button>
+      <button class="mf-btn mf-d5 on" data-layer="food" onclick="toggleLayer(this)">🍴 맛집</button>
+      <button class="mf-btn mf-d4 on" data-layer="sight" onclick="toggleLayer(this)">🔵 명소</button>
+      <button class="mf-btn mf-d7 on" data-layer="shop" onclick="toggleLayer(this)">🛍 쇼핑</button>
+      <button class="mf-btn mf-d6 on" data-layer="hotel" onclick="toggleLayer(this)">🩷 숙소</button>
+      <button class="mf-btn mf-dk on" data-layer="transit" onclick="toggleLayer(this)">🚉 기차역·공항</button>
+    </div>
+    <div class="map-places-wrap">
+      <div class="map-wrap">
+        <div id="leaflet-map" style="width:100%;height:100%;border-radius:16px;z-index:1"></div>
+        <div class="map-foot">🗺️ 인터랙티브 지도 — <a href="https://www.google.com/maps/d/edit?mid=1FzFIOH9soUkDXdTPiGEyC1PZ1UTVu_M&usp=sharing" target="_blank">구글 지도 편집 →</a></div>
+      </div>
+      <!-- 장소 목록 패널 -->
+      <div class="places-panel">
+        <div class="pp-header">
+          <span>📍 장소 목록</span>
+          <span class="pp-count">총 103곳</span>
+        </div>
+        <div class="pp-tabs">
+          <button class="pp-tab on" onclick="ppTab(this,'all')">전체</button>
+          <button class="pp-tab" onclick="ppTab(this,'d1')">8/1</button>
+          <button class="pp-tab" onclick="ppTab(this,'d2')">8/2</button>
+          <button class="pp-tab" onclick="ppTab(this,'food')">맛집</button>
+          <button class="pp-tab" onclick="ppTab(this,'sight')">명소</button>
+          <button class="pp-tab" onclick="ppTab(this,'shop')">쇼핑</button>
+        </div>
+        <div class="pp-list" id="ppList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCHEDULE TIMELINE -->
+<div class="section" id="schedule">
+  <div class="sec-eyebrow">ITINERARY</div>
+  <div class="sec-title">📅 날짜별 타임라인</div>
+  <div class="sec-sub">각 항목 우측 버튼으로 구글맵 바로 열기</div>
+
+  <div class="day-tabs">
+    <button class="dt-btn dt-d0 on" onclick="showDay(0,this)">✈️ D-1 · 7/31 출발</button>
+    <button class="dt-btn dt-d1" onclick="showDay(1,this)">🏙️ D1 · 8/1 리스본</button>
+    <button class="dt-btn dt-d2" onclick="showDay(2,this)">🏰 D2 · 8/2 알파마</button>
+    <button class="dt-btn dt-d3" onclick="showDay(3,this)">🌊 D3 · 8/3 신트라</button>
+    <button class="dt-btn dt-d4" onclick="showDay(4,this)">🍷 D4 · 8/4 포르투</button>
+    <button class="dt-btn dt-d5" onclick="showDay(5,this)">🌉 D5 · 8/5 포르투</button>
+    <button class="dt-btn dt-d6" onclick="showDay(6,this)">🛶 D6 · 8/6 아베이루</button>
+    <button class="dt-btn dt-d7" onclick="showDay(7,this)">🚆 D7 · 8/7 귀국</button>
+  </div>
+
+  <!-- D-1 -->
+  <div class="day-panel show" id="dp-0">
+    <div class="day-hero d0-h"><h3>✈️ D-1 · 2026년 7월 31일 (금) — 인천 출발</h3><p>연차 사용 · 인천 12:45 탑승 · 대한항공 직항 · 기내 숙박</p></div>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">05:00</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-free">준비</span></div><div class="tl-place">기상 &amp; 최종 짐 점검</div><div class="tl-desc">집 출발 전 최종 확인</div></div>
+        <div class="tl-actions"></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">06:00</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-move">이동</span></div><div class="tl-place">택시 탑승 → 시외버스터미널</div><div class="tl-desc">7시 인천공항행 버스 탑승 (약 2시간 30분)</div></div>
+        <div class="tl-actions"></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">09:30</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-move">공항</span></div><div class="tl-place">인천공항 T2 도착</div><div class="tl-desc">대한항공 카운터 체크인 &amp; 수하물 위탁<div class="tl-note">⚠️ 공항 3시간 전 도착 권장 · 면세점 쇼핑 여유</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=인천국제공항+2터미널" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">12:45</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-move">탑승</span></div><div class="tl-place">✈️ 대한항공 인천 → 리스본 출발</div><div class="tl-desc">15시간 30분 직항 · 기내 숙면으로 시차 적응<div class="tl-note">이튿날 8/1(토) 리스본 20:15 도착</div></div></div>
+        <div class="tl-actions"></div>
+      </div>
+    </div>
+    <div class="day-total">💰 <strong>오늘 총 비용:</strong> 택시 + 버스비 + 면세 쇼핑</div>
+  </div>
+
+  <!-- D1 -->
+  <div class="day-panel" id="dp-1">
+    <div class="day-hero d1-h"><h3>🏙️ D1 · 2026년 8월 1일 (토) — 리스본 벨렝 + 코메르시우</h3><p>더 리스보네이르 아파트먼트 출발 · 벨렝 지구 완전 정복 · Cervejaria Ramiro 저녁</p></div>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">07:30</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-hotel">🏠 숙소출발</span></div><div class="tl-place">더 리스보네이르 아파트먼트 출발</div><div class="tl-desc">트램 15E or 버스 727 탑승 → 벨렝 이동<div class="tl-note">리스보아 카드 무료 · 약 30분</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=38.7166268,-9.1436794" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">08:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-meal">🥐 미식</span></div><div class="tl-place">파스테이스 드 벨렝 — 에그타르트 원조</div><div class="tl-desc">08:00 오픈 직후! 계피+슈가파우더 뿌려서 따뜻하게 <span class="cost-badge">€1.5/개</span><div class="tl-note">⚠️ 10시 이후 웨이팅 30분↑ · 반드시 일찍!</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=38.6975105,-9.2032276" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">09:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-free">🌿 산책</span></div><div class="tl-place">프라사 두 임페리우 — 제국 광장</div><div class="tl-desc">제로니무스 수도원 정문 앞 정원 · 분수대 · 테주강 조망<div class="tl-note">무료 24시간 · 수도원 오픈 9:30 대기줄 합류</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=38.6959948,-9.2059935" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">10:00</div><div class="dur">2h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-sight">🏛️ 세계유산</span></div><div class="tl-place">제로니무스 수도원</div><div class="tl-desc">09:30 대기줄 서기 → 10시 오픈 직후 입장 · 마누엘 양식 회랑 · 2층 아치 사진 포인트 · 바스쿠 다 가마 석관<div class="tl-note">🎫 리스보아 카드 무료 (일반 €10) · 11시 이후 급격히 붐빔 → 오픈 직후 방문 필수!</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=38.6978909,-9.2067039" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">12:00</div><div class="dur">45m</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-sight">🗿 명소</span></div><div class="tl-place">발견자 기념비 (Padrão dos Descobrimentos)</div><div class="tl-desc">대항해 영웅 33인 · 높이 52m · 전망대 올라가면 벨렘+테주강 파노라마 <span class="cost-badge">€4</span><div class="tl-note">제로니무스에서 도보 5분 · 10:00~18:30</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=38.6935973,-9.2057115" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">13:00</div><div class="dur">45m</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-sight">🏰 세계유산</span></div><div class="tl-place">벨렝탑 (Torre de Belém)</div><div class="tl-desc">16세기 마누엘 양식 · 테주강 위 석조 탑 · 탑 내부+테라스 관람<div class="tl-note">🎫 리스보아 카드 무료 (일반 €6) · 화~일 10:00~18:30</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=38.6915837,-9.2159773" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">14:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-meal">🍽️ 점심</span></div><div class="tl-place">벨렘 강변 레스토랑 점심 → 코메르시우 이동</div><div class="tl-desc">식후 트램 15E 탑승 → 코메르시우 광장 이동 (약 25분) <span class="cost-badge">€15~25/인</span><div class="tl-note">리스보아 카드 무료 (교통) · 추천: Taberna da Rua das Flores or 강변 레스토랑</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=38.6960,-9.2040" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">15:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-sight">🏛️ 광장</span></div><div class="tl-place">코메르시우 광장 · 아우구스타 개선문 · 산타 주스타 엘리베이터</div><div class="tl-desc">주제 1세 기마상 · 아우구스타 개선문 전망대 · 산타 주스타 상단 전망<div class="tl-note">산타 주스타: 리스보아 카드 무료 ✅ · 개선문 전망대 별도 €3</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=38.7072828,-9.1363613" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">16:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-free">☕ 휴식</span></div><div class="tl-place">로시우 광장 (Praça do Rossio)</div><div class="tl-desc">물결무늬 바닥 · 동 페드루 4세 기념상 · 갈랑(Galão) 커피 한 잔 <span class="cost-badge">€3~5</span><div class="tl-note">로시우역 아름다운 외관도 감상 · 내일 알파마·상 조르즈 성 동선 확인</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=38.7138036,-9.1393681" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">17:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-hotel">🏠 휴식</span></div><div class="tl-place">숙소 귀환 &amp; 라미루 예약 확인</div><div class="tl-desc">저녁 식사 전 컨디션 회복 · 라미루 예약 재확인 (19:00)<div class="tl-note">📍 라미루: Av. Almirante Reis 1-H · 메트로 Verde선 Anjos역 하차</div></div></div>
+        <div class="tl-actions"></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">18:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-move">🚇 이동</span></div><div class="tl-place">Cervejaria Ramiro 이동</div><div class="tl-desc">메트로 황선(Amarela) → Anjos역 하차 또는 도보 약 20분<div class="tl-note">⏰ 19:00 예약 — 5분 전 도착 권장 · 예약번호 지참 · 화~토 영업</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=38.720257,-9.1357429" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">19:00</div><div class="dur">2h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-meal">🦞 저녁</span></div><div class="tl-place">Cervejaria Ramiro — 1956년 개업 리스본 최고 해산물</div><div class="tl-desc">왕새우(Gambas) · 랍스터 · 게 · 조개 · 포르투갈 해산물의 정수! <span class="cost-badge">€60~100/2인</span><div class="tl-note">⚠️ 쿠베르토 거절: "Não quero couvert" · 예약 필수 · 화~토 영업</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=38.720257,-9.1357429" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">20:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-free">🌙 야경</span></div><div class="tl-place">리스본 야경 산책 · 코메르시우 광장 or 테주 강변</div><div class="tl-desc">리스본 첫날 마무리! 내일 알파마+상 조르즈 성+LX팩토리 대비 충분한 휴식</div></div>
+        <div class="tl-actions"></div>
+      </div>
+    </div>
+    <div class="day-total">💰 <strong>1인 예상:</strong> €61~91 (리스보아 카드 €62 포함) · 숙소: 더 리스보네이어 아파트먼트</div>
+  </div>
+
+  <!-- D2 -->
+  <div class="day-panel" id="dp-2">
+    <div class="day-hero d2-h"><h3>🏰 D2 · 2026년 8월 2일 (일) — 알파마 + 상조르즈 성 + LX팩토리 플리마켓</h3><p>28번 트램 → 포르타스 두 솔 → 상조르즈 성 → 알파마 골목 → 비카 케이블카 → LX팩토리 → 벨렘 저녁</p><p style="background:rgba(239,154,154,.15);border:1px solid rgba(239,154,154,.4);border-radius:8px;padding:8px 12px;font-size:12px;margin-top:8px">⚠️ <strong>비카 푸니쿨라 폐쇄 중</strong> — 2025년 9월 사고 후 운행 중단. 출발 전 carris.pt에서 재개 여부 확인. 대안: 산타 주스타 엘리베이터(리스보아 카드 무료) 또는 도보로 치아두 언덕 이동.</p></div>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">08:00</div><div class="dur">30m</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-move">🚋 트램탑승</span></div><div class="tl-place">28번 트램 탑승 → 알파마</div><div class="tl-desc">마르팀 모니스 출발 → 포르타스 두 솔 정류장 하차<div class="tl-note">⚠️ 소매치기 주의! 가방 앞으로 · 리스보아 카드 무료 · 종점에서 타야 자리 확보</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=38.7160271,-9.136315" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">09:00</div><div class="dur">30m</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-sight">🌅 전망대</span></div><div class="tl-place">포르타스 두 솔 + 산타 루지아 전망대</div><div class="tl-desc">두 전망대 연속 무료 관람 · 아줄레주 타일 벽화 · 알파마 붉은 지붕<div class="tl-note">무료 ✅ · 이른 아침 빛도 좋고 사람도 적음 → 09:30 전 상조르즈 성으로 이동!</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=38.7119253,-9.1299568" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">09:30</div><div class="dur">2h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-sight">🏰 세계유산</span></div><div class="tl-place">상 조르즈 성 (Castelo de São Jorge)</div><div class="tl-desc">리스본 360도 파노라마 · 성벽 10개 탑 · 공작새 🦚 자유롭게<div class="tl-note">🎫 리스보아 카드 무료 (일반 €15) · ⚠️ 카드 소지자는 매표소 전용 창구에서 무료 티켓 교환 후 입장 · 혼잡 피크: 11:00~14:00</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=38.7139092,-9.1334762" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">11:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-free">🧭 골목탐방</span></div><div class="tl-place">알파마 골목 자유 탐방</div><div class="tl-desc">아줄레주 타일 기념품 쇼핑 · 파두 음악 흘러나오는 골목 <span class="cost-badge">€10~20</span><div class="tl-note">추천 기념품: 아줄레주 타일 €5~15 · 코르크 제품 · 수제 도자기</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=38.7119253,-9.1299568" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">12:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-meal">🍽️ 점심</span></div><div class="tl-place">알파마 현지 레스토랑</div><div class="tl-desc">Menu do Dia €10~12 · 수프+메인+디저트+음료 · 현지인 맛집 <span class="cost-badge">€10~15/인</span><div class="tl-note">바칼라우(대구) or 그릴 생선 추천 · 영어 메뉴 없어도 손짓으로 OK</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=38.7092832,-9.1343429" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">13:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-move">🚡 케이블카</span><span class="cat" style="background:rgba(239,154,154,.2);color:#ef9a9a;border:1px solid rgba(239,154,154,.3)">⚠️ 운행중단확인필요</span></div><div class="tl-place">비카 케이블카 (Funicular da Bica) + 치아두</div><div class="tl-desc">1892년 개통 130년 역사 푸니쿨라 → 카탈루냐 전망대 → 치아두 산책<div class="tl-note">⚠️ <strong>2025년 9월 사고로 폐쇄 중</strong> — 출발 전 carris.pt 운행 여부 확인. 미운행 시 대안: 산타 주스타 엘리베이터(리스보아 카드 무료) → 치아두까지 도보 5분. 비카 포토존(아래서 올려다보는 샷)은 케이블카 미탑승해도 가능!</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=38.7084884,-9.1467485" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">14:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-sight">📚 명소</span></div><div class="tl-place">베르트란 서점 + 치아두 지구</div><div class="tl-desc">1732년 세계 최고(最古) 서점 · 치아두 카페에서 갈랑(Galão) 한 잔<div class="tl-note">베르트란 서점 무료 입장 ✅ · Rua Garrett 73</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=38.7096,-9.1431" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">15:00</div><div class="dur">2h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-free">🛍️ 플리마켓</span></div><div class="tl-place">LX Factory — 일요 플리마켓</div><div class="tl-desc">빈티지 복합 문화공간 · 일요일 플리마켓 12:00~20:00 · Ler Devagar 인디 서점<div class="tl-note">무료 입장 ✅ · Cais do Sodré역에서 트램 15E 탑승 · 아줄레주 소품 €5~15</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=38.7034602,-9.1787831" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">17:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-free">☕ 휴식</span></div><div class="tl-place">벨렘 강변 카페</div><div class="tl-desc">갈랑(Galão) 커피 or 진자(Ginjinha) · 테주 강변 산책 · 4월 25일 다리 뷰<div class="tl-note">내일 신트라+포르투 이동 일정 확인 · 기차표·페나궁전 예약 재확인</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=38.6935973,-9.2057115" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">18:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-meal">🍽️ 저녁</span></div><div class="tl-place">벨렘 지구 저녁 식사</div><div class="tl-desc">강변 레스토랑 (해산물 or 바칼라우) · 테주 강변 야경과 함께 <span class="cost-badge">€40~70/2인</span></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=38.6960,-9.2040" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">19:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-free">🌙 야경</span></div><div class="tl-place">테주 강변 야경 감상</div><div class="tl-desc">4월 25일 다리 야경 조망 · 빵 베르드(Vinho Verde) 한 잔 <span class="cost-badge">€10~15</span></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=38.6924,-9.1949" target="_blank">📍 구글맵</a></div>
+      </div>
+    </div>
+    <div class="day-total">💰 <strong>1인 예상:</strong> €50~110 · ⚠️ 내일 신트라+포르투 이동 — 페나 궁전 예약 재확인!</div>
+  </div>
+
+  <!-- D3 -->
+  <div class="day-panel" id="dp-3">
+    <div class="day-hero d3-h"><h3>🌊 D3 · 2026년 8월 3일 (월) — 신트라 오전 → 포르투 이동</h3><p>페나 궁전 · 무어인 성 · 레갈레이라 → CP 기차 17:00 포르투</p></div>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">06:00</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-free">준비</span></div><div class="tl-place">이른 기상 &amp; 짐 정리</div><div class="tl-desc">큰 캐리어 체크아웃 전 정리 · 신트라는 백팩만!</div></div>
+        <div class="tl-actions"></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">07:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-move">🚂 기차</span></div><div class="tl-place">Rossio역 → 신트라 (CP 기차 40분)</div><div class="tl-desc">리스보아 카드 무료 or 현장 €2.3</div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Estação+do+Rossio+Lisboa" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">09:00</div><div class="dur">30m</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-move">🚌 버스</span></div><div class="tl-place">버스 434번 → 페나 궁전</div><div class="tl-desc">버스 €5 왕복<div class="tl-note">⚠️ 성수기 버스 만석 → 일찍 줄 서기</div></div></div>
+        <div class="tl-actions"></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">10:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-sight">🏰 세계유산</span></div><div class="tl-place">페나 궁전</div><div class="tl-desc">화려한 낭만주의 궁전 · 신트라+대서양 360도 <span class="cost-badge">€14</span><div class="tl-note">⚠️ 사전 예약 필수 parquesdesintra.pt · 리스보아 카드 불포함</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Palácio+da+Pena+Sintra" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">11:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-sight">🏯 성채</span></div><div class="tl-place">무어인 성</div><div class="tl-desc">7세기 성채 · 성벽 위 걷기 · 신트라 마을 조망 <span class="cost-badge">€10</span></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Castelo+dos+Mouros+Sintra" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">12:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-sight">🌿 저택</span></div><div class="tl-place">레갈레이라 저택 (Quinta da Regaleira)</div><div class="tl-desc">신비로운 정원 · 이니시아투스 우물 · 무어인 성 → 택시 €5~7 (약 5분) <span class="cost-badge">€12</span><div class="tl-note">⚠️ 사전 예약 강력 권장 quintadaregaleira.pt · 리스보아 카드 불포함</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Quinta+da+Regaleira+Sintra" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">13:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-sight">🏛️ 역사지구</span></div><div class="tl-place">신트라 역사지구 · 신트라 왕궁</div><div class="tl-desc">두 굴뚝 랜드마크 신트라 왕궁 · 마을 광장 기념품 쇼핑 · 퀘이자다(Queijada) 전통 과자 <span class="cost-badge">€5~10</span><div class="tl-note">신트라 왕궁: 리스보아 카드 무료 ✅ (일반 €10) · 레갈레이라에서 도보 10분</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Palácio+Nacional+de+Sintra" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">14:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-move">🚂 귀환</span></div><div class="tl-place">신트라 → 리스본 Rossio역 기차 귀환</div><div class="tl-desc">Sintra역 → Rossio CP역 직행 약 40분 후 숙소 짐 픽업<div class="tl-note">⚠️ 14:00~14:20 탑승 여유 없음! · 리스보아 카드 무료 ✅</div></div></div>
+        <div class="tl-actions"></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">15:30</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-meal">🍽️ 점심</span></div><div class="tl-place">산타 아폴로니아역 근처 카페</div><div class="tl-desc">든든히 식사 (3시간 기차 이동 전) <span class="cost-badge">€10~15</span></div></div>
+        <div class="tl-actions"></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">17:00</div><div class="dur">3h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-move">🚆 이동</span></div><div class="tl-place">리스본 → 포르투 CP 기차</div><div class="tl-desc">산타 아폴로니아 → 캄파냐 · 19:48 도착 <span class="cost-badge">€25~35</span><div class="tl-note">cp.pt 사전 예매 권장 · 창가 자리 추천</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Estação+de+Santa+Apolónia+Lisboa" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">21:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-meal">🍺 저녁</span></div><div class="tl-place">히베이라 광장 첫 저녁</div><div class="tl-desc">Conga 비파나 샌드위치 or 슈퍼복 맥주 <span class="cost-badge">€10~15</span><div class="tl-note">포르투 첫인상 = 도우루강 야경!</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Cais+da+Ribeira+Porto" target="_blank">📍 구글맵</a></div>
+      </div>
+    </div>
+    <div class="day-total">💰 <strong>1인 예상:</strong> €70~100 · 기차 포함 이동 많은 날</div>
+  </div>
+
+  <!-- D4 -->
+  <div class="day-panel" id="dp-4">
+    <div class="day-hero d4-h"><h3>🍷 D4 · 2026년 8월 4일 (화) — 렐루 서점 · 클레리구스 · 동루이스 다리 · 포트와인</h3><p>렐루 서점 09:30 오픈 직후 → 클레리구스 탑 → 리베이라 → 동루이스 다리 → 가이아 포트와인 셀러 → 상벤투역 → 카페 산티아고 프란세지냐</p></div>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">08:00</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-meal">☕ 아침</span></div><div class="tl-place">숙소 근처 카페 아침</div><div class="tl-desc">갈랑(Galão) 커피 + 현지 빵 · 볼량 시장 방향 아침 산책</div></div>
+        <div class="tl-actions"></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">09:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-sight">📚 명소</span></div><div class="tl-place">렐루 서점 (Livraria Lello)</div><div class="tl-desc">해리포터에 영감 준 서점 · 아르누보 나선형 계단 포토타임 <span class="cost-badge">€5 (도서 구매 시 환급)</span><div class="tl-note">⚠️ 09:30 오픈 직후가 가장 한산 · Rua das Carmelitas 144</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Livraria+Lello+Porto" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">10:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-sight">🔔 전망</span></div><div class="tl-place">클레리구스 탑 (Torre dos Clérigos)</div><div class="tl-desc">225개 계단 등반 → 포르투 360도 전망 <span class="cost-badge">€8 (탑+교회)</span><div class="tl-note">렐루 서점에서 도보 3분 · 09:00~19:00</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Torre+dos+Clérigos+Porto" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">11:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-sight">🌉 랜드마크</span></div><div class="tl-place">리베이라 (Ribeira) — 도우루강변</div><div class="tl-desc">클레리구스에서 도보 하산 15분 · 알록달록 건물 · 유네스코 세계유산<div class="tl-note">무료 ✅ · Rua das Flores 따라 하산 · 강변 카페 커피 추천</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Cais+da+Ribeira+Porto" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">12:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-sight">🌉 랜드마크</span></div><div class="tl-place">동 루이스 1세 다리 상층 도보 + 모루정원</div><div class="tl-desc">상층 도보 횡단 (높이 45m) → 빌라노바 가이아 방향 → 모루정원 파노라마 전망<div class="tl-note">무료 ✅ · ⚠️ 상층 높이 45m — 바람 강함</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Ponte+Luís+I+Porto" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">13:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-meal">🍽️ 점심</span></div><div class="tl-place">빌라노바 가이아 강변 레스토랑</div><div class="tl-desc">도우루강변 · 포르투 구시가 전경 바라보며 식사 <span class="cost-badge">€30~50/2인</span></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Vila+Nova+de+Gaia+waterfront" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">14:00</div><div class="dur">1.5h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-sight">🍷 와이너리 투어</span></div><div class="tl-place">Taylor's 와이너리 셀프 투어 (한국어 오디오 가이드)</div><div class="tl-desc">1692년 설립 — 포르투갈 최고(最古) 포트와인 하우스 · 오크통 셀러 + 빈티지 저장고 관람 <span class="cost-badge">€25/인 (시음 포함)</span><div class="tl-note">🇰🇷 한국어 오디오 가이드 제공 ✅ · Rua do Choupelo 250, Vila Nova de Gaia · 예약: taylors.pt · 모루정원에서 도보 10분</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Taylor's+Port+Wine+Cellar+Vila+Nova+de+Gaia" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">15:30</div><div class="dur">1.5h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-free">🛍️ 선물 구매</span></div><div class="tl-place">Taylor's 시음 &amp; 포트와인 선물 구매</div><div class="tl-desc">루비·토니·LBV·화이트 비교 시음 후 팀원 선물용 미니어처 + 초콜릿 구매 <span class="cost-badge">€30~60 (구매)</span><div class="tl-note">현장 구매 = 최저가 &amp; 선물용 포장 가능 · 세관 한도: 2L+$400 · 미니어처 750ml 기준 €15~30/병</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Taylor's+Port+Wine+Cellar+Vila+Nova+de+Gaia" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">17:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-sight">⛪ 성당</span></div><div class="tl-place">산 프란시스코 성당 (Igreja de São Francisco)</div><div class="tl-desc">황금으로 뒤덮인 바로크 내부 압도적! 추정 800kg 금박 · 카타콤베 포함 <span class="cost-badge">€4</span><div class="tl-note">동 루이스 다리 하층 복귀 후 방문 · 09:00~19:00 (7~9월)</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Igreja+de+São+Francisco+Porto" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">16:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-sight">⛪ 성당</span></div><div class="tl-place">포르투 대성당 (Sé do Porto)</div><div class="tl-desc">12세기 포르투 최고 역사 건물 · 아줄레주 타일 회랑 감상<div class="tl-note">외부·교회 내부 무료 ✅ · 회랑(Claustro) 별도 €3</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Sé+do+Porto" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">17:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-sight">🎨 명소</span></div><div class="tl-place">상벤투 기차역 (Estação de São Bento)</div><div class="tl-desc">2만 개 아줄레주 타일 벽화 · 포르투갈 역사를 담은 세계 최고 기차역<div class="tl-note">무료 입장 ✅ · 08:00~23:00 · 사진 촬영 자유롭게</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Estação+de+São+Bento+Porto" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">18:00</div><div class="dur">2h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-meal">🥩 저녁</span></div><div class="tl-place">카페 산티아고 (Café Santiago)</div><div class="tl-desc">★ 한국인 포르투 필수 맛집! 프란세지냐 + 바깔라우 아 브라스 <span class="cost-badge">€15~25/인</span><div class="tl-note">평점 ⭐4.4 · Rua Passos Manuel 226 · 예약 권장: +351 222 055 797</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Café+Santiago+Porto" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">20:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-free">🌉 야경</span></div><div class="tl-place">히베이라 야경 산책</div><div class="tl-desc">조명 켜진 동 루이스 다리 야경 · 도우루강 반영 포토타임 📸</div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Cais+da+Ribeira+Porto" target="_blank">📍 구글맵</a></div>
+      </div>
+    </div>
+    <div class="day-total">💰 <strong>1인 예상:</strong> €55~80 · Taylor's 와이너리 투어 €25 포함 · 선물 구매 별도 (€30~60/2인)</div>
+  </div>
+
+  <!-- D5 -->
+  <div class="day-panel" id="dp-5">
+    <div class="day-hero d5-h"><h3>🏪 D5 · 2026년 8월 5일 (수) — 볼량 시장 · Brasão Aliados · 마토지뉴스 해산물</h3><p>볼량 시장 아침 → 알리아도스 광장 → Brasão Aliados 프란세지냐 → 마토지뉴스 해변 → O Valentim 카타플라나</p></div>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">08:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-sight">🛒 시장</span></div><div class="tl-place">메르카도 두 볼량 (Mercado do Bolhão)</div><div class="tl-desc">1914년 개장 포르투 대표 재래시장 · 신선한 과일·치즈·현지 식재료 구경 <span class="cost-badge">€3~10</span><div class="tl-note">세라 다 에스트렐라 치즈 구매 추천! · 이른 아침 = 현지인 타임 · 평점 4.5</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Mercado+do+Bolhão+Porto" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">09:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-meal">🥐 아침</span></div><div class="tl-place">Confeitaria do Bolhão 빵집</div><div class="tl-desc">볼루 헤이(Bolo Rei) · 포르투갈 전통 견과류+과일 케이크 <span class="cost-badge">€3~5</span><div class="tl-note">볼량 시장 바로 근처 · 평점 4.3 · 저렴한 가격</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Confeitaria+do+Bolhão+Porto" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">10:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-sight">🏛️ 광장</span></div><div class="tl-place">알리아도스 광장 (Praça da Liberdade)</div><div class="tl-desc">포르투 시청 웅장한 건물 외관 · 광장 산책 + 갈랑 한 잔<div class="tl-note">포르투 중심 광장 · 아침 현지인 분위기</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Praça+da+Liberdade+Porto" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">11:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-free">🧭 골목탐방</span></div><div class="tl-place">포르투 역사지구 골목 자유 탐방</div><div class="tl-desc">아줄레주 타일 건물 사진 투어 · 어제 못 간 골목 탐방<div class="tl-note">유네스코 세계유산 지구 · 골목마다 다른 타일 패턴</div></div></div>
+        <div class="tl-actions"></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">12:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-meal">🥩 점심</span></div><div class="tl-place">Brasão Aliados — 포르투 최고 프란세지냐</div><div class="tl-desc">포르투 최고 프란세지냐 (평점 ⭐4.6!) · 어제 산티아고와 소스 맛 비교! <span class="cost-badge">€15~25/인</span><div class="tl-note">알리아도스 광장 근처 · 웨이팅 가능 · 요즘 가장 인기 있는 맛집</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Brasão+Aliados+Porto" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">13:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-free">☕ 여유</span></div><div class="tl-place">알리아도스 광장 카페</div><div class="tl-desc">식후 갈라오 or 비카 한 잔 · 마토지뉴스 이동 준비 <span class="cost-badge">€2~4</span></div></div>
+        <div class="tl-actions"></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">14:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-move">🚇 이동</span></div><div class="tl-place">마토지뉴스 (Matosinhos) 이동</div><div class="tl-desc">메트로 A선 → Matosinhos Sul역 (약 30분) · 포르투 최고 해산물 지역 <span class="cost-badge">€2 메트로</span><div class="tl-note">안단테 카드로 탑승 · O Valentim 예약 추천! · 평점 4.5 카타플라나 맛집</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Matosinhos+Portugal" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">15:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-free">🌊 해변</span></div><div class="tl-place">마토지뉴스 해변 산책</div><div class="tl-desc">대서양 해변 현지인 분위기 · 해변 카페에서 자유 시간<div class="tl-note">PLAN B: 레사 수영장 (Piscina das Marés) — 알바루 시자 설계 세계적 건축 명작, 해안선 북쪽 2km</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Praia+de+Matosinhos" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">17:00</div><div class="dur">1.5h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-meal">🦞 저녁</span></div><div class="tl-place">O Valentim — 카타플라나 해물찜</div><div class="tl-desc">포르투갈식 해물찜 · 새우+홍합+조개+문어 풍성한 한 냄비 · 2인 공유 추천 <span class="cost-badge">€30~50/2인</span><div class="tl-note">평점 4.5 · 예약 권장: +351 229 379 142 · ⚠️ 빵은 "Não obrigado" 미리 말하기</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=O+Valentim+Matosinhos" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">18:30</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-free">🌅 일몰</span></div><div class="tl-place">마토지뉴스 대서양 일몰</div><div class="tl-desc">8월 일몰 약 21:00 · 포르투 최고 일몰 포인트 · 황금빛 해변 사진<div class="tl-note">일몰 방향 = 서쪽 바다 · 저녁 식사 후 해변 산책</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Praia+de+Matosinhos" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">19:30</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-move">🚇 귀환</span></div><div class="tl-place">포르투 시내 귀환</div><div class="tl-desc">메트로 탑승 → 숙소 <span class="cost-badge">€2</span><div class="tl-note">내일 아베이루 이른 출발! 오늘 일찍 취침</div></div></div>
+        <div class="tl-actions"></div>
+      </div>
+    </div>
+    <div class="day-total">💰 <strong>1인 예상:</strong> €60~100 · 마토지뉴스 해산물 포함</div>
+  </div>
+
+  <!-- D6 -->
+  <div class="day-panel" id="dp-6">
+    <div class="day-hero d6-h"><h3>🛶 D6 · 2026년 8월 6일 (목) — 아베이루 당일치기 + 포르투 마지막 저녁</h3><p>아베이루 몰리세이루 배 투어 → 파스테이스 드 오보 → 포르투 귀환 → Pedro dos Frangos → 히베이라 야경</p></div>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">06:00</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-free">⏰ 준비</span></div><div class="tl-place">이른 기상 &amp; 아베이루 출발 준비</div><div class="tl-desc">아베이루는 오전이 가장 좋음 · 큰 짐은 숙소에 두고 백팩만!<div class="tl-note">내일 짐 정리 미리 시작</div></div></div>
+        <div class="tl-actions"></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">07:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-move">🚂 기차</span></div><div class="tl-place">포르투 캄파냐역 → 아베이루</div><div class="tl-desc">CP 기차 약 1시간 소요 · 포르투갈 시골 풍경 창밖으로 <span class="cost-badge">€4~6</span><div class="tl-note">메트로로 캄파냐역 이동 €2 · cp.pt or 창구 현장 구매</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Estação+Campanhã+Porto" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">09:00</div><div class="dur">45m</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-sight">🛶 투어</span></div><div class="tl-place">몰리세이루 (Moliceiro) 배 투어</div><div class="tl-desc">45분 코스 · 알록달록 채색된 전통 배 + 운하 감상 · 포르투갈의 베네치아! <span class="cost-badge">€15</span><div class="tl-note">현장 구매 or 선착장 대기 · 배 위에서 촬영 최고!</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Moliceiro+Aveiro" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">11:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-meal">🧁 미식</span></div><div class="tl-place">파스테이스 드 오보 (Pastéis de Ovo)</div><div class="tl-desc">아베이루 특산 달걀 노른자 에그타르트 · 리스본 에그타르트와 다른 독특한 맛! <span class="cost-badge">€3~5</span><div class="tl-note">아베이루에서만 맛볼 수 있음! · €1~2/개 · 꼭 따뜻할 때 먹기</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Aveiro+Portugal" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">12:00</div><div class="dur">1.5h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-free">🧭 탐방</span></div><div class="tl-place">아베이루 시내 자유 탐방 + 점심</div><div class="tl-desc">아르누보 양식 건물 거리 · 운하 주변 기념품 쇼핑 · 현지 식당 점심 <span class="cost-badge">€10~20</span><div class="tl-note">도시 자체가 아기자기하고 예쁨</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Aveiro+Portugal" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">13:30</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-move">🚂 귀환</span></div><div class="tl-place">아베이루 → 포르투 귀환 기차</div><div class="tl-desc">약 1시간 소요 <span class="cost-badge">€4~6</span><div class="tl-note">더 있고 싶으면 한 편 늦게 타도 OK</div></div></div>
+        <div class="tl-actions"></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">15:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-meal">🥙 간식</span></div><div class="tl-place">Conga — 비파나 샌드위치</div><div class="tl-desc">포르투 가성비 최고 길거리 음식 · 돼지고기+빵+소스 <span class="cost-badge">€5~7</span><div class="tl-note">평점 4.4 · 볼량 시장 근처 위치 · 포르투 서민 음식의 상징</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Conga+Porto" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">16:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-free">📸 포토타임</span></div><div class="tl-place">포르투 마지막 포토타임</div><div class="tl-desc">히베이라 광장 / 동 루이스 다리 · 오후 황금빛 조명 타임<div class="tl-note">오후 빛이 사진 찍기 최적! · 포르투 마지막 추억 사진</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Cais+da+Ribeira+Porto" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">17:00</div><div class="dur">1.5h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-meal">🍗 저녁</span></div><div class="tl-place">Pedro dos Frangos — 피리피리 치킨</div><div class="tl-desc">★ 한국인 입맛에 가장 잘 맞는 메뉴! 매콤한 피리피리 치킨 + 감자튀김 <span class="cost-badge">€10~15/인</span><div class="tl-note">평점 4.3 · 시내 중심 위치</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Pedro+dos+Frangos+Porto" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">18:30</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-free">🌉 야경</span></div><div class="tl-place">포르투 마지막 저녁 야경 산책</div><div class="tl-desc">히베이라 광장 &amp; 도우루강 야경 · 포르투와의 작별 인사 🌉<div class="tl-note">내일 포르투 떠나는 날 · 조명 켜진 다리 마지막으로</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Cais+da+Ribeira+Porto" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">19:30</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-sight">🍷 와인바</span></div><div class="tl-place">히베이라 강변 바 — 마지막 포트와인</div><div class="tl-desc">루비 포트와인 한 잔 · 도우루강 바라보며 마시는 마지막 한 잔 <span class="cost-badge">€5~10</span></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Cais+da+Ribeira+Porto" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">20:30</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-hotel">🏠 귀환</span></div><div class="tl-place">숙소 귀환 &amp; 리스본행 짐 완전 정리</div><div class="tl-desc">내일 체크아웃 11:00 · 빠진 짐 없는지 전체 확인<div class="tl-note">⚠️ 내일 14:40 포르투 캄파냐 출발 · 여권·탑승권 배낭에 챙겨두기</div></div></div>
+        <div class="tl-actions"></div>
+      </div>
+    </div>
+    <div class="day-total">💰 <strong>1인 예상:</strong> €50~85 · 아베이루 배 투어 €15 포함</div>
+  </div>
+
+  <!-- D7 -->
+  <div class="day-panel" id="dp-7">
+    <div class="day-hero d7-h"><h3>🚆 D7 · 2026년 8월 7일 (금) — 포르투 체크아웃 → 리스본 오리엔트 → ✈️ 귀국</h3><p>14:40 포르투 캄파냐 출발 → 17:22 리스본 오리엔트 도착 → 메트로 → 공항 → 22:00 대한항공</p></div>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">07:00</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-free">🌅 아침</span></div><div class="tl-place">포르투 마지막 아침 기상</div><div class="tl-desc">포르투갈 여행 마지막 날! · 충분한 수면으로 귀국 피로 대비</div></div>
+        <div class="tl-actions"></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">08:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-meal">☕ 아침</span></div><div class="tl-place">숙소 근처 카페 — 포르투 마지막 아침 커피</div><div class="tl-desc">갈랑(Galão) 커피 + 크루아상 · 카페에서 여유롭게 추억 회상 <span class="cost-badge">€4~6</span></div></div>
+        <div class="tl-actions"></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">09:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-free">🧳 준비</span></div><div class="tl-place">짐 최종 점검 &amp; 체크아웃 준비</div><div class="tl-desc">방 전체 확인 · 충전기·파우치 · 귀중품·여권 꺼내 가방에 챙기기<div class="tl-note">자주 잃어버리는 것: 충전기, 화장실 세면도구 · 캐리어 잠금장치 확인</div></div></div>
+        <div class="tl-actions"></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">10:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-free">🛍️ 쇼핑</span></div><div class="tl-place">마지막 기념품 쇼핑</div><div class="tl-desc">아줄레주 타일 자석 / 포르트와인 선물 / 코르크 제품 <span class="cost-badge">€20~50</span><div class="tl-note">기념품: 공항보다 시내가 훨씬 저렴! · 타일 자석 €2~5 / 코르크 지갑·백팩 인기</div></div></div>
+        <div class="tl-actions"></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">11:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-hotel">🏨 체크아웃</span></div><div class="tl-place">숙소 체크아웃 (11:00)</div><div class="tl-desc">영수증 확인 / 짐 픽업 or 맡겨두고 히베이라 잠깐 방문<div class="tl-note">⚠️ 체크아웃 11:00! · 짐 맡겨두고 마지막 산책 가능</div></div></div>
+        <div class="tl-actions"></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">12:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-free">🌉 작별</span></div><div class="tl-place">히베이라 광장 마지막 산책</div><div class="tl-desc">히베이라 광장 마지막 방문 · 포르투와 작별 인사 👋<div class="tl-note">짐은 숙소에 맡기고 가볍게 · 마지막 인증샷</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Cais+da+Ribeira+Porto" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">13:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-meal">🍽️ 점심</span></div><div class="tl-place">캄파냐역 근처 현지 카페 — 마지막 포르투 밥</div><div class="tl-desc">간단히 비파나 or 파스텔 드 바깔라우 <span class="cost-badge">€10~15</span><div class="tl-note">역 내부는 물가 비쌈 → 바깥 이용 · 든든히 먹기 (기차+공항 긴 하루)</div></div></div>
+        <div class="tl-actions"></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">14:00</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-move">🚆 탑승 준비</span></div><div class="tl-place">포르투 캄파냐역 도착 &amp; 탑승 준비</div><div class="tl-desc">탑승권 확인 / 짐 정리 / 플랫폼 전광판 끝까지 확인!<div class="tl-note">출발 30분 전 역 도착 목표 · 플랫폼 정보 수시로 바뀜</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Estação+Campanhã+Porto" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">14:40</div><div class="dur">2h 42m</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-move">🚆 이동</span></div><div class="tl-place">CP 기차 출발 → 리스본 오리엔트</div><div class="tl-desc">포르투 캄파냐 14:40 → 리스본 오리엔트 17:22 도착<div class="tl-note">충전기·이어폰 준비 · 포르투갈 마지막 창밖 풍경 감상 · 귀국 비행기 서류 확인</div></div></div>
+        <div class="tl-actions"></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">17:22</div><div class="dur">30m</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-move">✈️ 공항 이동</span></div><div class="tl-place">리스본 오리엔트역 → 리스본 공항</div><div class="tl-desc">메트로 레드라인 → 리스본 공항 (약 20~25분) <span class="cost-badge">€1.85</span><div class="tl-note">오리엔트역 = 공항 직통 메트로! · 짐 많아도 엘리베이터 있음</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Gare+do+Oriente+Lisboa" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">18:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-move">✈️ 체크인</span></div><div class="tl-place">리스본 공항 도착 &amp; 대한항공 체크인</div><div class="tl-desc">대한항공 체크인 카운터 · 여권·탑승권·짐 최종 확인<div class="tl-note">카운터 위치: 출발층 2층 · 대한항공 코드 KE · ✅ 3시간 전 도착 OK!</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://maps.google.com/?q=Aeroporto+Humberto+Delgado+Lisboa" target="_blank">📍 구글맵</a></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">19:00</div><div class="dur">1h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-move">✈️ 출국</span></div><div class="tl-place">출국 수속 &amp; 보안 검색 &amp; 면세점</div><div class="tl-desc">면세점 쇼핑 · 포르트와인 / 에그타르트 파우더 구매 <span class="cost-badge">€0~50</span><div class="tl-note">수하물 위탁 후 몸만 가볍게 · 출국 후 면세 가게 탐방</div></div></div>
+        <div class="tl-actions"></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">22:00</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-move">🛫 귀국</span></div><div class="tl-place">✈️ 대한항공 리스본 → 인천 출발</div><div class="tl-desc">15시간 귀국 비행 · 인천 8/8(토) 19:15 도착 🇰🇷<div class="tl-note">좌석 창가·복도 미리 확인 · 기내 편의용품 준비</div></div></div>
+        <div class="tl-actions"></div>
+      </div>
+    </div>
+    <div class="day-total">💰 <strong>1인 예상:</strong> €40~80 · 기차+공항 이동 포함 · 인천 8/8(토) 19:15 도착 🇰🇷</div>
+  </div>
+</div>
+
+<!-- FLIGHTS -->
+<div style="background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:72px 0" id="flights">
+  <div class="section" style="padding-top:0;padding-bottom:0">
+    <div class="sec-eyebrow">FLIGHTS</div>
+    <div class="sec-title">✈️ 항공편 정보</div>
+    <div class="sec-sub">대한항공 (아시아나 운항) · 인천 ↔ 리스본 직항</div>
+    <div class="flight-grid">
+      <div class="flight-card">
+        <div class="fc-header">🛫 가는 편 · 2026년 7월 31일 (금)</div>
+        <div class="fc-row">
+          <div class="fc-airport">
+            <div class="code">ICN</div>
+            <div class="city">인천</div>
+            <div class="time">12:45</div>
+          </div>
+          <div class="fc-arrow">
+            <div class="line"><span class="plane">✈️</span></div>
+            <div class="dur">15시간 30분 · 직항</div>
+          </div>
+          <div class="fc-airport">
+            <div class="code">LIS</div>
+            <div class="city">리스본</div>
+            <div class="time">20:15 <span style="font-size:11px;color:var(--sub)">(+1일)</span></div>
+          </div>
+        </div>
+        <div class="fc-meta">
+          <span class="fc-tag">대한항공</span>
+          <span class="fc-tag">아시아나 운항</span>
+          <span class="fc-tag">직항</span>
+          <span class="fc-tag">수하물 포함</span>
+          <span class="fc-tag">연차 1일 필요</span>
+        </div>
+      </div>
+      <div class="flight-card">
+        <div class="fc-header">🛬 오는 편 · 2026년 8월 7일 (금)</div>
+        <div class="fc-row">
+          <div class="fc-airport">
+            <div class="code">LIS</div>
+            <div class="city">리스본</div>
+            <div class="time">22:15</div>
+          </div>
+          <div class="fc-arrow">
+            <div class="line"><span class="plane">✈️</span></div>
+            <div class="dur">13시간 00분 · 직항</div>
+          </div>
+          <div class="fc-airport">
+            <div class="code">ICN</div>
+            <div class="city">인천</div>
+            <div class="time">19:15 <span style="font-size:11px;color:var(--sub)">(+1일)</span></div>
+          </div>
+        </div>
+        <div class="fc-meta">
+          <span class="fc-tag">대한항공</span>
+          <span class="fc-tag">아시아나 운항</span>
+          <span class="fc-tag">직항</span>
+          <span class="fc-tag">수하물 포함</span>
+          <span class="fc-tag">야간 출발 → 낮 여유</span>
+        </div>
+      </div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-top:16px;font-size:13px;color:var(--sub)">
+      💡 <strong style="color:#c5cae9">참고 금액</strong> — 1인 약 ₩1,838,600 · 2인 합계 약 ₩3,677,200 (조회 당시 참고가, 변동 있음)
+    </div>
+  </div>
+</div>
+
+<!-- RESTAURANTS -->
+<div class="section" id="restaurants">
+  <div class="sec-eyebrow">DINING</div>
+  <div class="sec-title">🍽️ 추천 맛집</div>
+  <div class="sec-sub">Google Maps 평점 4.0↑ · 가성비 기준 · 2인 저녁 추정가 포함</div>
+
+  <!-- 리스본 저녁 -->
+  <div style="margin:28px 0 10px;font-size:13px;font-weight:800;color:#9fa8da;letter-spacing:.06em">🇵🇹 리스본 — 날짜별 저녁 식당</div>
+  <div class="rest-grid">
+    <div class="rest-day-card">
+      <div class="rest-day-label">8/1 (토) · 바이샤/산타아폴로니아</div>
+      <div class="rest-row best">
+        <div class="rest-stars">⭐4.7</div>
+        <div class="rest-info">
+          <div class="rest-name">Taberna Sal Grosso</div>
+          <div class="rest-desc">문어·감바스·소꼬리 타파스 · 소형(예약 권장)</div>
+        </div>
+        <div class="rest-price">€ · €20~30/인</div>
+      </div>
+      <div class="rest-row alt">
+        <div class="rest-stars">⭐4.5</div>
+        <div class="rest-info">
+          <div class="rest-name">Taberna da Baixa</div>
+          <div class="rest-desc">해산물밥·감바스 · 숙소 근처 · 매일 ~22시</div>
+        </div>
+        <div class="rest-price">€€ · €20~30/인</div>
+      </div>
+    </div>
+    <div class="rest-day-card">
+      <div class="rest-day-label">8/2 (일) · 벨렘/LX팩토리</div>
+      <div class="rest-row best">
+        <div class="rest-stars">⭐4.8</div>
+        <div class="rest-info">
+          <div class="rest-name">O Rio Marisqueira</div>
+          <div class="rest-desc">해산물밥·문어·감바스 · 벨렘 현지 · 일 ~22:30</div>
+        </div>
+        <div class="rest-price">€€ · €25~35/인</div>
+      </div>
+      <div class="rest-row alt">
+        <div class="rest-stars">⭐4.3</div>
+        <div class="rest-info">
+          <div class="rest-name">Chickinho (LX Factory)</div>
+          <div class="rest-desc">페리페리 치킨 · 플리마켓 후 가볍게 · 일 영업 ✓</div>
+        </div>
+        <div class="rest-price">€ · €10~15/인</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 포르투 저녁 -->
+  <div style="margin:28px 0 10px;font-size:13px;font-weight:800;color:#9fa8da;letter-spacing:.06em">🇵🇹 포르투 — 날짜별 저녁 식당</div>
+  <div class="rest-grid">
+    <div class="rest-day-card">
+      <div class="rest-day-label">8/3 (월) · 히베이라 — 도착일 가볍게</div>
+      <div class="rest-row best">
+        <div class="rest-stars">⭐4.8</div>
+        <div class="rest-info">
+          <div class="rest-name">Bó tá quente</div>
+          <div class="rest-desc">수제 비파나 · 월 ~22:30 ✓ · 빠르고 든든하게</div>
+        </div>
+        <div class="rest-price">€ · €8~12/인</div>
+      </div>
+      <div class="rest-row alt">
+        <div class="rest-stars">⭐4.7</div>
+        <div class="rest-info">
+          <div class="rest-name">Ribeira Square</div>
+          <div class="rest-desc">강변뷰 해산물밥 · 월 18~23시 ✓ · 한국인 선호</div>
+        </div>
+        <div class="rest-price">€€ · €20~30/인</div>
+      </div>
+      <div style="font-size:11px;color:#ef9a9a;padding:8px 4px 0">⚠️ Taberna dos Mercadores 월·화 휴무</div>
+    </div>
+    <div class="rest-day-card">
+      <div class="rest-day-label">8/4 (화) · 기존 유지</div>
+      <div class="rest-row best">
+        <div class="rest-stars">⭐4.4</div>
+        <div class="rest-info">
+          <div class="rest-name">카페 산티아고</div>
+          <div class="rest-desc">프란세지냐 명물 · 가성비 양호 · 유지 추천</div>
+        </div>
+        <div class="rest-price">€ · €15~25/인</div>
+      </div>
+      <div class="rest-row alt">
+        <div class="rest-stars">⭐4.3</div>
+        <div class="rest-info">
+          <div class="rest-name">A Tasquinha</div>
+          <div class="rest-desc">문어밥 · 화 저녁 영업 ✓ · 대안</div>
+        </div>
+        <div class="rest-price">€€</div>
+      </div>
+    </div>
+    <div class="rest-day-card">
+      <div class="rest-day-label">8/5 (수) · 마토지뉴스 — 교체 추천</div>
+      <div class="rest-row best">
+        <div class="rest-stars">⭐4.5</div>
+        <div class="rest-info">
+          <div class="rest-name">Cantinho Senhor do Padrão</div>
+          <div class="rest-desc">숯불 정어리·문어 · 해변 근처 · 수 ~23시 ✓</div>
+        </div>
+        <div class="rest-price">€ · €15~22/인</div>
+      </div>
+      <div class="rest-row alt">
+        <div class="rest-stars">⭐4.3</div>
+        <div class="rest-info">
+          <div class="rest-name">Casa Açoreana</div>
+          <div class="rest-desc">€20 풀코스 메뉴 · 현지인 식당 · 현금 권장</div>
+        </div>
+        <div class="rest-price">€ · €20/인 풀코스</div>
+      </div>
+    </div>
+    <div class="rest-day-card">
+      <div class="rest-day-label">8/6 (목) · 기존 유지</div>
+      <div class="rest-row best">
+        <div class="rest-stars">⭐4.3</div>
+        <div class="rest-info">
+          <div class="rest-name">Pedro dos Frangos</div>
+          <div class="rest-desc">치킨 구이 명물 · 가성비 최고 · 유지 추천</div>
+        </div>
+        <div class="rest-price">€ · €10~15/인</div>
+      </div>
+      <div class="rest-row alt">
+        <div class="rest-stars">⭐4.5</div>
+        <div class="rest-info">
+          <div class="rest-name">Casa Guedes Tradicional</div>
+          <div class="rest-desc">돼지목살 샌드위치 명물 · 현지인 단골 · 대안</div>
+        </div>
+        <div class="rest-price">€ · €5~8/인</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 블로그 추천 추가 맛집 -->
+  <div style="margin:28px 0 10px;font-size:13px;font-weight:800;color:#9fa8da;letter-spacing:.06em">📝 블로그 추천 — 포르투 추가 맛집</div>
+  <div class="rest-grid">
+    <div class="rest-day-card">
+      <div class="rest-day-label">🦞 해물밥 · 가이아 강변</div>
+      <div class="rest-row best">
+        <div class="rest-stars">⭐강추</div>
+        <div class="rest-info">
+          <div class="rest-name">Tempêro D'Maria</div>
+          <div class="rest-desc">포르투갈 여행 통틀어 최고 해물밥 · 한국인 입맛 딱 맞음 · 가이아 강변 · Av. de Diogo Leite 278</div>
+        </div>
+        <div class="rest-price">€€ · €20~30/인</div>
+      </div>
+    </div>
+    <div class="rest-day-card">
+      <div class="rest-day-label">🐟 대구 전문 · 히베이라 강변</div>
+      <div class="rest-row best">
+        <div class="rest-stars">⭐추천</div>
+        <div class="rest-info">
+          <div class="rest-name">Muro do Bacalhau</div>
+          <div class="rest-desc">바칼라우(대구) 요리 전문 · 히베이라 강변 테라스 · Cais da Estiva 122</div>
+        </div>
+        <div class="rest-price">€€</div>
+      </div>
+    </div>
+    <div class="rest-day-card">
+      <div class="rest-day-label">🌭 현지인 단골 · 포르투 시내</div>
+      <div class="rest-row best">
+        <div class="rest-stars">⭐추천</div>
+        <div class="rest-info">
+          <div class="rest-name">Gazela</div>
+          <div class="rest-desc">포르투 명물 코지도 · 현지인 줄서는 맛집 · Tv. do Cimo de Vila 4</div>
+        </div>
+        <div class="rest-price">€</div>
+      </div>
+    </div>
+    <div class="rest-day-card">
+      <div class="rest-day-label">☕ 브런치·카페 · 루아 다스 플로레스</div>
+      <div class="rest-row best">
+        <div class="rest-stars">⭐추천</div>
+        <div class="rest-info">
+          <div class="rest-name">Floresta Cafe by Hungry Biker</div>
+          <div class="rest-desc">분위기 좋은 카페 · 브런치 · R. das Flores 146</div>
+        </div>
+        <div class="rest-price">€</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 낮/간식 스팟 -->
+  <!-- 해산물 Ramiro 대안 -->
+  <div style="margin:28px 0 10px;font-size:13px;font-weight:800;color:#9fa8da;letter-spacing:.06em">🦞 해산물 — Cervejaria Ramiro 대안</div>
+  <div class="rest-grid">
+    <div class="rest-day-card">
+      <div class="rest-day-label">리스본 · Av. da Liberdade 155</div>
+      <div class="rest-row best">
+        <div class="rest-stars">⭐4.4</div>
+        <div class="rest-info">
+          <div class="rest-name">Cervejaria Ribadouro</div>
+          <div class="rest-desc">1947년 개업 · 타이거 새우(하루 20kg)·게·거위 따개비(percebes)·랍스터 · Mariscada à Ribadouro 5종 모둠 플레이터 · Ramiro보다 줄 짧음</div>
+        </div>
+        <div class="rest-price">새벽 1:30까지</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 포르투갈 전통 육류 -->
+  <div style="margin:28px 0 10px;font-size:13px;font-weight:800;color:#9fa8da;letter-spacing:.06em">🥩 포르투갈 전통 육류 — 리스본</div>
+  <div class="rest-grid">
+    <div class="rest-day-card">
+      <div class="rest-day-label">🐂 소고기 전문</div>
+      <div class="rest-row best">
+        <div class="rest-stars">⭐세계 34위</div>
+        <div class="rest-info">
+          <div class="rest-name">Sala de Corte</div>
+          <div class="rest-desc">카이스 두 소드레 · 이베리아 반도 숙성 소고기 · 호스퍼 오븐 숯불구이 · 2023년 세계 스테이크하우스 34위 (포르투갈 유일)</div>
+        </div>
+        <div class="rest-price">프리미엄</div>
+      </div>
+      <div class="rest-row alt">
+        <div class="rest-stars">⭐클래식</div>
+        <div class="rest-info">
+          <div class="rest-name">Carvoaria Jacto</div>
+          <div class="rest-desc">1953년 개업 · 아로이우스 · 미란데사 재래종·와규·숙성육 · 에스페타다(꼬치구이) · 부위·중량별 주문</div>
+        </div>
+        <div class="rest-price">중간</div>
+      </div>
+    </div>
+    <div class="rest-day-card">
+      <div class="rest-day-label">🍳 전통 타스카 (비토케·피카파우)</div>
+      <div class="rest-row best">
+        <div class="rest-stars">⭐현지 1위</div>
+        <div class="rest-info">
+          <div class="rest-name">Jorge d'Amália</div>
+          <div class="rest-desc">아주다(Ajuda) · 피카파우(마늘소스 소고기 조각) · "리스본 최고 비토케" 로 불리는 타스카 · 현지인 단골</div>
+        </div>
+        <div class="rest-price">저렴</div>
+      </div>
+      <div class="rest-row alt">
+        <div class="rest-stars">⭐명물</div>
+        <div class="rest-info">
+          <div class="rest-name">O Tachadas</div>
+          <div class="rest-desc">산토스(Santos) · 접시를 가득 채우는 대형 티본 스테이크(costoleta de novilho) · 타스카 스타일 가성비</div>
+        </div>
+        <div class="rest-price">저렴·가성비</div>
+      </div>
+    </div>
+    <div class="rest-day-card">
+      <div class="rest-day-label">🍗 숯불 닭 (프랑구 아사두)</div>
+      <div class="rest-row best">
+        <div class="rest-stars">⭐투표 1위</div>
+        <div class="rest-info">
+          <div class="rest-name">Casa dos Frangos de Moscavide</div>
+          <div class="rest-desc">NiT 독자 투표(9,592표) 1위 37% · 리스본 최고 숯불 닭 · 모스카비드 지역</div>
+        </div>
+        <div class="rest-price">저렴</div>
+      </div>
+      <div class="rest-row alt">
+        <div class="rest-stars">⭐투표 2위</div>
+        <div class="rest-info">
+          <div class="rest-name">Chickinho</div>
+          <div class="rest-desc">NiT 투표 2위 27% · 페리페리 치킨 · LX Factory 지점 있음 (8/2 일정과 연계 가능)</div>
+        </div>
+        <div class="rest-price">저렴</div>
+      </div>
+    </div>
+    <div class="rest-day-card">
+      <div class="rest-day-label">🥪 프레구 (소고기 샌드위치)</div>
+      <div class="rest-row best">
+        <div class="rest-stars">⭐전문점</div>
+        <div class="rest-info">
+          <div class="rest-name">Rui dos Pregos</div>
+          <div class="rest-desc">두툼하고 즙이 많은 소고기 샌드위치(prego) 전문 · 벨렝/주케이라·도카스·신트라 등 복수 지점</div>
+        </div>
+        <div class="rest-price">저렴</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin:28px 0 10px;font-size:13px;font-weight:800;color:#9fa8da;letter-spacing:.06em">☀️ 낮 / 간식 필수 스팟</div>
+  <div class="info-grid">
+    <div class="icard">
+      <div class="icard-head">🇵🇹 리스본</div>
+      <div class="icard-body">
+        <div class="irow"><div class="icon">🥐</div><div class="content"><div class="name">Pastéis de Belém</div><div class="desc">1837년 원조 에그타르트 · 08:00 오픈 직후 방문 필수 · 10시 이후 웨이팅 30분↑</div></div><div class="price">€1.5/개</div></div>
+        <div class="irow"><div class="icon">🍽️</div><div class="content"><div class="name">Timeout Market</div><div class="desc">포르투갈 최고 셰프 음식 집결 · 입장 무료 · 카이스 두 소드레역 인근</div></div><div class="price">€10~20/인</div></div>
+      </div>
+    </div>
+    <div class="icard">
+      <div class="icard-head">🇵🇹 포르투</div>
+      <div class="icard-body">
+        <div class="irow"><div class="icon">🛒</div><div class="content"><div class="name">볼량 시장</div><div class="desc">100년 역사 재래시장 · 09:00~20:00 (월~금) · 신선 재료 구경</div></div><div class="price">€5~10</div></div>
+        <div class="irow"><div class="icon">🧁</div><div class="content"><div class="name">오부스 몰레스 (아베이루)</div><div class="desc">아베이루 전통 과자 · 달걀 노른자+설탕 · 기념품으로 인기</div></div><div class="price">€3~5</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HOTELS -->
+<div style="background:var(--surface);border-top:1px solid var(--border);padding:72px 0" id="hotels">
+  <div class="section" style="padding-top:0;padding-bottom:0">
+    <div class="sec-eyebrow">ACCOMMODATION</div>
+    <div class="sec-title">🏨 숙소</div>
+    <div class="info-grid">
+      <div class="icard">
+        <div class="icard-head">🇵🇹 리스본 숙소 (4박)</div>
+        <div class="icard-body">
+          <div class="irow"><div class="icon">🏠</div><div class="content"><div class="name">더 리스보네이르 아파트먼트</div><div class="desc">리스본 숙소 · 바이샤/알파마 중심부</div></div><div class="price"><a href="https://www.google.com/maps?q=38.7166268,-9.1436794" target="_blank" style="color:#7986cb;font-size:11px;text-decoration:none">📍 지도</a></div></div>
+          <div class="irow"><div class="icon">🗓️</div><div class="content"><div class="name">체크인</div><div class="desc">8/1(토) 20:15 공항 도착 → 볼트/우버 이동 · 레이트 체크인 사전 안내 필수</div></div></div>
+          <div class="irow"><div class="icon">🗓️</div><div class="content"><div class="name">8/3(월) 체크아웃</div><div class="desc">짐 맡기고 신트라 출발 → 저녁 포르투 이동</div></div></div>
+          <div class="irow"><div class="icon">🗓️</div><div class="content"><div class="name">8/6(목) 재입실</div><div class="desc">포르투에서 리스본 귀환 · 마지막 1박</div></div></div>
+        </div>
+      </div>
+      <div class="icard">
+        <div class="icard-head">🇵🇹 포르투 숙소 (3박)</div>
+        <div class="icard-body">
+          <div class="irow"><div class="icon">🏠</div><div class="content"><div class="name">아파트먼트 포르토 알렉산터 프라가</div><div class="desc">체크인 15:00~ · 늦은 도착 사전 안내 필요</div></div></div>
+          <div class="irow"><div class="icon">🗓️</div><div class="content"><div class="name">체크인</div><div class="desc">8/3(월) 19:48 캄파냐역 도착 후 이동</div></div></div>
+          <div class="irow"><div class="icon">🗓️</div><div class="content"><div class="name">체크아웃</div><div class="desc">8/6(목) 아베이루 이른 출발 전 · 짐 보관 요청</div></div></div>
+          <div class="irow"><div class="icon">🚇</div><div class="content"><div class="name">교통</div><div class="desc">안단테 카드 구매 €0.60 + 충전 · 메트로+버스+트램</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TRANSPORT -->
+<div class="section" id="transport">
+  <div class="sec-eyebrow">TRANSPORT</div>
+  <div class="sec-title">🚆 교통 정보</div>
+  <div class="info-grid">
+    <div class="icard">
+      <div class="icard-head">리스본 시내</div>
+      <div class="icard-body">
+        <div class="irow"><div class="icon">🎟️</div><div class="content"><div class="name">리스보아 카드</div><div class="desc">51개 어트랙션 + 대중교통 무료 · 공항 1층 교환<br>⚠️ 수령 시간부터 카운트!</div></div><div class="price">€62 절약</div></div>
+        <div class="irow"><div class="icon">🚋</div><div class="content"><div class="name">28번 트램</div><div class="desc">리스본 아이콘 · 알파마 이동 · 리스보아 카드 무료<br>⚠️ 소매치기 주의</div></div><div class="price">€3.20</div></div>
+        <div class="irow"><div class="icon">🚡</div><div class="content"><div class="name">비카 케이블카</div><div class="desc">리스보아 카드 포함 · ⚠️ 2025년 9월~현재 운행 중단. 출발 전 carris.pt 확인 필수</div></div><div class="price">포함</div></div>
+        <div class="irow"><div class="icon">🚗</div><div class="content"><div class="name">볼트 / 우버</div><div class="desc">공항 P2 카파크 · 입국장 나와서 좌측<br>볼트 저렴 but 취소多 → 우버가 확실</div></div></div>
+      </div>
+    </div>
+    <div class="icard">
+      <div class="icard-head">도시 간 이동</div>
+      <div class="icard-body">
+        <div class="irow"><div class="icon">🚂</div><div class="content"><div class="name">리스본 ↔ 신트라</div><div class="desc">Rossio역 출발 · 약 40분 · 리스보아 카드 무료</div></div><div class="price">€2.3</div></div>
+        <div class="irow"><div class="icon">🚆</div><div class="content"><div class="name">리스본 → 포르투</div><div class="desc">산타 아폴로니아역 · 약 3시간 · cp.pt 예매</div></div><div class="price">€25~35</div></div>
+        <div class="irow"><div class="icon">🚂</div><div class="content"><div class="name">포르투 ↔ 아베이루</div><div class="desc">캄파냐역 출발 · 약 1시간</div></div><div class="price">€5~7</div></div>
+        <div class="irow"><div class="icon">🚆</div><div class="content"><div class="name">포르투 → 리스본</div><div class="desc">캄파냐역 출발 · 약 3시간 · cp.pt 예매</div></div><div class="price">€25~35</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BUDGET -->
+<div style="background:var(--surface);border-top:1px solid var(--border);padding:72px 0" id="budget">
+  <div class="section" style="padding-top:0;padding-bottom:0">
+
+    <!-- 헤더 -->
+    <div class="ledger-report-header">
+      <div class="ledger-report-title">🏦 포르투갈 여행경비 내역서</div>
+      <div class="ledger-report-meta">셀 클릭 → 직접 수정 · Enter 저장 · 행 추가/삭제 · 실시간 공유</div>
+      <span id="budget-status" class="ledger-report-status">불러오는 중…</span>
+    </div>
+
+    <!-- 잔액 요약 -->
+    <div class="ledger-summary-bar">
+      <div class="ledger-summary-card krw-card">
+        <div class="lsc-label">원화 잔액</div>
+        <div class="lsc-value" id="bal-krw-top">₩—</div>
+      </div>
+      <div class="ledger-summary-card eur-card">
+        <div class="lsc-label">유로 잔액</div>
+        <div class="lsc-value" id="bal-eur-top">€—</div>
+      </div>
+    </div>
+
+    <!-- 원화 섹션 -->
+    <div class="ledger-section krw-section">
+      <div class="ledger-section-header krw-header">
+        <span class="ls-flag">KR</span> 원화 (KRW)
+      </div>
+      <div class="ledger-wrap">
+        <div class="ledger-half">
+          <div class="ledger-half-title in">▶ 입금</div>
+          <div class="ledger-table-wrap">
+            <table class="ledger-table">
+              <thead><tr><th>날짜</th><th>항목</th><th>금액(원)</th><th>비고</th><th></th></tr></thead>
+              <tbody id="body-krw-in"></tbody>
+              <tfoot><tr class="ledger-foot-row">
+                <td colspan="2" class="ledger-foot-label">합계</td>
+                <td id="sum-krw-in" class="ledger-foot-in">₩0</td>
+                <td colspan="2"></td>
+              </tr></tfoot>
+            </table>
+          </div>
+          <button class="ledger-add-btn" onclick="addRow('krw','in')">＋ 행 추가</button>
+        </div>
+        <div class="ledger-half">
+          <div class="ledger-half-title out">◀ 출금</div>
+          <div class="ledger-table-wrap">
+            <table class="ledger-table">
+              <thead><tr><th>날짜</th><th>항목</th><th>금액(원)</th><th>비고</th><th></th></tr></thead>
+              <tbody id="body-krw-out"></tbody>
+              <tfoot><tr class="ledger-foot-row">
+                <td colspan="2" class="ledger-foot-label">합계</td>
+                <td id="sum-krw-out" class="ledger-foot-out">₩0</td>
+                <td colspan="2"></td>
+              </tr></tfoot>
+            </table>
+          </div>
+          <button class="ledger-add-btn" onclick="addRow('krw','out')">＋ 행 추가</button>
+        </div>
+      </div>
+      <div class="ledger-balance" id="bal-krw">잔액 계산 중…</div>
+    </div>
+
+    <!-- 유로 섹션 -->
+    <div class="ledger-section eur-section">
+      <div class="ledger-section-header eur-header">
+        <span class="ls-flag">EU</span> 유로 (EUR)
+      </div>
+      <div class="ledger-wrap">
+        <div class="ledger-half">
+          <div class="ledger-half-title in">▶ 입금</div>
+          <div class="ledger-table-wrap">
+            <table class="ledger-table">
+              <thead><tr><th>날짜</th><th>항목</th><th>금액(€)</th><th>비고</th><th></th></tr></thead>
+              <tbody id="body-eur-in"></tbody>
+              <tfoot><tr class="ledger-foot-row">
+                <td colspan="2" class="ledger-foot-label">합계</td>
+                <td id="sum-eur-in" class="ledger-foot-in">€0</td>
+                <td colspan="2"></td>
+              </tr></tfoot>
+            </table>
+          </div>
+          <button class="ledger-add-btn" onclick="addRow('eur','in')">＋ 행 추가</button>
+        </div>
+        <div class="ledger-half">
+          <div class="ledger-half-title out">◀ 출금</div>
+          <div class="ledger-table-wrap">
+            <table class="ledger-table">
+              <thead><tr><th>날짜</th><th>항목</th><th>금액(€)</th><th>비고</th><th></th></tr></thead>
+              <tbody id="body-eur-out"></tbody>
+              <tfoot><tr class="ledger-foot-row">
+                <td colspan="2" class="ledger-foot-label">합계</td>
+                <td id="sum-eur-out" class="ledger-foot-out">€0</td>
+                <td colspan="2"></td>
+              </tr></tfoot>
+            </table>
+          </div>
+          <button class="ledger-add-btn" onclick="addRow('eur','out')">＋ 행 추가</button>
+        </div>
+      </div>
+      <div class="ledger-balance" id="bal-eur">잔액 계산 중…</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TIPS -->
+<div class="section" id="tips">
+  <div class="sec-eyebrow">TIPS</div>
+  <div class="sec-title">💡 꿀팁 모음</div>
+
+  <!-- 2026년 최신 업데이트 -->
+  <div style="background:rgba(239,154,154,.08);border:1px solid rgba(239,154,154,.3);border-radius:16px;padding:20px 22px;margin-bottom:24px">
+    <div style="font-size:13px;font-weight:800;color:#ef9a9a;margin-bottom:14px">⚠️ 2026년 최신 업데이트 — 출발 전 필독</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:13px;line-height:1.7"><strong style="color:#ef9a9a">🚡 비카·글로리아·라브라 푸니쿨라 운행 중단</strong> — 2025년 9월 글로리아 탈선 사고 이후 전면 점검. 2026년 4월 기준 그라사 푸니쿨라만 재개(09~17시), <strong>비카(Bica)·글로리아·라브라는 아직 미정</strong>. 8월 재개 여부는 출발 전 <a href="https://www.carris.pt" target="_blank" style="color:#7986cb">carris.pt</a> 확인 필수. D2(8/2) 비카 케이블카 일정 대체 필요.</div>
+      <div style="font-size:13px;line-height:1.7"><strong style="color:#ffd54f">🚋 28번 트램 경로 단축 운행 중</strong> — 2025년 5월부터 공사로 마르팀 모니스↔그라사 구간은 대체 버스 운행. 2026년 초 공사 완료 예정이나 8월에도 일부 구간 변동 가능. 탑승 전 <a href="https://www.carris.pt" target="_blank" style="color:#7986cb">carris.pt</a> 확인.</div>
+      <div style="font-size:13px;line-height:1.7"><strong style="color:#a5d6a7">📅 신트라 페나 궁전 예약 필수</strong> — 시간대 지정 예약 없이는 입장 불가. 여름 오전 10~12시 슬롯은 며칠 전에 마감. <strong>지금 바로 예약</strong> → parquesdesintra.pt</div>
+      <div style="font-size:13px;line-height:1.7"><strong style="color:#a5d6a7">🍽️ Taberna Sal Grosso 이전·확장</strong> — 2025년 3월 더 넓은 새 공간으로 이전 (55석). 예약 가능해짐. tabernasalgrosso.pt에서 예약 권장.</div>
+    </div>
+  </div>
+
+  <!-- 식당 예약 & 식사 시간 가이드 -->
+  <div style="background:rgba(92,107,192,.07);border:1px solid rgba(92,107,192,.2);border-radius:16px;padding:20px 22px;margin-bottom:24px">
+    <div style="font-size:13px;font-weight:800;color:#9fa8da;margin-bottom:14px">🍽️ 식당 예약 & 식사 시간 가이드</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">
+      <div style="background:rgba(0,0,0,.2);border-radius:10px;padding:12px 14px;font-size:12px;line-height:1.7">
+        <div style="font-weight:800;color:#c5cae9;margin-bottom:4px">예약 필수 🔴</div>
+        Taberna Sal Grosso — tabernasalgrosso.pt<br>
+        신트라 페나 궁전 — parquesdesintra.pt<br>
+        Sala de Corte, O Rio Marisqueira
+      </div>
+      <div style="background:rgba(0,0,0,.2);border-radius:10px;padding:12px 14px;font-size:12px;line-height:1.7">
+        <div style="font-weight:800;color:#c5cae9;margin-bottom:4px">예약 강력 권장 🟡</div>
+        Cervejaria Ramiro — 웨이팅 길 수 있음<br>
+        Pedro dos Frangos — 전화: +351 222008522<br>
+        (예약 없으면 1시간 대기 가능)
+      </div>
+      <div style="background:rgba(0,0,0,.2);border-radius:10px;padding:12px 14px;font-size:12px;line-height:1.7">
+        <div style="font-weight:800;color:#c5cae9;margin-bottom:4px">예약 없이 가능 🟢</div>
+        카페 산티아고 — 10~30분 대기<br>
+        Bó tá quente, Chickinho<br>
+        Casa Guedes, 대부분 타스카
+      </div>
+      <div style="background:rgba(0,0,0,.2);border-radius:10px;padding:12px 14px;font-size:12px;line-height:1.7">
+        <div style="font-weight:800;color:#c5cae9;margin-bottom:4px">포르투갈 식사 시간</div>
+        점심: 오후 1~3시<br>
+        저녁: <strong>오후 8시 이후</strong> (현지식)<br>
+        타스카/간식: 60~90분 여유<br>
+        해산물·코스: <strong>2~3시간</strong> 배정
+      </div>
+    </div>
+  </div>
+
+  <!-- 사진 꿀팁 -->
+  <div style="background:rgba(121,134,203,.07);border:1px solid rgba(121,134,203,.2);border-radius:16px;padding:20px 22px;margin-bottom:24px">
+    <div style="font-size:13px;font-weight:800;color:#9fa8da;margin-bottom:14px">📸 사진 잘 찍는 법 — 리스본 포토 스팟</div>
+    <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;line-height:1.7">
+      <div><strong style="color:#c5cae9">🌅 미라도루 산타 루지아</strong> — 동쪽을 바라봄 → <strong>일출 직후 방문</strong>이 빛이 가장 예쁨. 부겐빌리아 꽃과 지붕선 함께 담기. 사람 포함 5:4 비율 구도.</div>
+      <div><strong style="color:#c5cae9">🏰 라르고 포르타스 두 솔</strong> — 테라코타 지붕이 강까지 펼쳐지는 파노라마. 아치 라인을 프레임으로 활용.</div>
+      <div><strong style="color:#c5cae9">🌆 미라도루 다 세뇨라 두 몬테 (그라사)</strong> — 리스본 최고 전망대. 상조르즈 성·타구스강·4월 25일 다리 모두 한 프레임. 황금 시간대(일몰 1~2시간 전) 추천.</div>
+      <div><strong style="color:#c5cae9">🚋 28번 트램</strong> — 트램이 언덕 모퉁이를 돌아오는 순간을 기다려서 찍기. 이른 아침 7~8시가 사람·차 없어서 BEST.</div>
+      <div><strong style="color:#c5cae9">🚡 비카 푸니쿨라 (운행 재개 시)</strong> — <strong>아래에서 올려다보는 앵글</strong>이 핵심. 레일 양쪽 건물 라인이 수렴하는 구도. 케이블카가 내려오는 타이밍에 셔터.</div>
+      <div><strong style="color:#c5cae9">📐 공통 팁</strong> — 50mm 이상 망원으로 골목 원근감 강조. 낮은 앵글(무릎 높이)로 자갈길+전경 함께. 오전 7~8시 황금빛·인파 없는 타이밍이 최고.</div>
+    </div>
+  </div>
+
+  <div class="tips-list">
+    <div class="tip-item"><span class="tip-tag">리스보아 카드</span><strong>수령 시간부터 카운트</strong> 시작. 공항 1층 관광안내소에서 교환. 제로니무스 €10 + 벨렝탑 €6 + 상 조르즈 성 €15 등 절약.</div>
+    <div class="tip-item"><span class="tip-tag">에그타르트</span>Pastéis de Belém은 <strong>08:00 오픈 직후</strong> 방문. 10시 이후 웨이팅 30분↑. 계피+슈가파우더 뿌려서 따뜻하게!</div>
+    <div class="tip-item"><span class="tip-tag">신트라 예약</span>페나 궁전(€14) + 레갈레이라(€12) + 무어인 성(€10) 모두 <strong>사전 예매 필수</strong>. parquesdesintra.pt / quintadaregaleira.pt. 리스보아 카드 불포함!</div>
+    <div class="tip-item"><span class="tip-tag">쿠베르토 거절</span>레스토랑 착석 시 자동으로 나오는 빵·버터(€3~5 유료). <strong>"Não quero couvert"</strong> (낭 케루 쿠베르투) 라고 말하면 거절 가능.</div>
+    <div class="tip-item"><span class="tip-tag">ATM·카드</span>공항 수수료 없는 ATM 이용. <strong>트래블월렛 또는 트래블로그</strong> 카드 준비. 환전은 현지 ATM이 유리.</div>
+    <div class="tip-item"><span class="tip-tag">볼트 vs 우버</span>볼트가 저렴하나 취소多. <strong>공항에서는 우버 추천</strong>. P2 카파크, 입국장 나와서 좌측. 4인승 이상 차량 잡기(캐리어 때문).</div>
+    <div class="tip-item"><span class="tip-tag">렐루 서점</span><strong>온라인 예약 필수</strong> (€5, 구매 시 환급). 성수기 줄 매우 긺. 아침 오픈 직후 방문 추천.</div>
+    <div class="tip-item"><span class="tip-tag">포트와인 셀러</span>빌라노바 가이아 지역 테일러스·그라함스. <strong>무료 or 시음 포함 €10~20</strong>. 동 루이스 다리 건너서 이동.</div>
+    <div class="tip-item"><span class="tip-tag">소매치기</span><strong>28번 트램 특히 주의</strong>. 크로스백 앞으로 메기, 스마트폰·지갑 외주머니 금지. 알파마 좁은 골목 주의.</div>
+    <div class="tip-item"><span class="tip-tag">VAT 환급</span>귀국 전 공항에서 <strong>세금 환급</strong> 가능. Diva 앱 사전 설치 or 공항 환급 창구 이용.</div>
+
+    <div style="margin:24px 0 12px;font-size:11px;font-weight:800;color:#7986cb;letter-spacing:.08em;text-transform:uppercase">☀️ 리스본 여름 가이드 (gtgabroad)</div>
+    <div class="tip-item"><span class="tip-tag">신발 필수</span>알파마·바이루알투 언덕은 <strong>자갈 돌길 2만 보</strong> 이상. 삼바(Samba) / 가젤(Gazelles) / 뉴발란스 / 완전히 길들여진 운동화만 OK. 예쁜 신발은 발이 고생.</div>
+    <div class="tip-item"><span class="tip-tag">나이트라이프</span>리스본 밤은 늦게 시작됩니다. 저녁식사 <strong>8:30~10시</strong> · 바 11시~새벽 1시 · 클럽 새벽 1시 이후. 자정 전에는 대부분 한산. 소지품 주의 필수.</div>
+    <div class="tip-item"><span class="tip-tag">여름 의류</span>끊임없는 도보와 더위 — <strong>린넨 팬츠·탱크탑·오버사이즈 셔츠</strong> 추천. 단, 카스카이스·코스타 카파리카 해변은 밤에 바람이 강하고 쌀쌀 → 얇은 재킷/후디 필수.</div>
+    <div class="tip-item"><span class="tip-tag">사전 예약</span>선셋 디너, 루프탑 바, 비치 클럽, 트렌디 브런치는 여름 주말에 <strong>빠르게 마감</strong>. 최소 2~3일 전 예약 필수.</div>
+    <div class="tip-item"><span class="tip-tag">타일 주의</span>리스본 자갈·타일 길바닥은 <strong>비 오면 매우 미끄럽습니다</strong>. 작은 가게는 현금 필요한 경우 있음. 이곳의 석양은 정말 환상적 — 뷰포인트(미라도루) 꼭 방문!</div>
+  </div>
+</div>
+
+<!-- GIFTS -->
+<div class="section" id="gifts">
+  <div class="sec-eyebrow">GIFT LIST</div>
+  <div class="sec-title">🎁 선물 구입 목록</div>
+  <div class="sec-sub">받을 사람과 선물을 미리 계획하세요 · 브라우저에 자동 저장됩니다</div>
+
+  <!-- 입력 폼 -->
+  <div id="gift-form" style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;margin:24px 0;max-width:700px">
+    <div style="font-size:14px;font-weight:600;color:#c5cae9;margin-bottom:16px">➕ 선물 추가</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div>
+        <label style="font-size:12px;color:var(--sub);display:block;margin-bottom:4px">받을 사람</label>
+        <input id="g-person" type="text" placeholder="예: 엄마, 친구 김OO" style="width:100%;box-sizing:border-box;background:#1a1d2e;border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:#e8eaf6;font-size:14px;outline:none">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--sub);display:block;margin-bottom:4px">선물 품목</label>
+        <input id="g-item" type="text" placeholder="예: 아줄레주 타일 자석" style="width:100%;box-sizing:border-box;background:#1a1d2e;border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:#e8eaf6;font-size:14px;outline:none">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+      <div>
+        <label style="font-size:12px;color:var(--sub);display:block;margin-bottom:4px">예산 (€)</label>
+        <input id="g-budget" type="text" placeholder="예: €5~10" style="width:100%;box-sizing:border-box;background:#1a1d2e;border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:#e8eaf6;font-size:14px;outline:none">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--sub);display:block;margin-bottom:4px">구매 예정 장소</label>
+        <input id="g-place" type="text" placeholder="예: LX팩토리, 볼량시장" style="width:100%;box-sizing:border-box;background:#1a1d2e;border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:#e8eaf6;font-size:14px;outline:none">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--sub);display:block;margin-bottom:4px">메모</label>
+        <input id="g-note" type="text" placeholder="예: 파란색으로" style="width:100%;box-sizing:border-box;background:#1a1d2e;border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:#e8eaf6;font-size:14px;outline:none">
+      </div>
+    </div>
+    <button onclick="addGift()" style="background:linear-gradient(135deg,#5c6bc0,#7986cb);color:#fff;border:none;border-radius:10px;padding:10px 28px;font-size:14px;font-weight:600;cursor:pointer">➕ 추가하기</button>
+  </div>
+
+  <!-- 통계 바 -->
+  <div id="gift-stats" style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap"></div>
+
+  <!-- 목록 -->
+  <div id="gift-list" style="display:flex;flex-direction:column;gap:10px;max-width:900px"></div>
+
+  <!-- 빈 상태 -->
+  <div id="gift-empty" style="text-align:center;padding:40px;color:var(--sub);display:none">
+    <div style="font-size:40px;margin-bottom:12px">🎁</div>
+    <div>아직 추가된 선물이 없습니다.<br>위에서 선물을 추가해 보세요!</div>
+  </div>
+</div>
+
+<!-- LISBOA CARD -->
+<!-- CHECKLIST -->
+<div class="section" id="checklist" style="scroll-margin-top:60px">
+  <div class="sec-eyebrow">PACKING</div>
+  <div class="sec-title">🎒 여행 준비물 체크리스트</div>
+  <div class="sec-sub">항목을 클릭해 체크하고, 직접 추가할 수도 있어요</div>
+
+  <!-- 진행률 -->
+  <div id="cl-progress" style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px 24px;margin:24px 0;max-width:700px;display:flex;align-items:center;gap:16px">
+    <div style="flex:1">
+      <div style="font-size:13px;color:var(--sub);margin-bottom:8px">체크 완료</div>
+      <div style="height:8px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden">
+        <div id="cl-bar" style="height:100%;background:linear-gradient(90deg,#5c6bc0,#7986cb);border-radius:99px;transition:.4s;width:0%"></div>
+      </div>
+    </div>
+    <div id="cl-count" style="font-size:22px;font-weight:800;color:#c5cae9;white-space:nowrap">0 / 0</div>
+  </div>
+
+  <!-- 카테고리 필터 -->
+  <div class="cl-cats" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+    <button class="cl-cat on" onclick="clFilter('all',this)">전체</button>
+    <button class="cl-cat" onclick="clFilter('doc',this)">📄 서류</button>
+    <button class="cl-cat" onclick="clFilter('clothes',this)">👕 의류</button>
+    <button class="cl-cat" onclick="clFilter('hygiene',this)">🧴 세면/위생</button>
+    <button class="cl-cat" onclick="clFilter('elec',this)">🔌 전자기기</button>
+    <button class="cl-cat" onclick="clFilter('meds',this)">💊 약/응급</button>
+    <button class="cl-cat" onclick="clFilter('etc',this)">📦 기타</button>
+  </div>
+
+  <!-- 추가 폼 -->
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;max-width:700px;margin-bottom:24px">
+    <div style="font-size:13px;font-weight:700;color:var(--sub);margin-bottom:12px">✏️ 항목 추가</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <input id="cl-input" type="text" placeholder="준비물 이름 입력..." onkeydown="if(event.key==='Enter')clAdd()"
+        style="flex:1;min-width:180px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:14px;font-family:inherit;outline:none">
+      <select id="cl-select" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;font-family:inherit;cursor:pointer">
+        <option value="doc">📄 서류</option>
+        <option value="clothes">👕 의류</option>
+        <option value="hygiene">🧴 세면/위생</option>
+        <option value="elec">🔌 전자기기</option>
+        <option value="meds">💊 약/응급</option>
+        <option value="etc">📦 기타</option>
+      </select>
+      <button onclick="clAdd()" style="background:#5c6bc0;color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">➕ 추가</button>
+    </div>
+  </div>
+
+  <!-- 리스트 -->
+  <div id="cl-list" style="max-width:700px;display:flex;flex-direction:column;gap:6px"></div>
+</div>
+
+<div class="section" id="lisboacard" style="scroll-margin-top:60px">
+  <div class="sec-eyebrow">LISBOA CARD</div>
+  <div class="sec-title">📋 리스보아 카드 안내</div>
+  <div class="sec-sub">리스본 대중교통 무제한 + 51개 관광명소 무료/할인 · 공항 1층 관광안내소에서 교환</div>
+
+  <div style="margin:20px 0 28px">
+    <a href="#travel-docs" onclick="navOn(document.querySelector('[href=\'#travel-docs\']'),event)"
+      style="display:inline-flex;align-items:center;gap:8px;background:rgba(121,134,203,.14);border:1px solid rgba(121,134,203,.3);border-radius:12px;padding:10px 20px;color:#9fa8da;text-decoration:none;font-size:13px;font-weight:600;transition:.2s">
+      📁 PDF 자료 (한국어 번역본 · 바우처 · 원본 설명서) → 여행자료 탭에서 열기
+    </a>
+  </div>
+
+  <!-- 리스보아 카드 요약 정보 -->
+  <div style="margin-top:32px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px">
+      <div style="font-size:20px;margin-bottom:8px">🕐</div>
+      <div style="font-weight:700;font-size:14px;color:#c5cae9;margin-bottom:6px">유효시간 주의</div>
+      <div style="font-size:13px;color:var(--sub);line-height:1.6">수령 시간이 아닌 <strong style="color:#e8eaf6">첫 사용 시간부터</strong> 카운트. 공항에서 받아도 호텔 도착 후 첫 탑승 시 시작.</div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px">
+      <div style="font-size:20px;margin-bottom:8px">🏛️</div>
+      <div style="font-weight:700;font-size:14px;color:#c5cae9;margin-bottom:6px">무료 입장 주요 명소</div>
+      <div style="font-size:13px;color:var(--sub);line-height:1.6">제로니무스 수도원 (€10) · 벨렝탑 (€6) · 상조르즈 성 (€15) · 산타 주스타 엘리베이터 (€5.5) · 비카 케이블카</div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px">
+      <div style="font-size:20px;margin-bottom:8px">🚇</div>
+      <div style="font-weight:700;font-size:14px;color:#c5cae9;margin-bottom:6px">교통 무제한 포함</div>
+      <div style="font-size:13px;color:var(--sub);line-height:1.6">메트로 · 트램 · 버스 · 산타 주스타 · 비카 케이블카 · 공항~시내 무제한. ⚠️ Sintra 버스 434 제외</div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px">
+      <div style="font-size:20px;margin-bottom:8px">📍</div>
+      <div style="font-weight:700;font-size:14px;color:#c5cae9;margin-bottom:6px">교환 장소</div>
+      <div style="font-size:13px;color:var(--sub);line-height:1.6">리스본 공항 1층 관광안내소 (도착 후 바로!) · 호텔 컨시어지 · 시내 관광안내소 · 일부 기차역</div>
+    </div>
+  </div>
+</div>
+
+<div class="section" id="travel-docs" style="scroll-margin-top:60px">
+  <div class="sec-eyebrow">TRAVEL DOCS</div>
+  <div class="sec-title">📁 여행 자료 모음</div>
+  <div class="sec-sub">리스본·포르투 관련 PDF 자료를 한 곳에서 열람하고 다운로드하세요</div>
+
+  <div class="pdoc-grid">
+
+    <!-- 1. 리스보아 카드 한국어 번역본 -->
+    <div class="pdoc-card">
+      <div class="pdoc-icon">🇰🇷</div>
+      <div class="pdoc-info">
+        <div class="pdoc-name">리스보아 카드 한국어 번역본</div>
+        <div class="pdoc-meta">리스보아카드_한국어번역.pdf &nbsp;·&nbsp; 377KB</div>
+        <div class="pdoc-desc">리스보아 카드 사용법·혜택을 한국어로 번역한 자료</div>
+      </div>
+      <div class="pdoc-btns">
+        <button class="pdoc-preview-btn" onclick="togglePdf(this,'리스보아카드_한국어번역.pdf')">📄 미리보기</button>
+        <a class="pdoc-dl-btn" href="리스보아카드_한국어번역.pdf" download>⬇ 다운로드</a>
+      </div>
+      <div class="pdoc-viewer" style="display:none">
+        <iframe style="width:100%;height:680px;border:none;background:#1a1d2e;display:block" title="리스보아 카드 한국어 번역본"></iframe>
+        <p class="pdoc-hint">PDF가 보이지 않으면 <a href="리스보아카드_한국어번역.pdf" target="_blank">새 탭에서 열기</a></p>
+      </div>
+    </div>
+
+    <!-- 2. 리스보아 카드 바우처 -->
+    <div class="pdoc-card">
+      <div class="pdoc-icon">🎫</div>
+      <div class="pdoc-info">
+        <div class="pdoc-name">리스보아 카드 바우처</div>
+        <div class="pdoc-meta">리스보아카드_바우처.pdf &nbsp;·&nbsp; 74KB</div>
+        <div class="pdoc-desc">교환용 바우처 — 공항 안내소에서 실물 카드로 교환</div>
+      </div>
+      <div class="pdoc-btns">
+        <button class="pdoc-preview-btn" onclick="togglePdf(this,'리스보아카드_바우처.pdf')">📄 미리보기</button>
+        <a class="pdoc-dl-btn" href="리스보아카드_바우처.pdf" download>⬇ 다운로드</a>
+      </div>
+      <div class="pdoc-viewer" style="display:none">
+        <iframe style="width:100%;height:680px;border:none;background:#1a1d2e;display:block" title="리스보아 카드 바우처"></iframe>
+        <p class="pdoc-hint">PDF가 보이지 않으면 <a href="리스보아카드_바우처.pdf" target="_blank">새 탭에서 열기</a></p>
+      </div>
+    </div>
+
+    <!-- 3. 리스본 소개 가이드 -->
+    <div class="pdoc-card">
+      <div class="pdoc-icon">🏛️</div>
+      <div class="pdoc-info">
+        <div class="pdoc-name">리스본 소개 종합 가이드</div>
+        <div class="pdoc-meta">리스본_소개.pdf &nbsp;·&nbsp; 21.7MB &nbsp;·&nbsp; 15페이지</div>
+        <div class="pdoc-desc">리스본 역사·문화·볼거리 종합 안내서</div>
+      </div>
+      <div class="pdoc-btns">
+        <button class="pdoc-preview-btn" onclick="togglePdf(this,'리스본_소개.pdf')">📄 미리보기</button>
+        <a class="pdoc-dl-btn" href="리스본_소개.pdf" download>⬇ 다운로드</a>
+      </div>
+      <div class="pdoc-viewer" style="display:none">
+        <iframe style="width:100%;height:780px;border:none;background:#1a1d2e;display:block" title="리스본 소개 가이드"></iframe>
+        <p class="pdoc-hint">PDF가 보이지 않으면 <a href="리스본_소개.pdf" target="_blank">새 탭에서 열기</a></p>
+      </div>
+    </div>
+
+    <!-- 4. 리스보아 카드 원본 설명서 -->
+    <div class="pdoc-card">
+      <div class="pdoc-icon">🇵🇹</div>
+      <div class="pdoc-info">
+        <div class="pdoc-name">리스보아 카드 원본 설명서</div>
+        <div class="pdoc-meta">리스보아카드_설명서.pdf &nbsp;·&nbsp; 9.3MB</div>
+        <div class="pdoc-desc">포르투갈어 원본 공식 설명서 (96페이지)</div>
+      </div>
+      <div class="pdoc-btns">
+        <button class="pdoc-preview-btn" onclick="togglePdf(this,'리스보아카드_설명서.pdf')">📄 미리보기</button>
+        <a class="pdoc-dl-btn" href="리스보아카드_설명서.pdf" download>⬇ 다운로드</a>
+      </div>
+      <div class="pdoc-viewer" style="display:none">
+        <iframe style="width:100%;height:780px;border:none;background:#1a1d2e;display:block" title="리스보아 카드 원본 설명서"></iframe>
+        <p class="pdoc-hint">PDF가 보이지 않으면 <a href="리스보아카드_설명서.pdf" target="_blank">새 탭에서 열기</a></p>
+      </div>
+    </div>
+
+    <div class="pdoc-card">
+      <div class="pdoc-icon">☀️</div>
+      <div class="pdoc-info">
+        <div class="pdoc-name">리스본 여름 가이드</div>
+        <div class="pdoc-meta">리스본_여름_가이드.pdf &nbsp;·&nbsp; 114KB &nbsp;·&nbsp; 2페이지</div>
+        <div class="pdoc-desc">신발·나이트라이프·교통·의류·예약 팁 7가지 (gtgabroad 번역본)</div>
+      </div>
+      <div class="pdoc-btns">
+        <button class="pdoc-preview-btn" onclick="togglePdf(this,'리스본_여름_가이드.pdf')">📄 미리보기</button>
+        <a class="pdoc-dl-btn" href="리스본_여름_가이드.pdf" download>⬇ 다운로드</a>
+      </div>
+      <div class="pdoc-viewer" style="display:none">
+        <iframe style="width:100%;height:780px;border:none;background:#1a1d2e;display:block" title="리스본 여름 가이드"></iframe>
+        <p class="pdoc-hint">PDF가 보이지 않으면 <a href="리스본_여름_가이드.pdf" target="_blank">새 탭에서 열기</a></p>
+      </div>
+    </div>
+
+  </div><!-- /.pdoc-grid -->
+</div>
+
+<div style="text-align:center;padding:40px 20px;color:var(--sub);font-size:13px;border-top:1px solid var(--border)">
+  🇵🇹 포르투갈 7박 8일 · 2026.07.31 – 08.07 · 즐거운 여행 되세요!
+</div>
+
+<script>
+// ── 실제 구글 지도 KML 장소 데이터 ──
+const PLACES = [
+  // 숙소
+  {n:'더 리스보네이르 아파트먼트', d:'리스본 숙소', layer:'숙소', cat:'hotel', lat:38.7166268, lng:-9.1436794},
+  // 8/1(토) 동선
+  {n:'파스테이스 드 벨렝', d:'에그타르트 원조 아침 식사 · 8:00 오픈', layer:'8/1(토)', cat:'d1', lat:38.6975105, lng:-9.2032276},
+  {n:'프라사 두 임페리우 - 제국광장', d:'수도원 입장 전 구경', layer:'8/1(토)', cat:'d1', lat:38.6959948, lng:-9.2059935},
+  {n:'제로니무스 수도원', d:'9:30 대기줄 서기 · 10시 오픈', layer:'8/1(토)', cat:'d1', lat:38.6978909, lng:-9.2067039},
+  {n:'발견기념비', d:'대항해 시대 영웅들을 기리는 기념비', layer:'8/1(토)', cat:'d1', lat:38.6935973, lng:-9.2057115},
+  {n:'벨렝탑', d:'16세기 마누엘 양식 · 테주강 위 석조 탑', layer:'8/1(토)', cat:'d1', lat:38.6915837, lng:-9.2159773},
+  {n:'상 코메르시우 광장', d:'테주 강변 넓고 역사적인 광장', layer:'8/1(토)', cat:'d1', lat:38.7072828, lng:-9.1363613},
+  {n:'아우구스타 스트리트 아치', d:'개선문 전망대', layer:'8/1(토)', cat:'d1', lat:38.7084447, lng:-9.1368243},
+  {n:'산타 후스타 엘리베이터', d:'리스보아 카드 무료', layer:'8/1(토)', cat:'d1', lat:38.7121301, lng:-9.1394297},
+  {n:'호시우광장', d:'물결무늬 바닥 · 갈랑 커피', layer:'8/1(토)', cat:'d1', lat:38.7138036, lng:-9.1393681},
+  {n:'Cervejaria Ramiro', d:'해산물 맛집 · 새우 내장이 맛있다고', layer:'8/1(토)', cat:'d1', lat:38.720257, lng:-9.1357429},
+  // 8/2(일) 동선
+  {n:'Martim Moniz Square', d:'28번 트램 탑승', layer:'8/2(일)', cat:'d2', lat:38.7160271, lng:-9.136315},
+  {n:'Oficina 32', d:'알파마 입구', layer:'8/2(일)', cat:'d2', lat:38.7139629, lng:-9.1312998},
+  {n:'상조르즈 성', d:'리스본 360도 파노라마 · 공작새', layer:'8/2(일)', cat:'d2', lat:38.7139092, lng:-9.1334762},
+  {n:'막달레나 마리아 성당', d:'미사 11시 15분 (영어)', layer:'8/2(일)', cat:'d2', lat:38.710112, lng:-9.134924},
+  {n:'리스본 대성당', d:'일요일 미사 11시 30분', layer:'8/2(일)', cat:'d2', lat:38.7098339, lng:-9.1329535},
+  {n:'Maria Catita', d:'문어 밥이 맛있다는 소문이 (점심)', layer:'8/2(일)', cat:'d2', lat:38.7092832, lng:-9.1343429},
+  {n:'포르타스 두 솔 전망대', d:'알파마 전망 · 무료', layer:'8/2(일)', cat:'d2', lat:38.7119253, lng:-9.1299568},
+  {n:'산타루치아 전망대', d:'아줄레주 타일 벽화 · 무료', layer:'8/2(일)', cat:'d2', lat:38.7116956, lng:-9.1301972},
+  {n:'비카 푸니클라 포토존', d:'Bica Funicular 인생샷 포인트', layer:'8/2(일)', cat:'d2', lat:38.7084884, lng:-9.1467485},
+  {n:'R. S. Paulo (Bica) 탑승', d:'비카 케이블카 탑승 지점', layer:'8/2(일)', cat:'d2', lat:38.708504, lng:-9.146688},
+  {n:'Bica - Lg. Calhariz 하차', d:'비카 케이블카 하차 지점', layer:'8/2(일)', cat:'d2', lat:38.71076, lng:-9.1458},
+  {n:'LX Factory (리스본 성수동)', d:'빈티지 복합 문화공간 · 일요 플리마켓 12~20시', layer:'8/2(일)', cat:'d2', lat:38.7034602, lng:-9.1787831},
+  // 맛집
+  {n:'Francesinhas Al Forno da Baixa', d:'프란세지냐 맛집 (포르투)', layer:'맛집', cat:'food', lat:41.1476136, lng:-8.6120632},
+  {n:'Tupi', d:'투피 / 크로아상 빵집 (포르투)', layer:'맛집', cat:'food', lat:41.1472306, lng:-8.6086461},
+  {n:'ENCAIXADOS', d:'뽈뽀/정어리 해산물 식당 (포르투)', layer:'맛집', cat:'food', lat:41.1462232, lng:-8.6134836},
+  {n:'Gelataria Portuense', d:'젤라또 (포르투)', layer:'맛집', cat:'food', lat:41.1471716, lng:-8.6094343},
+  {n:'Grupo Desportivo Infante Dom Henrique', d:'해물밥 맛집 (포르투)', layer:'맛집', cat:'food', lat:41.1400736, lng:-8.6151494},
+  {n:'나타 리스보아', d:'퀘이자도, 에그타르트 맛집 (포르투)', layer:'맛집', cat:'food', lat:41.1451638, lng:-8.6114675},
+  {n:'Pomme Eatery', d:'트렌디 맛집 1순위 (리스본)', layer:'맛집', cat:'food', lat:38.7187832, lng:-9.1518574},
+  {n:'Cosmo', d:'문어, 스테이크 트렌디 맛집 (리스본)', layer:'맛집', cat:'food', lat:38.7080936, lng:-9.1450911},
+  {n:'Holy Wine 🍾', d:'홀리 와인 · 네츄럴 와인샵 (리스본)', layer:'맛집', cat:'food', lat:38.7112906, lng:-9.153012},
+  {n:'Magnolia Bistrot & Winebar', d:'골목 코너 분위기 와인바 (리스본)', layer:'맛집', cat:'food', lat:38.7153688, lng:-9.1517357},
+  {n:'Restaurant - Cervejaria Ramiro', d:'해산물 맛집 · 새우 내장 추천 (리스본)', layer:'맛집', cat:'food', lat:38.720257, lng:-9.1357429},
+  {n:'Casa Guedes Gaia', d:'뽈뽀/프란세지냐 야외좌석 (포르투)', layer:'맛집', cat:'food', lat:41.1373574, lng:-8.6143543},
+  {n:'파스테이스 드 벨렝', d:'에그타르트 원조 (리스본)', layer:'맛집', cat:'food', lat:38.6975105, lng:-9.2032276},
+  {n:'Musa da Bica', d:'비카 근처 카페 (리스본)', layer:'맛집', cat:'food', lat:38.7086722, lng:-9.1473381},
+  {n:'오트레보 (비파나)', d:"로컬 샌드위치 '비파나' 판매 (리스본)", layer:'맛집', cat:'food', lat:38.710865, lng:-9.1430943},
+  {n:'Bacalhau', d:'대구요리 전문 (리스본)', layer:'맛집', cat:'food', lat:38.7083122, lng:-9.1457004},
+  {n:'Lisboa Tu & Eu 2', d:'리스본 로컬 식당', layer:'맛집', cat:'food', lat:38.7094415, lng:-9.1330448},
+  // Ramiro 대안 · 해산물
+  {n:'⭐Cervejaria Ribadouro (Ramiro 대안)', d:'⭐4.4 · 1947년 개업 · 타이거 새우·게·거위 따개비·랍스터 · Mariscada 5종 모둠 · 새벽 1:30까지', layer:'맛집', cat:'food', lat:38.7200, lng:-9.1464},
+  // 포르투갈 전통 육류
+  {n:'⭐Sala de Corte (소고기·세계34위)', d:'⭐세계 스테이크하우스 34위 · 이베리아 숙성육 · 호스퍼 숯불구이 · 카이스 두 소드레', layer:'맛집', cat:'food', lat:38.7071, lng:-9.1462},
+  {n:'Carvoaria Jacto (1953년 숯불구이)', d:'⭐1953년 개업 · 미란데사 재래종·와규·에스페타다(꼬치) · 아로이우스', layer:'맛집', cat:'food', lat:38.7265, lng:-9.1330},
+  {n:'⭐Jorge d\'Amália (피카파우·비토케)', d:'⭐리스본 최고 비토케 · 피카파우(마늘소스 소고기) · 아주다 지역 타스카', layer:'맛집', cat:'food', lat:38.7036, lng:-9.1970},
+  {n:'O Tachadas (대형 티본)', d:'⭐대형 티본 스테이크 명물 · 접시 가득 · 산토스 지역 타스카 · 가성비', layer:'맛집', cat:'food', lat:38.7084, lng:-9.1546},
+  {n:'⭐Casa dos Frangos de Moscavide (숯불닭 1위)', d:'⭐NiT 독자투표 1위(37%) · 리스본 최고 숯불 닭 · 모스카비드', layer:'맛집', cat:'food', lat:38.7454, lng:-9.1008},
+  {n:'Rui dos Pregos (프레구 샌드위치)', d:'⭐소고기 샌드위치(prego) 전문 · 벨렝/주케이라·도카스 등 복수 지점', layer:'맛집', cat:'food', lat:38.6981, lng:-9.1985},
+  // 저녁 식당 추천 (날짜별)
+  {n:'⭐Taberna Sal Grosso (8/1 추천)', d:'⭐4.7 · € 저렴 · 문어·감바스·소꼬리 타파스 · 토 영업·소형 예약권장', layer:'맛집', cat:'food', lat:38.7136987, lng:-9.1244447},
+  {n:'Taberna da Baixa (8/1 대안)', d:'⭐4.5 · €€ · 해산물밥·감바스 · 매일 ~22시·숙소 근처', layer:'맛집', cat:'food', lat:38.7115321, lng:-9.1364166},
+  {n:'⭐O Rio Marisqueira (8/2 1순위)', d:'⭐4.8 · €€ · 해산물밥·문어·감바스 · 일 ~22:30', layer:'맛집', cat:'food', lat:38.6952525, lng:-9.212664},
+  {n:'Chickinho LX Factory (8/2 대안)', d:'⭐4.3 · € 저렴 · 페리페리 치킨 · 일 영업·플리마켓 후', layer:'맛집', cat:'food', lat:38.7028079, lng:-9.178653},
+  {n:'⭐Ribeira Square (8/3 추천)', d:'⭐4.7 · €€ · 강변뷰 해산물밥 · 월 18~23시', layer:'맛집', cat:'food', lat:41.1408965, lng:-8.6128941},
+  {n:'⭐Bó tá quente (8/3 대안)', d:'⭐4.8 · € 저렴 · 수제 비파나 · 월 ~22:30·빠르게', layer:'맛집', cat:'food', lat:41.144111, lng:-8.612059},
+  {n:'A Tasquinha (8/4 대안)', d:'⭐4.3 · €€ · 문어밥 · 화 저녁 영업', layer:'맛집', cat:'food', lat:41.1471358, lng:-8.6172744},
+  {n:'⭐Cantinho Senhor do Padrão (8/5 추천)', d:'⭐4.5 · € 저렴 · 숯불 정어리·문어 · 수 ~23시·해변 근처', layer:'맛집', cat:'food', lat:41.1808639, lng:-8.6941233},
+  {n:'Casa Açoreana (8/5 대안)', d:'⭐4.3 · € · €20 풀코스 · 현금 권장', layer:'맛집', cat:'food', lat:41.1805013, lng:-8.6885339},
+  {n:'Casa Guedes Tradicional (8/6 대안)', d:'⭐4.5 · € 저렴 · 돼지목살 샌드위치 · ~23시', layer:'맛집', cat:'food', lat:41.146016, lng:-8.6034864},
+  {n:'⭐Tempêro D\'Maria (해물밥 강추)', d:'한국인 여행자 극찬 · 해물밥 · 가이아 강변 · 포르투갈 여행 통틀어 최고 해물밥', layer:'맛집', cat:'food', lat:41.1378, lng:-8.6158},
+  {n:'Gazela (핫도그 명물)', d:'포르투 최고 코지도/핫도그 · 현지인 단골 줄서는 곳', layer:'맛집', cat:'food', lat:41.1468, lng:-8.6087},
+  {n:'Muro do Bacalhau (대구 전문)', d:'히베이라 강변 · 바칼라우(대구) 전문 · 강뷰 테라스', layer:'맛집', cat:'food', lat:41.1404, lng:-8.6148},
+  {n:'Floresta Cafe by Hungry Biker', d:'루아 다스 플로레스 · 브런치·카페 · 분위기 좋음', layer:'맛집', cat:'food', lat:41.1454, lng:-8.6155},
+  // 명소
+  {n:'국립 판테온', d:'알파마 · 포르투갈 위인 안치', layer:'명소', cat:'sight', lat:38.7149944, lng:-9.1246835},
+  {n:'국립 타일 박물관', d:'아줄레주 타일 전문 박물관', layer:'명소', cat:'sight', lat:38.7250559, lng:-9.113539},
+  {n:'Viewpoint of Monte Agudo', d:'리스본 전망대', layer:'명소', cat:'sight', lat:38.7261506, lng:-9.1315064},
+  {n:'상 페드루 드 알칸타라 전망대', d:'노을 명승지 · 리스본 시내 전망', layer:'명소', cat:'sight', lat:38.7153095, lng:-9.1441762},
+  {n:'국립 고대 미술관', d:'포르투갈 고대 미술품 소장', layer:'명소', cat:'sight', lat:38.7048412, lng:-9.1614643},
+  {n:'Miradouro do Bairro do Alvito', d:'리스본 서쪽 전망대', layer:'명소', cat:'sight', lat:38.7136496, lng:-9.179629},
+  {n:'팔라레 7다리 경험 (Pilar 7)', d:'4월 25일 다리 내부 전망대', layer:'명소', cat:'sight', lat:38.7004031, lng:-9.1788387},
+  {n:'카르모 수녀원', d:'1755년 지진 흔적 · 고고학 박물관', layer:'명소', cat:'sight', lat:38.7120383, lng:-9.1406129},
+  {n:'아주다 궁전', d:'포르투갈 왕궁 · 벨렝 지구', layer:'명소', cat:'sight', lat:38.7076247, lng:-9.1979777},
+  {n:'에두아르두 7세 공원', d:'리스본 중심 공원 · 그린하우스', layer:'명소', cat:'sight', lat:38.7283001, lng:-9.1526828},
+  {n:'미라도루 다 그라사', d:'알파마 북쪽 전망대', layer:'명소', cat:'sight', lat:38.7164509, lng:-9.1315937},
+  {n:'Feira da Ladra', d:'리스본 벼룩시장 (화·토)', layer:'명소', cat:'sight', lat:38.715248, lng:-9.1262075},
+  {n:'아폰수 드 알부케르크 정원', d:'벨렝 지구 정원', layer:'명소', cat:'sight', lat:38.6965652, lng:-9.2002225},
+  {n:'아주다 궁전', d:'벨렝 왕궁', layer:'명소', cat:'sight', lat:38.7076247, lng:-9.1979777},
+  {n:'벨렝 궁전', d:'포르투갈 대통령 공식 관저', layer:'명소', cat:'sight', lat:38.6979905, lng:-9.2005493},
+  {n:'가이아 케이블카 (모루공원, 하행)', d:'포르투 빌라노바 가이아', layer:'명소', cat:'sight', lat:41.138002, lng:-8.6095865},
+  {n:'모루 정원', d:'빌라노바 가이아 전망', layer:'명소', cat:'sight', lat:41.1371459, lng:-8.6092935},
+  {n:'가이아 케이블카 (가이아, 상행)', d:'포르투 케이블카 상행', layer:'명소', cat:'sight', lat:41.1373375, lng:-8.6162122},
+  {n:'Mercado do Bolhão', d:'포르투 100년 역사 재래시장', layer:'명소', cat:'sight', lat:41.1493855, lng:-8.6071175},
+  // 쇼핑
+  {n:'Amor Fati - Vintage Store', d:'리스본 빈티지 샵', layer:'쇼핑', cat:'shop', lat:38.7161888, lng:-9.1374761},
+  {n:'아 진지냐 (체리 리큐르)', d:'포르투갈 전통 체리주', layer:'쇼핑', cat:'shop', lat:38.7147387, lng:-9.1390797},
+  {n:'Feira da Ladra (벼룩시장)', d:'알파마 벼룩시장', layer:'쇼핑', cat:'shop', lat:38.715248, lng:-9.1262075},
+  {n:'HUMANA 빈티지샵 (치아두)', d:'빈티지 편집샵', layer:'쇼핑', cat:'shop', lat:38.7229399, lng:-9.1351381},
+  {n:'HUMANA 빈티지샵 (리베르다데)', d:'빈티지 편집샵', layer:'쇼핑', cat:'shop', lat:38.7259492, lng:-9.147703},
+  {n:'HUMANA Vintage (알파마)', d:'빈티지 편집샵', layer:'쇼핑', cat:'shop', lat:38.71827, lng:-9.13004},
+  {n:'Cork & Co (기념품)', d:'코르크 기념품점 (리스본)', layer:'쇼핑', cat:'shop', lat:38.7110288, lng:-9.1439872},
+  {n:'Caves Cálem', d:'포르투 포트와인 셀러', layer:'쇼핑', cat:'shop', lat:41.1381447, lng:-8.6109182},
+  {n:'Taberninha do Manel', d:'빌라노바 가이아 와인바', layer:'쇼핑', cat:'shop', lat:41.1380369, lng:-8.6114837},
+  {n:'산드만 와이너리', d:'포르투 포트와인 셀러', layer:'쇼핑', cat:'shop', lat:41.137649, lng:-8.6124},
+  {n:'Barris Do Douro Restaurante', d:'빌라노바 가이아 강변 레스토랑', layer:'쇼핑', cat:'shop', lat:41.1384419, lng:-8.6104589},
+  {n:'Caves Ferreira', d:'페레이라 포트와인 셀러', layer:'쇼핑', cat:'shop', lat:41.1369189, lng:-8.619281},
+  {n:'테일러스 와이너리', d:'테일러스 포트와인 셀러', layer:'쇼핑', cat:'shop', lat:41.1339521, lng:-8.6142869},
+  {n:'그라함스 포트 롯지', d:'그라함스 포트와인 셀러', layer:'쇼핑', cat:'shop', lat:41.1380513, lng:-8.625111},
+  // 교통
+  {n:'리스본 포르텔라 국제공항', d:'리스본 공항 (LIS)', layer:'교통', cat:'transit', lat:38.7788454, lng:-9.1319758},
+  {n:'리스본 오리엔트역', d:'Lisboa Oriente · 포르투행 기차', layer:'교통', cat:'transit', lat:38.76783, lng:-9.101165},
+  {n:'산타 아폴로니아 역', d:'Santa Apolónia · 포르투로 가는 역', layer:'교통', cat:'transit', lat:38.71436, lng:-9.12235},
+];
+
+const CAT_COLOR = {
+  d1:'#e53935', d2:'#00897b', food:'#e65100', sight:'#1e88e5',
+  shop:'#7b1fa2', hotel:'#e91e63', transit:'#455a64'
+};
+const CAT_LABEL = {
+  d1:'8/1동선', d2:'8/2동선', food:'맛집', sight:'명소',
+  shop:'쇼핑', hotel:'숙소', transit:'교통'
+};
+
+function renderPlaces(filter) {
+  const list = document.getElementById('ppList');
+  const items = filter === 'all' ? PLACES : PLACES.filter(p => {
+    if (filter === 'd1') return p.cat === 'd1';
+    if (filter === 'd2') return p.cat === 'd2';
+    if (filter === 'food') return p.cat === 'food';
+    if (filter === 'sight') return p.cat === 'sight';
+    if (filter === 'shop') return p.cat === 'shop';
+    return true;
+  });
+  list.innerHTML = items.map((p, i) => `
+    <div class="pp-item" onclick="window.open('https://www.google.com/maps?q=${p.lat},${p.lng}','_blank')">
+      <div class="pp-num" style="background:${CAT_COLOR[p.cat]}22;color:${CAT_COLOR[p.cat]}">${i+1}</div>
+      <div class="pp-info">
+        <div class="pp-name">${p.n}</div>
+        <div class="pp-desc">${p.d}</div>
+        <div class="pp-layer">${CAT_LABEL[p.cat]} · ${p.layer}</div>
+      </div>
+      <a class="pp-gmap" href="https://www.google.com/maps?q=${p.lat},${p.lng}" target="_blank" onclick="event.stopPropagation()">구글맵 →</a>
+    </div>
+  `).join('');
+}
+
+function ppTab(btn, filter) {
+  document.querySelectorAll('.pp-tab').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderPlaces(filter);
+}
+
+// ── Google Sheets 실시간 연동 ──
+const GS_ID = '1SIAMyTwB0FLL2wpzduRN3Tf_9PXRg1v6';
+const GS_SHEETS = [
+  '7.31(%EA%B8%88)', '8.1(%ED%86%A0)', '8.2(%EC%9D%BC)', '8.3(%EC%9B%94)',
+  '8.4(%ED%99%94)', '8.5(%EC%88%98)', '8.6(%EB%AA%A9)', '8.7(%EA%B8%88)'
+];
+const gsCache = {};
+
+function parseCSV(text) {
+  const rows = [];
+  let cur = [], field = '', inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQ) {
+      if (c === '"') { if (text[i+1] === '"') { field += '"'; i++; } else inQ = false; }
+      else field += c;
+    } else {
+      if (c === '"') inQ = true;
+      else if (c === ',') { cur.push(field); field = ''; }
+      else if (c === '\n') { cur.push(field); rows.push(cur); cur = []; field = ''; }
+      else if (c !== '\r') field += c;
+    }
+  }
+  if (cur.length || field) { cur.push(field); rows.push(cur); }
+  return rows;
+}
+
+function renderGsTimeline(el, rows) {
+  const dataRows = rows.filter(r => /^\d{1,2}:\d{2}/.test((r[0]||'').trim()));
+  if (!dataRows.length) {
+    el.innerHTML = '<div style="padding:32px;text-align:center;color:var(--sub)">📭 시트에 일정 데이터가 없습니다</div>';
+    return;
+  }
+  el.innerHTML = dataRows.map(row => {
+    const rawTime = (row[0]||'').trim();
+    const time = rawTime.includes('~') ? rawTime.split('~')[0].trim() : rawTime;
+    const place = (row[2]||'').trim();
+    const content = (row[3]||'').trim();
+    const transport = (row[4]||'').trim();
+    const memo = (row[5]||'').trim();
+    const cost = (row[6]||'').trim();
+    let notes = '';
+    if (transport) notes += `<div class="tl-note">🚌 ${transport}</div>`;
+    if (memo) notes += `<div class="tl-note">💡 ${memo}</div>`;
+    const costBadge = cost ? ` <span class="cost-badge">${cost}</span>` : '';
+    return `<div class="tl-item">
+      <div class="tl-time"><div class="t">${time}</div></div>
+      <div class="tl-body">
+        ${place ? `<div class="tl-place">${place}</div>` : ''}
+        <div class="tl-desc">${content}${costBadge}${notes}</div>
+      </div>
+      <div class="tl-actions"></div>
+    </div>`;
+  }).join('');
+}
+
+async function loadGsDay(n) {
+  const panel = document.getElementById('dp-'+n);
+  if (!panel) return;
+  const tl = panel.querySelector('.timeline');
+  if (!tl) return;
+  if (gsCache[n]) { renderGsTimeline(tl, gsCache[n]); return; }
+  tl.innerHTML = '<div class="gs-loading">⏳ 구글 시트에서 일정을 불러오는 중...</div>';
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${GS_ID}/gviz/tq?tqx=out:csv&sheet=${GS_SHEETS[n]}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('fetch ' + res.status);
+    const text = await res.text();
+    const rows = parseCSV(text);
+    gsCache[n] = rows;
+    renderGsTimeline(tl, rows);
+  } catch(e) {
+    tl.innerHTML = '<div class="gs-err">❌ 일정을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</div>';
+  }
+}
+
+function showDay(n, btn) {
+  document.querySelectorAll('.day-panel').forEach(p => p.classList.remove('show'));
+  document.querySelectorAll('.dt-btn').forEach(b => b.classList.remove('on'));
+  document.getElementById('dp-'+n).classList.add('show');
+  btn.classList.add('on');
+  loadGsDay(n);
+}
+// ── Leaflet 지도 ──
+const LAYER_CFG = {
+  d1:      { color:'#e53935', label:'8/1(토) 동선' },
+  d2:      { color:'#43a047', label:'8/2(일) 동선' },
+  d3:      { color:'#fb8c00', label:'8/3(월) 동선' },
+  food:    { color:'#ff7043', label:'맛집' },
+  sight:   { color:'#1e88e5', label:'명소' },
+  shop:    { color:'#fdd835', label:'쇼핑' },
+  hotel:   { color:'#e91e63', label:'숙소' },
+  transit: { color:'#546e7a', label:'기차역·공항' }
+};
+
+// KML 동선 좌표 (lng,lat → lat,lng 변환)
+const ROUTES = {
+  d1: [[38.7167086,-9.1444116],[38.6975105,-9.2032276],[38.6959948,-9.2059935],[38.6978909,-9.2067039],[38.6935973,-9.2057115],[38.6915837,-9.2159773],[38.7072828,-9.1363613],[38.7084447,-9.1368243],[38.7121301,-9.1394297],[38.7138036,-9.1393681],[38.720257,-9.1357429]],
+  d2: [[38.7166268,-9.1436794],[38.7160271,-9.136315],[38.7139212,-9.1311654],[38.7139092,-9.1334762],[38.710112,-9.134924],[38.7098339,-9.1329535],[38.7093167,-9.1345772],[38.7119253,-9.1299568],[38.7116956,-9.1301972],[38.7084992,-9.1466473],[38.7084615,-9.1467331],[38.71076,-9.1458],[38.7059638,-9.1453072],[38.7034602,-9.1787831]],
+  d3: [[38.71712,-9.1435068],[38.7145827,-9.1417619],[38.7993785,-9.385946],[38.7878053,-9.3903234],[38.7928228,-9.3891647],[38.7963069,-9.3960244],[38.7970531,-9.3905666],[38.7976627,-9.3906554],[38.7994454,-9.3852165],[38.7145288,-9.1417608],[38.71436,-9.12235],[41.1487733,-8.5851806],[41.145492,-8.609544],[41.1488923,-8.6067546],[41.1404099,-8.6125664],[41.1455094,-8.6098569]]
+};
+
+let leafletMap = null;
+const lGroups = {};   // layer key → { markers: L.LayerGroup, route: L.Polyline }
+const activeSet = new Set(Object.keys(LAYER_CFG));
+
+function mkIcon(color) {
+  return L.divIcon({
+    className: '',
+    html: `<div style="width:12px;height:12px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.6)"></div>`,
+    iconSize: [12, 12], iconAnchor: [6, 6]
+  });
+}
+
+function initLeaflet() {
+  if (leafletMap) return;
+  leafletMap = L.map('leaflet-map', { zoomControl: true, attributionControl: false })
+    .setView([38.72, -9.14], 13);
+
+  L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&hl=ko&x={x}&y={y}&z={z}', {
+    maxZoom: 20,
+    subdomains: ['0','1','2','3']
+  }).addTo(leafletMap);
+
+  L.control.attribution({ prefix: '© Google Maps' }).addTo(leafletMap);
+
+  // 마커 레이어 그룹 생성
+  Object.keys(LAYER_CFG).forEach(key => {
+    lGroups[key] = { markers: L.layerGroup().addTo(leafletMap), route: null };
+  });
+
+  // PLACES → 마커 추가
+  PLACES.forEach(p => {
+    const key = p.cat;
+    if (!lGroups[key] || !p.lat) return;
+    const color = (LAYER_CFG[key] || {}).color || '#fff';
+    const popup = `<div style="font-size:13px;min-width:140px"><b>${p.n}</b><br><span style="color:#888">${p.d || ''}</span><br><a href="https://www.google.com/maps?q=${p.lat},${p.lng}" target="_blank" style="color:#7986cb">🗺️ 구글맵 열기</a></div>`;
+    L.marker([p.lat, p.lng], { icon: mkIcon(color) })
+      .bindPopup(popup)
+      .addTo(lGroups[key].markers);
+  });
+
+  // 동선 폴리라인 추가
+  ['d1','d2','d3'].forEach(key => {
+    const color = LAYER_CFG[key].color;
+    const line = L.polyline(ROUTES[key], {
+      color, weight: 3, opacity: 0.85,
+      dashArray: key === 'd3' ? '8,6' : null
+    }).addTo(leafletMap);
+    lGroups[key].route = line;
+  });
+
+  // 번호 마커 (동선 경유지)
+  ['d1','d2','d3'].forEach(key => {
+    ROUTES[key].forEach((pt, i) => {
+      if (i === 0) return;
+      const color = LAYER_CFG[key].color;
+      const numIcon = L.divIcon({
+        className: '',
+        html: `<div style="width:18px;height:18px;border-radius:50%;background:${color};border:2px solid #fff;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.7)">${i}</div>`,
+        iconSize:[18,18], iconAnchor:[9,9]
+      });
+      L.marker(pt, { icon: numIcon }).addTo(lGroups[key].markers);
+    });
+  });
+}
+
+function toggleLayer(btn) {
+  const key = btn.dataset.layer;
+  const grp = lGroups[key];
+  if (!grp) return;
+  const isOn = btn.classList.toggle('on');
+  if (isOn) {
+    leafletMap.addLayer(grp.markers);
+    if (grp.route) leafletMap.addLayer(grp.route);
+    activeSet.add(key);
+  } else {
+    leafletMap.removeLayer(grp.markers);
+    if (grp.route) leafletMap.removeLayer(grp.route);
+    activeSet.delete(key);
+  }
+}
+
+// 지도 섹션 진입 시 초기화
+document.querySelector('a[href="#map"]').addEventListener('click', () => {
+  setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 400);
+});
+
+function navOn(el, e) {
+  if (e) e.preventDefault();
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('on'));
+  el.classList.add('on');
+  const target = document.querySelector(el.getAttribute('href'));
+  if (target) target.scrollIntoView({behavior: 'smooth', block: 'start'});
+  if (el.getAttribute('href') === '#map') setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 400);
+}
+
+// 초기 렌더링
+renderPlaces('all');
+// 지도 초기화 (DOM 준비 후)
+window.addEventListener('load', initLeaflet);
+
+// ── 선물 목록 ──
+const DEFAULT_GIFTS = [
+  // 회사 팀원
+  {id:1001, person:'팀장님',  item:'포트와인 미니어처 TAYLOR\'s', budget:'€5~10', place:'빌라노바 가이아 셀러 / 공항 면세점', note:'', done:false},
+  {id:1002, person:'팀장님',  item:'포트와인 초콜릿',            budget:'€3~6',  place:'볼량 시장 / 공항 면세점',            note:'', done:false},
+  {id:1003, person:'송이사님', item:'포트와인 미니어처 TAYLOR\'s', budget:'€5~10', place:'빌라노바 가이아 셀러 / 공항 면세점', note:'', done:false},
+  {id:1004, person:'송이사님', item:'포트와인 초콜릿',            budget:'€3~6',  place:'볼량 시장 / 공항 면세점',            note:'', done:false},
+  {id:1005, person:'박이사님', item:'포트와인 미니어처 TAYLOR\'s', budget:'€5~10', place:'빌라노바 가이아 셀러 / 공항 면세점', note:'', done:false},
+  {id:1006, person:'박이사님', item:'포트와인 초콜릿',            budget:'€3~6',  place:'볼량 시장 / 공항 면세점',            note:'', done:false},
+  {id:1007, person:'최부장님', item:'포트와인 미니어처 TAYLOR\'s', budget:'€5~10', place:'빌라노바 가이아 셀러 / 공항 면세점', note:'', done:false},
+  {id:1008, person:'최부장님', item:'포트와인 초콜릿',            budget:'€3~6',  place:'볼량 시장 / 공항 면세점',            note:'', done:false},
+  {id:1009, person:'박부장님', item:'포트와인 미니어처 TAYLOR\'s', budget:'€5~10', place:'빌라노바 가이아 셀러 / 공항 면세점', note:'', done:false},
+  {id:1010, person:'박부장님', item:'포트와인 초콜릿',            budget:'€3~6',  place:'볼량 시장 / 공항 면세점',            note:'', done:false},
+  // 가족 — 추후 결정
+  {id:2001, person:'양가 부모님', item:'선물 미정 (추후 결정)', budget:'', place:'', note:'4분', done:false},
+  {id:2002, person:'동생 가정 1', item:'선물 미정 (추후 결정)', budget:'', place:'', note:'', done:false},
+  {id:2003, person:'동생 가정 2', item:'선물 미정 (추후 결정)', budget:'', place:'', note:'', done:false},
+  {id:2004, person:'동생 가정 3', item:'선물 미정 (추후 결정)', budget:'', place:'', note:'', done:false},
+];
+let gifts = JSON.parse(localStorage.getItem('pt-gifts') || 'null');
+if (!gifts) { gifts = DEFAULT_GIFTS; saveGifts(); }
+let editingId = null;
+
+function saveGifts() {
+  localStorage.setItem('pt-gifts', JSON.stringify(gifts));
+}
+
+function addGift() {
+  const person = document.getElementById('g-person').value.trim();
+  const item   = document.getElementById('g-item').value.trim();
+  const budget = document.getElementById('g-budget').value.trim();
+  const place  = document.getElementById('g-place').value.trim();
+  const note   = document.getElementById('g-note').value.trim();
+  if (!person || !item) { alert('받을 사람과 선물 품목은 필수입니다!'); return; }
+
+  if (editingId !== null) {
+    const idx = gifts.findIndex(g => g.id === editingId);
+    if (idx !== -1) gifts[idx] = { ...gifts[idx], person, item, budget, place, note };
+    editingId = null;
+    document.querySelector('#gift-form button').textContent = '➕ 추가하기';
+  } else {
+    gifts.push({ id: Date.now(), person, item, budget, place, note, done: false });
+  }
+  ['g-person','g-item','g-budget','g-place','g-note'].forEach(id => document.getElementById(id).value = '');
+  saveGifts();
+  renderGifts();
+}
+
+function toggleDone(id) {
+  const g = gifts.find(g => g.id === id);
+  if (g) g.done = !g.done;
+  saveGifts();
+  renderGifts();
+}
+
+function deleteGift(id) {
+  gifts = gifts.filter(g => g.id !== id);
+  saveGifts();
+  renderGifts();
+}
+
+function editGift(id) {
+  const g = gifts.find(g => g.id === id);
+  if (!g) return;
+  document.getElementById('g-person').value = g.person;
+  document.getElementById('g-item').value   = g.item;
+  document.getElementById('g-budget').value = g.budget;
+  document.getElementById('g-place').value  = g.place;
+  document.getElementById('g-note').value   = g.note;
+  editingId = id;
+  document.querySelector('#gift-form button').textContent = '✏️ 수정 저장';
+  document.getElementById('gift-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function renderGifts() {
+  const list  = document.getElementById('gift-list');
+  const empty = document.getElementById('gift-empty');
+  const stats = document.getElementById('gift-stats');
+
+  const total = gifts.length;
+  const done  = gifts.filter(g => g.done).length;
+  const people = [...new Set(gifts.map(g => g.person))];
+
+  // 통계
+  stats.innerHTML = total === 0 ? '' : `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 18px;font-size:13px;display:flex;gap:6px;align-items:center">
+      📦 총 <strong style="color:#c5cae9">${total}</strong>개
+    </div>
+    <div style="background:var(--surface);border:1px solid #43a047;border-radius:10px;padding:10px 18px;font-size:13px;display:flex;gap:6px;align-items:center">
+      ✅ 구매완료 <strong style="color:#a5d6a7">${done}</strong>개
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 18px;font-size:13px;display:flex;gap:6px;align-items:center">
+      ⏳ 미구매 <strong style="color:#ffcc80">${total - done}</strong>개
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 18px;font-size:13px;display:flex;gap:6px;align-items:center">
+      👥 대상 <strong style="color:#c5cae9">${people.length}</strong>명
+    </div>`;
+
+  if (total === 0) { list.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  // 사람별 그룹
+  const grouped = {};
+  people.forEach(p => grouped[p] = gifts.filter(g => g.person === p));
+
+  list.innerHTML = people.map(person => {
+    const items = grouped[person];
+    const pDone = items.filter(g => g.done).length;
+    return `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden">
+        <div style="padding:14px 18px;background:rgba(92,107,192,.12);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+          <span style="font-size:20px">👤</span>
+          <span style="font-weight:700;color:#c5cae9;font-size:15px">${person}</span>
+          <span style="margin-left:auto;font-size:12px;color:var(--sub)">${pDone}/${items.length} 완료</span>
+          <div style="width:80px;height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden">
+            <div style="width:${items.length ? (pDone/items.length*100) : 0}%;height:100%;background:#5c6bc0;transition:.3s"></div>
+          </div>
+        </div>
+        <div style="padding:12px 18px;display:flex;flex-direction:column;gap:8px">
+          ${items.map(g => `
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:${g.done ? 'rgba(67,160,71,.08)' : 'rgba(255,255,255,.03)'};border:1px solid ${g.done ? '#2e7d32' : 'rgba(255,255,255,.07)'};border-radius:10px;transition:.2s">
+              <input type="checkbox" ${g.done ? 'checked' : ''} onchange="toggleDone(${g.id})"
+                style="width:18px;height:18px;cursor:pointer;accent-color:#5c6bc0;flex-shrink:0">
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:600;font-size:14px;color:${g.done ? 'var(--sub)' : '#e8eaf6'};text-decoration:${g.done ? 'line-through' : 'none'}">${g.item}</div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+                  ${g.budget ? `<span style="font-size:11px;background:rgba(92,107,192,.2);color:#9fa8da;border-radius:6px;padding:2px 8px">💶 ${g.budget}</span>` : ''}
+                  ${g.place  ? `<span style="font-size:11px;background:rgba(255,255,255,.07);color:var(--sub);border-radius:6px;padding:2px 8px">📍 ${g.place}</span>` : ''}
+                  ${g.note   ? `<span style="font-size:11px;background:rgba(255,255,255,.07);color:var(--sub);border-radius:6px;padding:2px 8px">📝 ${g.note}</span>` : ''}
+                </div>
+              </div>
+              <button onclick="editGift(${g.id})" style="background:rgba(92,107,192,.2);border:none;color:#9fa8da;border-radius:7px;padding:5px 10px;font-size:12px;cursor:pointer">✏️</button>
+              <button onclick="deleteGift(${g.id})" style="background:rgba(183,28,28,.2);border:none;color:#ef9a9a;border-radius:7px;padding:5px 10px;font-size:12px;cursor:pointer">🗑️</button>
+            </div>
+          `).join('')}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// 엔터키 지원
+['g-person','g-item','g-budget','g-place','g-note'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') addGift(); });
+});
+
+renderGifts();
+
+// ── Supabase 경비 출금표 ──
+const SB_URL = 'https://ciljiutblgbnwlgcdiyq.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpbGppdXRibGdibndsZ2NkaXlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0Mzg5MDksImV4cCI6MjA5ODAxNDkwOX0.fjjZDzV-RziE_tYlHQrZjIMHQhxipPyy6YQVRqw381Q';
+const SB_H  = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
+const SB_HR = { ...SB_H, 'Prefer': 'return=representation' };
+
+function setStatus(msg, color) {
+  const el = document.getElementById('budget-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = color || 'var(--sub)';
+}
+
+// ── 숫자 파싱 (₩1,234 / €12.5 등에서 숫자 추출) ──
+function parseAmt(s) {
+  if (!s) return 0;
+  const n = parseFloat(s.replace(/[^0-9.\-]/g, ''));
+  return isNaN(n) ? 0 : n;
+}
+
+// ── 합계 + 잔액 갱신 ──
+function updateTotals(cur) {
+  const prefix = cur === 'krw' ? '₩' : '€';
+  const fmt = n => prefix + n.toLocaleString('ko-KR', { maximumFractionDigits: 2 });
+
+  let inTotal = 0, outTotal = 0;
+  document.querySelectorAll(`#body-${cur}-in tr`).forEach(tr => {
+    inTotal += parseAmt(tr.querySelector('.amount')?.value || '');
+  });
+  document.querySelectorAll(`#body-${cur}-out tr`).forEach(tr => {
+    outTotal += parseAmt(tr.querySelector('.amount')?.value || '');
+  });
+
+  document.getElementById(`sum-${cur}-in`).textContent  = fmt(inTotal);
+  document.getElementById(`sum-${cur}-out`).textContent = fmt(outTotal);
+
+  const bal = inTotal - outTotal;
+  const balEl = document.getElementById(`bal-${cur}`);
+  balEl.innerHTML = `잔액 &nbsp; <strong style="color:${bal >= 0 ? '#a5d6a7' : '#ef9a9a'};font-size:15px">${fmt(bal)}</strong>`;
+  // 상단 요약 카드 갱신
+  const topEl = document.getElementById(`bal-${cur}-top`);
+  if (topEl) topEl.textContent = fmt(bal);
+}
+
+// ── 행 DOM 생성 ──
+function makeRow(cur, type, row) {
+  const tr = document.createElement('tr');
+  tr.dataset.id = row.id;
+
+  const fields = [
+    { key: 'date',   ph: 'MM/DD',  cls: '' },
+    { key: 'item',   ph: '항목',    cls: '' },
+    { key: 'amount', ph: cur === 'krw' ? '₩0' : '€0', cls: 'amount' },
+    { key: 'note',   ph: '메모',    cls: '' },
+  ];
+
+  fields.forEach(({ key, ph, cls }) => {
+    const td = document.createElement('td');
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.className = 'ledger-cell' + (cls ? ' ' + cls : '');
+    inp.placeholder = ph;
+    inp.value = row[key] || '';
+    inp.dataset.field = key;
+
+    let timer;
+    inp.addEventListener('input', () => {
+      clearTimeout(timer);
+      if (key === 'amount') updateTotals(cur);
+      timer = setTimeout(() => saveCell(row.id, key, inp.value.trim()), 900);
+    });
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') inp.blur();
+    });
+
+    td.appendChild(inp);
+    tr.appendChild(td);
+  });
+
+  // 삭제 버튼
+  const tdDel = document.createElement('td');
+  const btn = document.createElement('button');
+  btn.className = 'ledger-del-btn';
+  btn.title = '행 삭제';
+  btn.textContent = '×';
+  btn.onclick = () => deleteRow(cur, type, row.id, tr);
+  tdDel.appendChild(btn);
+  tr.appendChild(tdDel);
+
+  return tr;
+}
+
+// ── 셀 저장 ──
+async function saveCell(id, field, value) {
+  setStatus('저장 중…', '#ffe082');
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/ledger?id=eq.${id}`, {
+      method: 'PATCH', headers: SB_H,
+      body: JSON.stringify({ [field]: value })
+    });
+    if (!res.ok) throw new Error();
+    setStatus('✅ 저장됨', '#a5d6a7');
+    setTimeout(() => setStatus('✏️ 클릭해서 수정 · 행 추가 가능', '#a5d6a7'), 1600);
+  } catch { setStatus('❌ 저장 실패', '#ef9a9a'); }
+}
+
+// ── 행 추가 ──
+async function addRow(cur, type) {
+  const maxOrder = [...document.querySelectorAll(`#body-${cur}-${type} tr`)].length;
+  const payload = { currency: cur, type, date: '', item: '', amount: '', note: '', sort_order: maxOrder + 1 };
+  setStatus('행 추가 중…', '#ffe082');
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/ledger`, {
+      method: 'POST', headers: SB_HR,
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error();
+    const [newRow] = await res.json();
+    const tbody = document.getElementById(`body-${cur}-${type}`);
+    tbody.appendChild(makeRow(cur, type, newRow));
+    // 새 행 날짜 셀에 포커스
+    tbody.lastElementChild?.querySelector('.ledger-cell')?.focus();
+    setStatus('✏️ 클릭해서 수정 · 행 추가 가능', '#a5d6a7');
+  } catch { setStatus('❌ 추가 실패', '#ef9a9a'); }
+}
+
+// ── 행 삭제 ──
+async function deleteRow(cur, type, id, tr) {
+  if (!confirm('이 행을 삭제하시겠습니까?')) return;
+  try {
+    await fetch(`${SB_URL}/rest/v1/ledger?id=eq.${id}`, { method: 'DELETE', headers: SB_H });
+    tr.remove();
+    updateTotals(cur);
+    setStatus('✅ 삭제됨', '#a5d6a7');
+    setTimeout(() => setStatus('✏️ 클릭해서 수정 · 행 추가 가능', '#a5d6a7'), 1600);
+  } catch { setStatus('❌ 삭제 실패', '#ef9a9a'); }
+}
+
+// ── 초기 로드 ──
+async function loadLedger() {
+  setStatus('불러오는 중…', 'var(--sub)');
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/ledger?select=*&order=sort_order.asc,created_at.asc`, { headers: SB_H });
+    if (!res.ok) throw new Error();
+    const rows = await res.json();
+    ['krw','eur'].forEach(cur => {
+      ['in','out'].forEach(type => {
+        const tbody = document.getElementById(`body-${cur}-${type}`);
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        rows.filter(r => r.currency === cur && r.type === type)
+            .forEach(r => tbody.appendChild(makeRow(cur, type, r)));
+        updateTotals(cur);
+      });
+    });
+    setStatus('✏️ 클릭해서 수정 · 행 추가 가능', '#a5d6a7');
+  } catch(e) {
+    setStatus('⚠️ 로드 실패 — 인터넷 연결 확인', '#ef9a9a');
+  }
+}
+
+// ── 준비물 체크리스트 ──
+const CL_CATS = { doc:'📄 서류', clothes:'👕 의류', hygiene:'🧴 세면/위생', elec:'🔌 전자기기', meds:'💊 약/응급', etc:'📦 기타' };
+const CL_DEFAULT = [
+  {id:1,cat:'doc',text:'여권',done:false},{id:2,cat:'doc',text:'항공권 (e-ticket 출력 or 저장)',done:false},{id:3,cat:'doc',text:'여행자 보험 증권',done:false},{id:4,cat:'doc',text:'리스보아카드 바우처',done:false},{id:5,cat:'doc',text:'숙박 예약확인서',done:false},{id:6,cat:'doc',text:'비상 연락처 메모',done:false},{id:7,cat:'doc',text:'트래블월렛 카드',done:false},
+  {id:10,cat:'clothes',text:'반팔 티셔츠 (5장)',done:false},{id:11,cat:'clothes',text:'얇은 긴팔 (1장)',done:false},{id:12,cat:'clothes',text:'반바지/면바지 (2장)',done:false},{id:13,cat:'clothes',text:'가벼운 바람막이/재킷',done:false},{id:14,cat:'clothes',text:'속옷 (7세트)',done:false},{id:15,cat:'clothes',text:'양말 (7켤레)',done:false},{id:16,cat:'clothes',text:'운동화/워킹화',done:false},{id:17,cat:'clothes',text:'슬리퍼/샌들',done:false},
+  {id:20,cat:'hygiene',text:'세면도구 (칫솔·치약·샴푸·바디워시)',done:false},{id:21,cat:'hygiene',text:'선크림 SPF50+',done:false},{id:22,cat:'hygiene',text:'면도기',done:false},{id:23,cat:'hygiene',text:'물티슈',done:false},{id:24,cat:'hygiene',text:'손 세정제',done:false},{id:25,cat:'hygiene',text:'여성 위생용품',done:false},{id:26,cat:'hygiene',text:'수건 (소형)',done:false},
+  {id:30,cat:'elec',text:'스마트폰 + 충전기',done:false},{id:31,cat:'elec',text:'보조배터리 (5000mAh+)',done:false},{id:32,cat:'elec',text:'멀티탭/어댑터',done:false},{id:33,cat:'elec',text:'이어폰',done:false},{id:34,cat:'elec',text:'카메라 + 메모리카드',done:false},{id:35,cat:'elec',text:'C타입 케이블 (여분)',done:false},
+  {id:40,cat:'meds',text:'타이레놀',done:false},{id:41,cat:'meds',text:'소화제',done:false},{id:42,cat:'meds',text:'지사제',done:false},{id:43,cat:'meds',text:'멀미약',done:false},{id:44,cat:'meds',text:'밴드 + 연고',done:false},{id:45,cat:'meds',text:'모기 기피제',done:false},
+  {id:50,cat:'etc',text:'여행용 자물쇠',done:false},{id:51,cat:'etc',text:'목베개 (장거리 비행)',done:false},{id:52,cat:'etc',text:'안대 + 귀마개',done:false},{id:53,cat:'etc',text:'에코백',done:false},{id:54,cat:'etc',text:'우산/우비',done:false},{id:55,cat:'etc',text:'볼펜 2자루',done:false}
+];
+let clItems = JSON.parse(localStorage.getItem('pt-checklist') || 'null') || CL_DEFAULT.map(i=>({...i}));
+let clFilter_ = 'all';
+
+function saveCL() { localStorage.setItem('pt-checklist', JSON.stringify(clItems)); }
+
+function renderCL() {
+  const list = document.getElementById('cl-list');
+  if (!list) return;
+  const visible = clFilter_ === 'all' ? clItems : clItems.filter(i => i.cat === clFilter_);
+  const done = clItems.filter(i => i.done).length;
+  const total = clItems.length;
+  document.getElementById('cl-count').textContent = `${done} / ${total}`;
+  document.getElementById('cl-bar').style.width = total ? (done/total*100)+'%' : '0%';
+  list.innerHTML = visible.map(item => `
+    <div class="cl-item${item.done?' done':''}" onclick="clToggle(${item.id})">
+      <div class="cl-check">${item.done?'✓':''}</div>
+      <div class="cl-text">${item.text}</div>
+      <span class="cl-tag">${CL_CATS[item.cat]||item.cat}</span>
+      <button class="cl-del" onclick="event.stopPropagation();clDelete(${item.id})" title="삭제">✕</button>
+    </div>`).join('');
+}
+
+function clToggle(id) {
+  const it = clItems.find(i=>i.id===id);
+  if (it) { it.done = !it.done; saveCL(); renderCL(); }
+}
+
+function clDelete(id) {
+  clItems = clItems.filter(i=>i.id!==id);
+  saveCL(); renderCL();
+}
+
+function clAdd() {
+  const inp = document.getElementById('cl-input');
+  const sel = document.getElementById('cl-select');
+  const text = (inp.value||'').trim();
+  if (!text) { inp.focus(); return; }
+  clItems.push({ id: Date.now(), cat: sel.value, text, done: false });
+  saveCL(); renderCL();
+  inp.value = '';
+  inp.focus();
+}
+
+function clFilter(cat, btn) {
+  clFilter_ = cat;
+  document.querySelectorAll('.cl-cat').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderCL();
+}
+
+document.addEventListener('DOMContentLoaded', () => { loadLedger(); loadGsDay(0); renderCL(); });
+
+// ── PDF 미리보기 토글 ──
+function togglePdf(btn, src) {
+  const card = btn.closest('.pdoc-card');
+  const viewer = card.querySelector('.pdoc-viewer');
+  const iframe = viewer.querySelector('iframe');
+  const isOpen = viewer.style.display !== 'none';
+
+  // 다른 모든 뷰어 닫기
+  document.querySelectorAll('.pdoc-viewer').forEach(v => { v.style.display = 'none'; });
+  document.querySelectorAll('.pdoc-preview-btn').forEach(b => b.classList.remove('open'));
+
+  if (!isOpen) {
+    if (!iframe.src || !iframe.src.endsWith(encodeURIComponent(src).replace(/%2F/g,'/'))) {
+      iframe.src = src;
+    }
+    viewer.style.display = 'block';
+    btn.classList.add('open');
+    setTimeout(() => viewer.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
+  }
+}
+
+function showCard(lang) {
+  document.getElementById('card-ko').style.display = lang === 'ko' ? 'block' : 'none';
+  document.getElementById('card-pt').style.display = lang === 'pt' ? 'block' : 'none';
+  const btnKo = document.getElementById('btn-ko');
+  const btnPt = document.getElementById('btn-pt');
+  if (lang === 'ko') {
+    btnKo.style.background = 'linear-gradient(135deg,#5c6bc0,#7986cb)';
+    btnKo.style.color = '#fff';
+    btnKo.style.border = 'none';
+    btnPt.style.background = 'var(--card)';
+    btnPt.style.color = 'var(--sub)';
+    btnPt.style.border = '1px solid var(--border)';
+  } else {
+    btnPt.style.background = 'linear-gradient(135deg,#5c6bc0,#7986cb)';
+    btnPt.style.color = '#fff';
+    btnPt.style.border = 'none';
+    btnKo.style.background = 'var(--card)';
+    btnKo.style.color = 'var(--sub)';
+    btnKo.style.border = '1px solid var(--border)';
+  }
+}
+</script>
+</body>
+</html>
