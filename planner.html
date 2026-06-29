@@ -113,6 +113,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;background:rgba(13,15,26,.95
 .f-inp{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:8px 12px;font-family:inherit;outline:none;flex:1;min-width:120px}
 .f-inp:focus{border-color:var(--accent)}
 .f-inp::placeholder{color:var(--sub)}
+.f-inp option{background:#1e2240;color:#e8eaf6;font-size:14px;padding:6px}
 .f-sel{background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:8px 12px;font-family:inherit;cursor:pointer}
 .f-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
 .f-btn:hover{background:#7986cb}
@@ -1227,7 +1228,7 @@ async function batchInsertSchedItems(items, tabId) {
 }
 
 // ── CHECKLIST ──
-const CL_DEFAULT_CATS = ['의류','세면도구','전자기기','서류/증명','의약품','간식/식품','액티비티','기타'];
+const CL_DEFAULT_CATS = ['👕 의류','🧴 세면도구','💻 전자기기','📄 서류/증명','💊 의약품','🍫 간식/식품','🎿 액티비티','📦 기타'];
 
 function renderChecklist(container, tab, items) {
   const customCats = JSON.parse(localStorage.getItem(`clCats_${tab.id}`) || '[]');
