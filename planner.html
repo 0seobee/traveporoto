@@ -425,6 +425,7 @@ async function loadProjects() {
 
 function renderProjects() {
   const grid = document.getElementById('projectGrid');
+  if (!grid) return;
   const cards = projects.map(p => {
     const start = p.start_date || '';
     const end = p.end_date || '';
