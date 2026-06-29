@@ -743,11 +743,40 @@ async function loadTabs() {
 function renderTabBar() {
   const bar = document.getElementById('tabBar');
   const btnHtml = tabs.map(t => `
-    <button class="tab-btn" id="tab-btn-${t.id}" data-id="${t.id}" onclick="openTab('${t.id}')">
-      ${TAB_ICONS[t.type]||'📄'} ${t.title}
+    <button class="tab-btn" id="tab-btn-${t.id}" data-id="${t.id}" onclick="openTab('${t.id}')" ondblclick="startRenameTab(event,'${t.id}')">
+      <span class="tab-label">${TAB_ICONS[t.type]||'📄'} ${t.title}</span>
       <span class="tab-del" onclick="event.stopPropagation();deleteTab('${t.id}')">✕</span>
     </button>`).join('');
   bar.innerHTML = btnHtml + `<button class="tab-add-btn" onclick="openTabModal()">＋ 탭 추가</button>`;
+}
+
+function startRenameTab(e, id) {
+  e.stopPropagation();
+  const btn = document.getElementById(`tab-btn-${id}`);
+  const label = btn.querySelector('.tab-label');
+  const tab = tabs.find(t => t.id === id);
+  if (!tab) return;
+
+  const inp = document.createElement('input');
+  inp.value = tab.title;
+  inp.style.cssText = 'background:rgba(255,255,255,.15);border:none;border-bottom:2px solid #7986cb;outline:none;color:#fff;font-size:13px;font-weight:700;font-family:inherit;width:80px;padding:0 2px';
+  label.replaceWith(inp);
+  inp.focus();
+  inp.select();
+
+  const finish = async () => {
+    const newTitle = inp.value.trim();
+    if (newTitle && newTitle !== tab.title) {
+      tab.title = newTitle;
+      await sbPatch('tabs', id, { title: newTitle });
+    }
+    renderTabBar();
+    if (currentTab?.id === id) {
+      document.getElementById(`tab-btn-${id}`)?.classList.add('on');
+    }
+  };
+  inp.onblur = finish;
+  inp.onkeydown = e => { if (e.key === 'Enter') inp.blur(); if (e.key === 'Escape') { inp.value = tab.title; inp.blur(); } };
 }
 
 function openTabModal() {
