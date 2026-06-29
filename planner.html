@@ -544,7 +544,11 @@ async function openProject(id) {
 function renderProjectHeader() {
   const p = currentProject;
   const dates = (p.start_date && p.end_date) ? `${p.start_date} ~ ${p.end_date}` : (p.start_date || '');
-  document.getElementById('projectHeader').innerHTML = `
+  const el = document.getElementById('projectHeader');
+  el.style.cursor = 'pointer';
+  el.title = '프로젝트 홈';
+  el.onclick = () => showProjectHero();
+  el.innerHTML = `
     <div class="project-header-emoji">${p.cover_emoji||'✈️'}</div>
     <div class="project-header-info">
       <div class="project-header-name">${p.name}</div>
