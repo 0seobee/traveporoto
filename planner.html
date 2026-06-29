@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🗺️ 여행 플래너</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0f1a;--surface:#13162a;--card:#181c30;--border:#252940;
+  --text:#e8eaf6;--sub:#7b80a0;--accent:#5c6bc0;--accent2:#7986cb;
+}
+body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;min-height:100vh}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:300;background:rgba(13,15,26,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);height:52px;display:flex;align-items:center;padding:0 20px;gap:12px}
+.nav-logo{font-size:17px;font-weight:800;cursor:pointer;white-space:nowrap}
+.nav-back{background:rgba(255,255,255,.08);border:1px solid var(--border);color:var(--text);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;display:none;font-family:inherit}
+.nav-back:hover{background:rgba(255,255,255,.14)}
+.nav-project-name{font-size:14px;font-weight:700;color:#9fa8da;display:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}
+.nav-spacer{flex:1}
+.nav-btn{background:var(--accent);color:#fff;border:none;border-radius:20px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
+.nav-btn:hover{background:#7986cb}
+
+/* ── VIEWS ── */
+.view{display:none;padding-top:52px;min-height:100vh}
+.view.active{display:block}
+
+/* ── DASHBOARD ── */
+#dashboard{padding:32px 24px;max-width:1100px;margin:0 auto}
+.dash-header{margin-bottom:28px}
+.dash-title{font-size:28px;font-weight:900;margin-bottom:6px}
+.dash-sub{color:var(--sub);font-size:14px}
+.project-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.project-card{background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden;cursor:pointer;transition:.2s;position:relative}
+.project-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.project-card-cover{height:90px;display:flex;align-items:center;justify-content:center;font-size:40px;position:relative}
+.project-card-actions{position:absolute;top:8px;right:8px;display:flex;gap:4px;opacity:0;transition:.2s}
+.project-card:hover .project-card-actions{opacity:1}
+.card-action-btn{background:rgba(0,0,0,.5);border:none;color:#fff;border-radius:8px;width:26px;height:26px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:.2s}
+.card-action-btn:hover{background:rgba(229,57,53,.7)}
+.project-card-body{padding:14px 16px}
+.project-card-name{font-size:15px;font-weight:800;margin-bottom:4px}
+.project-card-dest{font-size:12px;color:var(--sub);margin-bottom:6px}
+.project-card-dates{font-size:11px;color:var(--accent2);background:rgba(92,107,192,.12);border-radius:10px;padding:3px 10px;display:inline-block}
+.project-card-new{border:2px dashed var(--border);background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:180px;color:var(--sub);font-size:14px;font-weight:600}
+.project-card-new:hover{border-color:var(--accent);color:var(--accent2)}
+.project-card-new .plus{font-size:32px}
+
+/* ── PROJECT VIEW ── */
+#project-view{display:none;flex-direction:column}
+#project-view.active{display:flex}
+.project-header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;gap:16px}
+.project-header-emoji{font-size:32px}
+.project-header-info{flex:1}
+.project-header-name{font-size:20px;font-weight:800}
+.project-header-meta{font-size:12px;color:var(--sub);margin-top:2px}
+
+/* ── TAB BAR ── */
+.tab-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;gap:4px;overflow-x:auto;min-height:46px}
+.tab-bar::-webkit-scrollbar{display:none}
+.tab-btn{border:none;background:transparent;color:var(--sub);padding:12px 14px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;border-bottom:2px solid transparent;transition:.2s;display:flex;align-items:center;gap:5px;position:relative}
+.tab-btn.on{color:#fff;border-bottom-color:var(--accent)}
+.tab-btn:hover:not(.on){color:var(--text)}
+.tab-del{background:rgba(229,57,53,.15);border:none;color:#ef9a9a;border-radius:50%;width:16px;height:16px;font-size:10px;cursor:pointer;display:none;align-items:center;justify-content:center;margin-left:2px;font-family:inherit}
+.tab-btn:hover .tab-del{display:flex}
+.tab-add-btn{border:1px dashed var(--border);background:transparent;color:var(--sub);border-radius:16px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;margin-left:8px;transition:.2s}
+.tab-add-btn:hover{border-color:var(--accent);color:var(--accent2)}
+
+/* ── TAB CONTENT ── */
+.tab-content{flex:1;overflow:auto}
+.tab-pane{display:none;height:100%}
+.tab-pane.active{display:block}
+
+/* ── COMMON SECTION ── */
+.pane-wrap{padding:24px;max-width:1000px;margin:0 auto}
+.pane-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.pane-title{font-size:18px;font-weight:800}
+.add-btn{background:var(--accent);color:#fff;border:none;border-radius:20px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
+.add-btn:hover{background:#7986cb}
+.del-btn{background:rgba(229,57,53,.12);border:1px solid rgba(229,57,53,.25);color:#ef9a9a;border-radius:8px;padding:3px 8px;font-size:11px;cursor:pointer;font-family:inherit;transition:.2s}
+.del-btn:hover{background:rgba(229,57,53,.25)}
+
+/* ── FORM ── */
+.form-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:20px}
+.form-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.form-row:last-child{margin-bottom:0}
+.f-inp{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:8px 12px;font-family:inherit;outline:none;flex:1;min-width:120px}
+.f-inp:focus{border-color:var(--accent)}
+.f-inp::placeholder{color:var(--sub)}
+.f-sel{background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:8px 12px;font-family:inherit;cursor:pointer}
+.f-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+.f-btn:hover{background:#7986cb}
+.f-btn.secondary{background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--text)}
+.f-btn.secondary:hover{background:rgba(255,255,255,.1)}
+textarea.f-inp{resize:vertical;min-height:60px}
+
+/* ── CHECKLIST ── */
+.cl-list{display:flex;flex-direction:column;gap:6px}
+.cl-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:.2s}
+.cl-item:hover{border-color:var(--accent)}
+.cl-item.done{opacity:.5}
+.cl-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;transition:.2s}
+.cl-item.done .cl-check{background:var(--accent);border-color:var(--accent);color:#fff}
+.cl-text{flex:1;font-size:13px}
+.cl-item.done .cl-text{text-decoration:line-through}
+.cl-cat-badge{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(92,107,192,.15);color:var(--accent2)}
+
+/* ── LIST (TABLE) ── */
+.list-table{width:100%;border-collapse:collapse;margin-top:8px}
+.list-table th{background:rgba(0,0,0,.25);padding:9px 12px;font-size:11px;color:var(--sub);text-align:left;border-bottom:1px solid var(--border)}
+.list-table td{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px;vertical-align:middle}
+.list-table tr:hover td{background:rgba(255,255,255,.02)}
+.list-done-toggle{cursor:pointer;font-size:16px}
+.list-done{opacity:.45;text-decoration:line-through}
+
+/* ── CARD ── */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.info-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:.2s}
+.info-card:hover{border-color:var(--accent)}
+.info-card-img{width:100%;height:130px;object-fit:cover;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:36px;color:var(--sub)}
+.info-card-img img{width:100%;height:100%;object-fit:cover}
+.info-card-body{padding:12px 14px}
+.info-card-title{font-size:14px;font-weight:700;margin-bottom:4px}
+.info-card-desc{font-size:12px;color:var(--sub);line-height:1.5;margin-bottom:8px}
+.info-card-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+.tag{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(92,107,192,.15);color:var(--accent2)}
+.info-card-link{font-size:11px;color:var(--accent2);text-decoration:none}
+.info-card-link:hover{text-decoration:underline}
+.info-card-actions{display:flex;gap:6px;margin-top:8px}
+
+/* ── SCHEDULE ── */
+.sched-dates{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+.date-tab{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:6px}
+.date-tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.date-tab-del{background:none;border:none;color:inherit;cursor:pointer;font-size:11px;opacity:.6;padding:0}
+.date-tab-del:hover{opacity:1}
+.sched-timeline{display:flex;flex-direction:column;gap:10px}
+.sched-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;gap:14px;align-items:flex-start}
+.sched-time{font-size:13px;font-weight:800;color:var(--accent2);min-width:50px;text-align:center;padding-top:2px}
+.sched-body{flex:1}
+.sched-place{font-size:14px;font-weight:700;margin-bottom:3px}
+.sched-content{font-size:13px;color:var(--sub);line-height:1.5}
+.sched-note{font-size:11px;color:#7986cb;margin-top:4px;background:rgba(92,107,192,.08);border-radius:6px;padding:4px 8px;display:inline-block}
+.sched-cost{font-size:11px;color:#a5d6a7;margin-top:4px}
+.sched-item-actions{display:flex;gap:4px;flex-shrink:0}
+
+/* ── MAP ── */
+.map-layout{display:grid;grid-template-columns:1fr 300px;gap:0;height:calc(100vh - 160px)}
+@media(max-width:768px){.map-layout{grid-template-columns:1fr;height:auto}}
+#tab-map-el{width:100%;height:100%;min-height:400px}
+.map-sidebar{background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.map-sidebar-header{padding:14px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700}
+.map-place-list{flex:1;overflow-y:auto;padding:8px}
+.map-place-list::-webkit-scrollbar{width:4px}
+.map-place-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.map-place-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:6px;cursor:pointer;transition:.2s}
+.map-place-item:hover{border-color:var(--accent)}
+.map-place-name{font-size:13px;font-weight:700;margin-bottom:2px}
+.map-place-desc{font-size:11px;color:var(--sub)}
+.map-add-form{padding:12px;border-top:1px solid var(--border)}
+.map-add-form .f-inp{margin-bottom:6px;width:100%}
+.map-coord-row{display:flex;gap:6px;margin-bottom:6px}
+.map-coord-hint{font-size:10px;color:var(--sub);margin-bottom:6px}
+
+/* ── FILE ── */
+.file-list{display:flex;flex-direction:column;gap:8px}
+.file-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px}
+.file-icon{font-size:28px;flex-shrink:0}
+.file-info{flex:1}
+.file-name{font-size:14px;font-weight:700;margin-bottom:2px}
+.file-meta{font-size:11px;color:var(--sub)}
+.file-link{font-size:12px;color:var(--accent2);text-decoration:none;display:block;margin-top:4px;word-break:break-all}
+.file-link:hover{text-decoration:underline}
+
+/* ── MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-bg.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:18px;font-weight:800;margin-bottom:20px}
+.modal-label{font-size:12px;color:var(--sub);margin-bottom:6px;display:block;font-weight:600}
+.modal-inp{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;padding:10px 14px;font-family:inherit;outline:none;margin-bottom:14px}
+.modal-inp:focus{border-color:var(--accent)}
+.modal-btns{display:flex;gap:10px;margin-top:4px}
+.modal-btn{flex:1;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
+.modal-btn.primary{background:var(--accent);color:#fff}
+.modal-btn.primary:hover{background:#7986cb}
+.modal-btn.cancel{background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--text)}
+.modal-btn.cancel:hover{background:rgba(255,255,255,.1)}
+
+/* ── TAB TYPE SELECTOR ── */
+.tab-type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.tab-type-card{background:var(--surface);border:2px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:.2s}
+.tab-type-card:hover,.tab-type-card.on{border-color:var(--accent);background:rgba(92,107,192,.1)}
+.tab-type-card .icon{font-size:24px;margin-bottom:6px}
+.tab-type-card .label{font-size:12px;font-weight:700}
+
+/* ── EMOJI PICKER ── */
+.emoji-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.emoji-opt{font-size:24px;cursor:pointer;padding:4px;border-radius:8px;transition:.2s}
+.emoji-opt:hover,.emoji-opt.on{background:rgba(92,107,192,.2)}
+
+/* ── COLOR PICKER ── */
+.color-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.color-opt{width:32px;height:32px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:.2s}
+.color-opt:hover,.color-opt.on{border-color:#fff}
+
+/* ── PROGRESS BAR ── */
+.progress-bar-wrap{background:var(--surface);border-radius:20px;height:6px;margin-bottom:16px;overflow:hidden}
+.progress-bar{background:var(--accent);height:100%;border-radius:20px;transition:.4s}
+
+/* ── EMPTY STATE ── */
+.empty-state{text-align:center;padding:60px 24px;color:var(--sub)}
+.empty-state .icon{font-size:48px;margin-bottom:12px}
+.empty-state p{font-size:14px}
+
+/* ── MISC ── */
+.badge{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(92,107,192,.15);color:var(--accent2);font-weight:700}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo" onclick="goHome()">🗺️ 여행 플래너</div>
+  <button class="nav-back" id="navBack" onclick="goHome()">← 목록</button>
+  <div class="nav-project-name" id="navProjectName"></div>
+  <div class="nav-spacer"></div>
+  <button class="nav-btn" id="navMainBtn" onclick="openProjectModal()">+ 새 여행</button>
+</nav>
+
+<!-- DASHBOARD -->
+<div class="view active" id="dashboard">
+  <div style="padding:32px 24px;max-width:1100px;margin:0 auto">
+    <div class="dash-header">
+      <div class="dash-title">내 여행 프로젝트</div>
+      <div class="dash-sub">여행을 추가하고 탭으로 자유롭게 계획하세요</div>
+    </div>
+    <div class="project-grid" id="projectGrid">
+      <div class="project-card project-card-new" onclick="openProjectModal()">
+        <div class="plus">＋</div>
+        <span>새 여행 추가</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROJECT VIEW -->
+<div class="view" id="project-view">
+  <div class="project-header" id="projectHeader"></div>
+  <div class="tab-bar" id="tabBar">
+    <button class="tab-add-btn" onclick="openTabModal()">＋ 탭 추가</button>
+  </div>
+  <div class="tab-content" id="tabContent"></div>
+</div>
+
+<!-- ── MODALS ── -->
+
+<!-- 프로젝트 생성/수정 -->
+<div class="modal-bg" id="projectModal">
+  <div class="modal">
+    <div class="modal-title" id="projectModalTitle">새 여행 만들기</div>
+    <label class="modal-label">여행 이름 *</label>
+    <input class="modal-inp" id="pName" placeholder="예: 도쿄 봄 여행">
+    <label class="modal-label">목적지</label>
+    <input class="modal-inp" id="pDest" placeholder="예: 일본 도쿄">
+    <label class="modal-label">여행 기간</label>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <input class="modal-inp" id="pStart" type="date" style="margin:0;flex:1">
+      <span style="color:var(--sub);line-height:40px">~</span>
+      <input class="modal-inp" id="pEnd" type="date" style="margin:0;flex:1">
+    </div>
+    <label class="modal-label">메모</label>
+    <textarea class="modal-inp" id="pMemo" rows="2" placeholder="간단한 메모" style="resize:vertical"></textarea>
+    <label class="modal-label">아이콘</label>
+    <div class="emoji-grid" id="emojiGrid"></div>
+    <label class="modal-label">커버 색상</label>
+    <div class="color-grid" id="colorGrid"></div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="closeModal('projectModal')">취소</button>
+      <button class="modal-btn primary" onclick="saveProject()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 탭 추가 -->
+<div class="modal-bg" id="tabModal">
+  <div class="modal">
+    <div class="modal-title">탭 추가</div>
+    <label class="modal-label">탭 종류 선택</label>
+    <div class="tab-type-grid" id="tabTypeGrid">
+      <div class="tab-type-card on" data-type="schedule" onclick="selectTabType(this)">
+        <div class="icon">📅</div><div class="label">일정형</div>
+      </div>
+      <div class="tab-type-card" data-type="checklist" onclick="selectTabType(this)">
+        <div class="icon">✅</div><div class="label">체크리스트</div>
+      </div>
+      <div class="tab-type-card" data-type="list" onclick="selectTabType(this)">
+        <div class="icon">📋</div><div class="label">리스트형</div>
+      </div>
+      <div class="tab-type-card" data-type="card" onclick="selectTabType(this)">
+        <div class="icon">🃏</div><div class="label">카드형</div>
+      </div>
+      <div class="tab-type-card" data-type="map" onclick="selectTabType(this)">
+        <div class="icon">🗺️</div><div class="label">지도형</div>
+      </div>
+      <div class="tab-type-card" data-type="file" onclick="selectTabType(this)">
+        <div class="icon">📎</div><div class="label">파일/링크</div>
+      </div>
+      <div class="tab-type-card" data-type="budget" onclick="selectTabType(this)">
+        <div class="icon">💰</div><div class="label">경비형</div>
+      </div>
+    </div>
+    <label class="modal-label">탭 이름</label>
+    <input class="modal-inp" id="tabTitle" placeholder="예: 도쿄 일정">
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="closeModal('tabModal')">취소</button>
+      <button class="modal-btn primary" onclick="saveTab()">추가</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Supabase ──
+const SB_URL = 'https://inxvbiyfwndjqouvgjdq.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlueHZiaXlmd25kanFvdXZnamRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2Njk1NTYsImV4cCI6MjA5ODI0NTU1Nn0.N_7GGA4RoOxLKkPoZ1yEIqhYeF7pxGerx_NbLK2vBN8';
+const SB_H  = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
+const SB_HR = { ...SB_H, 'Prefer': 'return=representation' };
+
+async function sbGet(table, query='') {
+  const r = await fetch(`${SB_URL}/rest/v1/${table}?${query}`, { headers: SB_H });
+  return r.ok ? r.json() : [];
+}
+async function sbPost(table, data) {
+  const r = await fetch(`${SB_URL}/rest/v1/${table}`, { method:'POST', headers:SB_HR, body:JSON.stringify(data) });
+  return r.ok ? r.json() : null;
+}
+async function sbPatch(table, id, data) {
+  await fetch(`${SB_URL}/rest/v1/${table}?id=eq.${id}`, { method:'PATCH', headers:SB_H, body:JSON.stringify(data) });
+}
+async function sbDelete(table, id) {
+  await fetch(`${SB_URL}/rest/v1/${table}?id=eq.${id}`, { method:'DELETE', headers:SB_H });
+}
+
+// ── State ──
+let projects = [], tabs = [], currentProject = null, currentTab = null;
+let leafletMap = null, lMarkers = {};
+let editingProjectId = null;
+let selectedEmoji = '✈️';
+let selectedColor = '#1a237e';
+let selectedTabType = 'schedule';
+
+// ── Init ──
+const EMOJIS = ['✈️','🌍','🏝️','🗺️','🏔️','🎌','🏰','🌆','🌊','🍜','🎭','🚢','🚂','🏕️','🎒','📸'];
+const COLORS = ['#1a237e','#1b5e20','#4a148c','#b71c1c','#e65100','#006064','#37474f','#880e4f','#1565c0','#2e7d32','#6a1b9a','#c62828'];
+const TAB_ICONS = { schedule:'📅', checklist:'✅', list:'📋', card:'🃏', map:'🗺️', file:'📎', budget:'💰' };
+
+function initEmojiGrid() {
+  const g = document.getElementById('emojiGrid');
+  g.innerHTML = EMOJIS.map(e =>
+    `<span class="emoji-opt${e===selectedEmoji?' on':''}" onclick="selectEmoji(this,'${e}')">${e}</span>`
+  ).join('');
+}
+function initColorGrid() {
+  const g = document.getElementById('colorGrid');
+  g.innerHTML = COLORS.map(c =>
+    `<div class="color-opt${c===selectedColor?' on':''}" style="background:${c}" onclick="selectColor(this,'${c}')"></div>`
+  ).join('');
+}
+function selectEmoji(el, e) {
+  document.querySelectorAll('.emoji-opt').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on'); selectedEmoji = e;
+}
+function selectColor(el, c) {
+  document.querySelectorAll('.color-opt').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on'); selectedColor = c;
+}
+function selectTabType(el) {
+  document.querySelectorAll('.tab-type-card').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on'); selectedTabType = el.dataset.type;
+}
+
+// ── Modal ──
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ── Dashboard ──
+function goHome() {
+  document.getElementById('dashboard').classList.add('active');
+  document.getElementById('project-view').classList.remove('active');
+  document.getElementById('navBack').style.display = 'none';
+  document.getElementById('navProjectName').style.display = 'none';
+  document.getElementById('navMainBtn').textContent = '+ 새 여행';
+  document.getElementById('navMainBtn').onclick = openProjectModal;
+  currentProject = null;
+  if (leafletMap) { leafletMap.remove(); leafletMap = null; }
+  loadProjects();
+}
+
+async function loadProjects() {
+  projects = await sbGet('projects', 'order=sort_order.asc,created_at.asc');
+  renderProjects();
+}
+
+function renderProjects() {
+  const grid = document.getElementById('projectGrid');
+  const cards = projects.map(p => {
+    const start = p.start_date || '';
+    const end = p.end_date || '';
+    const dates = start ? (end ? `${start} ~ ${end}` : start) : '';
+    return `<div class="project-card" onclick="openProject('${p.id}')">
+      <div class="project-card-cover" style="background:${p.cover_color||'#1a237e'}">
+        <span>${p.cover_emoji||'✈️'}</span>
+        <div class="project-card-actions" onclick="event.stopPropagation()">
+          <button class="card-action-btn" title="수정" onclick="editProject('${p.id}')">✏️</button>
+          <button class="card-action-btn" title="삭제" onclick="deleteProject('${p.id}')">🗑️</button>
+        </div>
+      </div>
+      <div class="project-card-body">
+        <div class="project-card-name">${p.name}</div>
+        <div class="project-card-dest">${p.destination||''}</div>
+        ${dates ? `<div class="project-card-dates">${dates}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+  grid.innerHTML = cards + `<div class="project-card project-card-new" onclick="openProjectModal()">
+    <div class="plus">＋</div><span>새 여행 추가</span>
+  </div>`;
+}
+
+// ── Project CRUD ──
+function openProjectModal() {
+  editingProjectId = null;
+  document.getElementById('projectModalTitle').textContent = '새 여행 만들기';
+  ['pName','pDest','pStart','pEnd','pMemo'].forEach(id => document.getElementById(id).value = '');
+  selectedEmoji = '✈️'; selectedColor = '#1a237e';
+  initEmojiGrid(); initColorGrid();
+  openModal('projectModal');
+}
+
+function editProject(id) {
+  const p = projects.find(x => x.id === id);
+  if (!p) return;
+  editingProjectId = id;
+  document.getElementById('projectModalTitle').textContent = '여행 수정';
+  document.getElementById('pName').value = p.name || '';
+  document.getElementById('pDest').value = p.destination || '';
+  document.getElementById('pStart').value = p.start_date || '';
+  document.getElementById('pEnd').value = p.end_date || '';
+  document.getElementById('pMemo').value = p.memo || '';
+  selectedEmoji = p.cover_emoji || '✈️';
+  selectedColor = p.cover_color || '#1a237e';
+  initEmojiGrid(); initColorGrid();
+  openModal('projectModal');
+}
+
+async function saveProject() {
+  const name = document.getElementById('pName').value.trim();
+  if (!name) { alert('여행 이름을 입력해 주세요'); return; }
+  const data = {
+    name, destination: document.getElementById('pDest').value.trim(),
+    start_date: document.getElementById('pStart').value,
+    end_date: document.getElementById('pEnd').value,
+    memo: document.getElementById('pMemo').value.trim(),
+    cover_emoji: selectedEmoji, cover_color: selectedColor
+  };
+  if (editingProjectId) {
+    await sbPatch('projects', editingProjectId, data);
+  } else {
+    await sbPost('projects', { ...data, sort_order: projects.length });
+  }
+  closeModal('projectModal');
+  await loadProjects();
+}
+
+async function deleteProject(id) {
+  if (!confirm('이 여행을 삭제하시겠습니까? 모든 탭과 데이터가 삭제됩니다.')) return;
+  await sbDelete('projects', id);
+  await loadProjects();
+}
+
+// ── Open Project ──
+async function openProject(id) {
+  currentProject = projects.find(p => p.id === id);
+  if (!currentProject) return;
+  document.getElementById('dashboard').classList.remove('active');
+  document.getElementById('project-view').classList.add('active');
+  document.getElementById('navBack').style.display = 'block';
+  document.getElementById('navProjectName').style.display = 'block';
+  document.getElementById('navProjectName').textContent = currentProject.name;
+  document.getElementById('navMainBtn').textContent = '+ 탭 추가';
+  document.getElementById('navMainBtn').onclick = openTabModal;
+  renderProjectHeader();
+  await loadTabs();
+}
+
+function renderProjectHeader() {
+  const p = currentProject;
+  const dates = (p.start_date && p.end_date) ? `${p.start_date} ~ ${p.end_date}` : (p.start_date || '');
+  document.getElementById('projectHeader').innerHTML = `
+    <div class="project-header-emoji">${p.cover_emoji||'✈️'}</div>
+    <div class="project-header-info">
+      <div class="project-header-name">${p.name}</div>
+      <div class="project-header-meta">${p.destination||''}${dates?' · '+dates:''}</div>
+    </div>`;
+}
+
+// ── Tabs ──
+async function loadTabs() {
+  tabs = await sbGet('tabs', `project_id=eq.${currentProject.id}&order=sort_order.asc,created_at.asc`);
+  renderTabBar();
+  if (tabs.length > 0) openTab(tabs[0].id);
+  else {
+    document.getElementById('tabContent').innerHTML =
+      `<div class="empty-state"><div class="icon">📂</div><p>탭을 추가해서 여행을 계획하세요!</p></div>`;
+  }
+}
+
+function renderTabBar() {
+  const bar = document.getElementById('tabBar');
+  const btnHtml = tabs.map(t => `
+    <button class="tab-btn" id="tab-btn-${t.id}" data-id="${t.id}" onclick="openTab('${t.id}')">
+      ${TAB_ICONS[t.type]||'📄'} ${t.title}
+      <span class="tab-del" onclick="event.stopPropagation();deleteTab('${t.id}')">✕</span>
+    </button>`).join('');
+  bar.innerHTML = btnHtml + `<button class="tab-add-btn" onclick="openTabModal()">＋ 탭 추가</button>`;
+}
+
+function openTabModal() {
+  selectedTabType = 'schedule';
+  document.querySelectorAll('.tab-type-card').forEach(x=>x.classList.remove('on'));
+  document.querySelector('[data-type="schedule"]').classList.add('on');
+  document.getElementById('tabTitle').value = '';
+  openModal('tabModal');
+}
+
+async function saveTab() {
+  const title = document.getElementById('tabTitle').value.trim() ||
+    { schedule:'일정', checklist:'체크리스트', list:'리스트', card:'카드', map:'지도', file:'파일' }[selectedTabType];
+  const data = { project_id: currentProject.id, type: selectedTabType, title, sort_order: tabs.length };
+  await sbPost('tabs', data);
+  closeModal('tabModal');
+  await loadTabs();
+  openTab(tabs[tabs.length-1]?.id);
+}
+
+async function deleteTab(id) {
+  if (!confirm('이 탭을 삭제하시겠습니까? 탭 안의 데이터도 삭제됩니다.')) return;
+  await sbDelete('tabs', id);
+  await loadTabs();
+}
+
+async function openTab(id) {
+  currentTab = tabs.find(t => t.id === id);
+  if (!currentTab) return;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('on'));
+  const btn = document.getElementById(`tab-btn-${id}`);
+  if (btn) btn.classList.add('on');
+  await renderTabContent(currentTab);
+}
+
+// ── Tab Content Renderer ──
+async function renderTabContent(tab) {
+  const container = document.getElementById('tabContent');
+  const items = await sbGet('tab_items', `tab_id=eq.${tab.id}&order=sort_order.asc,created_at.asc`);
+
+  if (tab.type === 'schedule') await renderSchedule(container, tab, items);
+  else if (tab.type === 'checklist') renderChecklist(container, tab, items);
+  else if (tab.type === 'list') renderList(container, tab, items);
+  else if (tab.type === 'card') renderCards(container, tab, items);
+  else if (tab.type === 'map') renderMap(container, tab, items);
+  else if (tab.type === 'file') renderFiles(container, tab, items);
+  else if (tab.type === 'budget') renderBudget(container, tab, items);
+}
+
+// ── SCHEDULE ──
+let schedDates = [], currentSchedDate = null;
+
+async function renderSchedule(container, tab, items) {
+  schedDates = [...new Set(items.map(i => i.data.date).filter(Boolean))].sort();
+  if (schedDates.length === 0 && items.length > 0) schedDates = ['날짜 없음'];
+  currentSchedDate = schedDates[0] || null;
+
+  container.innerHTML = `<div class="pane-wrap">
+    <div class="pane-header">
+      <div class="pane-title">📅 ${tab.title}</div>
+    </div>
+    <div class="sched-dates" id="schedDates"></div>
+    <div id="schedItems"></div>
+    <div class="form-box" style="margin-top:20px">
+      <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--accent2)">＋ 일정 추가</div>
+      <div class="form-row">
+        <input class="f-inp" id="sDate" type="date" style="max-width:160px">
+        <input class="f-inp" id="sTime" type="time" placeholder="시간" style="max-width:120px">
+        <input class="f-inp" id="sPlace" placeholder="장소">
+      </div>
+      <div class="form-row">
+        <input class="f-inp" id="sContent" placeholder="내용">
+        <input class="f-inp" id="sCost" placeholder="예상비용" style="max-width:140px">
+      </div>
+      <div class="form-row">
+        <input class="f-inp" id="sNote" placeholder="메모/노트">
+        <button class="f-btn" onclick="addSchedItem('${tab.id}')">추가</button>
+      </div>
+    </div>
+  </div>`;
+  renderSchedDates(items);
+  renderSchedItems(items, currentSchedDate);
+}
+
+function renderSchedDates(items) {
+  schedDates = [...new Set(items.map(i => i.data.date).filter(Boolean))].sort();
+  const el = document.getElementById('schedDates');
+  if (!el) return;
+  el.innerHTML = schedDates.map(d =>
+    `<div class="date-tab${d===currentSchedDate?' on':''}" onclick="switchSchedDate('${d}', this)">
+      ${d}
+    </div>`
+  ).join('') + `<button class="add-btn" style="font-size:11px;padding:5px 12px" onclick="addSchedDate()">＋ 날짜</button>`;
+}
+
+function switchSchedDate(d, el) {
+  document.querySelectorAll('.date-tab').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+  currentSchedDate = d;
+}
+
+function addSchedDate() {
+  const d = prompt('날짜를 입력하세요 (예: 2026-08-01 또는 1일차)');
+  if (!d) return;
+  if (!schedDates.includes(d)) schedDates.push(d);
+  currentSchedDate = d;
+  renderSchedDates([]);
+}
+
+function renderSchedItems(items, date) {
+  const el = document.getElementById('schedItems');
+  if (!el) return;
+  const filtered = date ? items.filter(i => i.data.date === date) : items;
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty-state"><div class="icon">📅</div><p>일정을 추가해 보세요</p></div>`;
+    return;
+  }
+  el.innerHTML = `<div class="sched-timeline">${
+    filtered.sort((a,b)=>(a.data.time||'').localeCompare(b.data.time||'')).map(item => `
+    <div class="sched-item">
+      <div class="sched-time">${item.data.time||''}</div>
+      <div class="sched-body">
+        <div class="sched-place">${item.data.place||''}</div>
+        <div class="sched-content">${item.data.content||''}</div>
+        ${item.data.note?`<div class="sched-note">💡 ${item.data.note}</div>`:''}
+        ${item.data.cost?`<div class="sched-cost">💰 ${item.data.cost}</div>`:''}
+      </div>
+      <div class="sched-item-actions">
+        <button class="del-btn" onclick="deleteItem('${item.id}','${currentTab.id}')">삭제</button>
+      </div>
+    </div>`).join('')
+  }</div>`;
+}
+
+async function addSchedItem(tabId) {
+  const date = document.getElementById('sDate').value || currentSchedDate || '';
+  const time = document.getElementById('sTime').value;
+  const place = document.getElementById('sPlace').value.trim();
+  const content = document.getElementById('sContent').value.trim();
+  const cost = document.getElementById('sCost').value.trim();
+  const note = document.getElementById('sNote').value.trim();
+  if (!place && !content) { alert('장소 또는 내용을 입력하세요'); return; }
+  await sbPost('tab_items', { tab_id: tabId, data: { date, time, place, content, cost, note }, sort_order: 0 });
+  ['sDate','sTime','sPlace','sContent','sCost','sNote'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderSchedDates(items);
+  if (date) currentSchedDate = date;
+  renderSchedItems(items, currentSchedDate);
+}
+
+// ── CHECKLIST ──
+function renderChecklist(container, tab, items) {
+  const cats = [...new Set(items.map(i=>i.data.cat).filter(Boolean))];
+  const done = items.filter(i=>i.data.done).length;
+  const pct = items.length ? Math.round(done/items.length*100) : 0;
+  container.innerHTML = `<div class="pane-wrap">
+    <div class="pane-header">
+      <div class="pane-title">✅ ${tab.title}</div>
+      <span class="badge">${done}/${items.length}</span>
+    </div>
+    <div class="progress-bar-wrap"><div class="progress-bar" style="width:${pct}%"></div></div>
+    <div class="form-box" style="margin-bottom:16px">
+      <div class="form-row">
+        <input class="f-inp" id="clText" placeholder="항목 입력">
+        <input class="f-inp" id="clCat" placeholder="카테고리 (선택)" style="max-width:160px">
+        <button class="f-btn" onclick="addClItem('${tab.id}')">추가</button>
+      </div>
+    </div>
+    <div class="cl-list">${items.map(item=>`
+      <div class="cl-item${item.data.done?' done':''}" onclick="toggleClItem('${item.id}','${tab.id}',${!item.data.done})">
+        <div class="cl-check">${item.data.done?'✓':''}</div>
+        <div class="cl-text">${item.data.text||''}</div>
+        ${item.data.cat?`<span class="cl-cat-badge">${item.data.cat}</span>`:''}
+        <button class="del-btn" onclick="event.stopPropagation();deleteItem('${item.id}','${tab.id}')">삭제</button>
+      </div>`).join('')}
+    </div>
+    ${!items.length?`<div class="empty-state"><div class="icon">✅</div><p>항목을 추가해 보세요</p></div>`:''}
+  </div>`;
+}
+
+async function addClItem(tabId) {
+  const text = document.getElementById('clText').value.trim();
+  const cat = document.getElementById('clCat').value.trim();
+  if (!text) { alert('항목을 입력하세요'); return; }
+  await sbPost('tab_items', { tab_id: tabId, data: { text, cat, done: false }, sort_order: 0 });
+  document.getElementById('clText').value = '';
+  document.getElementById('clCat').value = '';
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderChecklist(document.getElementById('tabContent'), tab, items);
+}
+
+async function toggleClItem(id, tabId, done) {
+  const item = await sbGet('tab_items', `id=eq.${id}`);
+  if (!item[0]) return;
+  await sbPatch('tab_items', id, { data: { ...item[0].data, done } });
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderChecklist(document.getElementById('tabContent'), tab, items);
+}
+
+// ── LIST ──
+function renderList(container, tab, items) {
+  const rows = items.map(item=>`
+    <tr class="${item.data.done?'list-done':''}">
+      <td><span class="list-done-toggle" onclick="toggleListItem('${item.id}','${tab.id}',${!item.data.done})">${item.data.done?'✅':'⬜'}</span></td>
+      <td>${item.data.name||''}</td>
+      <td>${item.data.detail||''}</td>
+      <td>${item.data.budget||''}</td>
+      <td>${item.data.note||''}</td>
+      <td><button class="del-btn" onclick="deleteItem('${item.id}','${tab.id}')">삭제</button></td>
+    </tr>`).join('');
+  container.innerHTML = `<div class="pane-wrap">
+    <div class="pane-header"><div class="pane-title">📋 ${tab.title}</div><span class="badge">${items.length}개</span></div>
+    <div class="form-box">
+      <div class="form-row">
+        <input class="f-inp" id="lName" placeholder="이름/항목 *">
+        <input class="f-inp" id="lDetail" placeholder="세부내용">
+        <input class="f-inp" id="lBudget" placeholder="예산" style="max-width:120px">
+      </div>
+      <div class="form-row">
+        <input class="f-inp" id="lNote" placeholder="비고">
+        <button class="f-btn" onclick="addListItem('${tab.id}')">추가</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+    <table class="list-table">
+      <thead><tr><th>완료</th><th>이름/항목</th><th>세부내용</th><th>예산</th><th>비고</th><th></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    </div>
+    ${!items.length?`<div class="empty-state"><div class="icon">📋</div><p>항목을 추가해 보세요</p></div>`:''}
+  </div>`;
+}
+
+async function addListItem(tabId) {
+  const name = document.getElementById('lName').value.trim();
+  if (!name) { alert('이름/항목을 입력하세요'); return; }
+  const data = {
+    name, detail: document.getElementById('lDetail').value.trim(),
+    budget: document.getElementById('lBudget').value.trim(),
+    note: document.getElementById('lNote').value.trim(), done: false
+  };
+  await sbPost('tab_items', { tab_id: tabId, data, sort_order: 0 });
+  ['lName','lDetail','lBudget','lNote'].forEach(id=>document.getElementById(id).value='');
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderList(document.getElementById('tabContent'), tab, items);
+}
+
+async function toggleListItem(id, tabId, done) {
+  const item = await sbGet('tab_items', `id=eq.${id}`);
+  if (!item[0]) return;
+  await sbPatch('tab_items', id, { data: { ...item[0].data, done } });
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderList(document.getElementById('tabContent'), tab, items);
+}
+
+// ── CARD ──
+function renderCards(container, tab, items) {
+  container.innerHTML = `<div class="pane-wrap">
+    <div class="pane-header"><div class="pane-title">🃏 ${tab.title}</div><span class="badge">${items.length}개</span></div>
+    <div class="form-box">
+      <div class="form-row">
+        <input class="f-inp" id="cTitle" placeholder="제목 *">
+        <input class="f-inp" id="cTags" placeholder="태그 (쉼표로 구분)">
+      </div>
+      <div class="form-row">
+        <textarea class="f-inp" id="cDesc" placeholder="설명" rows="2"></textarea>
+      </div>
+      <div class="form-row">
+        <input class="f-inp" id="cImg" placeholder="이미지 URL (선택)">
+        <input class="f-inp" id="cLink" placeholder="링크 URL (선택)">
+        <button class="f-btn" onclick="addCard('${tab.id}')">추가</button>
+      </div>
+    </div>
+    <div class="card-grid">${items.map(item=>{
+      const tags = (item.data.tags||'').split(',').filter(Boolean);
+      return `<div class="info-card">
+        ${item.data.img ? `<div class="info-card-img"><img src="${item.data.img}" onerror="this.parentElement.innerHTML='🖼️'"></div>`
+          : `<div class="info-card-img">🃏</div>`}
+        <div class="info-card-body">
+          <div class="info-card-title">${item.data.title||''}</div>
+          ${item.data.desc?`<div class="info-card-desc">${item.data.desc}</div>`:''}
+          ${tags.length?`<div class="info-card-tags">${tags.map(t=>`<span class="tag">${t.trim()}</span>`).join('')}</div>`:''}
+          ${item.data.link?`<a class="info-card-link" href="${item.data.link}" target="_blank">🔗 ${item.data.link}</a>`:''}
+          <div class="info-card-actions">
+            <button class="del-btn" onclick="deleteItem('${item.id}','${tab.id}')">삭제</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('')}
+    </div>
+    ${!items.length?`<div class="empty-state"><div class="icon">🃏</div><p>카드를 추가해 보세요</p></div>`:''}
+  </div>`;
+}
+
+async function addCard(tabId) {
+  const title = document.getElementById('cTitle').value.trim();
+  if (!title) { alert('제목을 입력하세요'); return; }
+  const data = {
+    title, desc: document.getElementById('cDesc').value.trim(),
+    tags: document.getElementById('cTags').value.trim(),
+    img: document.getElementById('cImg').value.trim(),
+    link: document.getElementById('cLink').value.trim()
+  };
+  await sbPost('tab_items', { tab_id: tabId, data, sort_order: 0 });
+  ['cTitle','cDesc','cTags','cImg','cLink'].forEach(id=>document.getElementById(id).value='');
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderCards(document.getElementById('tabContent'), tab, items);
+}
+
+// ── MAP ──
+function renderMap(container, tab, items) {
+  container.innerHTML = `<div class="map-layout">
+    <div id="tab-map-el"></div>
+    <div class="map-sidebar">
+      <div class="map-sidebar-header">📍 장소 목록 <span class="badge">${items.length}곳</span></div>
+      <div class="map-place-list" id="mapPlaceList">${items.map(item=>`
+        <div class="map-place-item" onclick="focusMarker(${item.data.lat},${item.data.lng})">
+          <div class="map-place-name">${item.data.name||''}</div>
+          <div class="map-place-desc">${item.data.desc||''}</div>
+          <div style="display:flex;justify-content:flex-end;margin-top:4px">
+            <button class="del-btn" onclick="event.stopPropagation();deleteItem('${item.id}','${tab.id}')">삭제</button>
+          </div>
+        </div>`).join('')}
+      </div>
+      <div class="map-add-form">
+        <div style="font-size:12px;font-weight:700;color:var(--accent2);margin-bottom:8px">＋ 장소 추가</div>
+        <input class="f-inp" id="mName" placeholder="장소 이름 *" style="margin-bottom:6px;width:100%">
+        <input class="f-inp" id="mDesc" placeholder="설명 (선택)" style="margin-bottom:6px;width:100%">
+        <div class="map-coord-hint">지도를 클릭하면 좌표가 자동 입력됩니다</div>
+        <div class="map-coord-row">
+          <input class="f-inp" id="mLat" placeholder="위도" style="flex:1">
+          <input class="f-inp" id="mLng" placeholder="경도" style="flex:1">
+        </div>
+        <button class="f-btn" style="width:100%" onclick="addMapPlace('${tab.id}')">추가</button>
+      </div>
+    </div>
+  </div>`;
+  initLeafletTab(items, tab.id);
+}
+
+function initLeafletTab(items, tabId) {
+  if (leafletMap) { leafletMap.remove(); leafletMap = null; }
+  leafletMap = L.map('tab-map-el').setView([37.5665, 126.9780], 5);
+  L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&hl=ko&x={x}&y={y}&z={z}', {
+    maxZoom:20, subdomains:['0','1','2','3']
+  }).addTo(leafletMap);
+  leafletMap.on('click', e => {
+    document.getElementById('mLat').value = e.latlng.lat.toFixed(6);
+    document.getElementById('mLng').value = e.latlng.lng.toFixed(6);
+  });
+  lMarkers = {};
+  items.forEach(item => addLeafletMarker(item));
+  if (items.length > 0) {
+    const lats = items.map(i=>i.data.lat), lngs = items.map(i=>i.data.lng);
+    leafletMap.fitBounds([[Math.min(...lats),Math.min(...lngs)],[Math.max(...lats),Math.max(...lngs)]], {padding:[30,30]});
+  }
+}
+
+function addLeafletMarker(item) {
+  if (!item.data.lat || !item.data.lng) return;
+  const icon = L.divIcon({
+    html:`<div style="width:12px;height:12px;border-radius:50%;background:#5c6bc0;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.5)"></div>`,
+    className:'', iconSize:[12,12], iconAnchor:[6,6]
+  });
+  const m = L.marker([item.data.lat, item.data.lng], { icon })
+    .bindPopup(`<b>${item.data.name||''}</b>${item.data.desc?'<br>'+item.data.desc:''}`)
+    .addTo(leafletMap);
+  lMarkers[item.id] = m;
+}
+
+function focusMarker(lat, lng) {
+  if (leafletMap && lat && lng) leafletMap.setView([lat, lng], 15);
+}
+
+async function addMapPlace(tabId) {
+  const name = document.getElementById('mName').value.trim();
+  const lat = parseFloat(document.getElementById('mLat').value);
+  const lng = parseFloat(document.getElementById('mLng').value);
+  if (!name) { alert('장소 이름을 입력하세요'); return; }
+  if (!lat || !lng) { alert('지도를 클릭하거나 좌표를 입력하세요'); return; }
+  const desc = document.getElementById('mDesc').value.trim();
+  await sbPost('tab_items', { tab_id: tabId, data: { name, desc, lat, lng }, sort_order: 0 });
+  ['mName','mDesc','mLat','mLng'].forEach(id=>document.getElementById(id).value='');
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderMap(document.getElementById('tabContent'), tab, items);
+}
+
+// ── FILE / LINK ──
+function renderFiles(container, tab, items) {
+  const fileIcon = t => {
+    if (t.includes('pdf')) return '📄';
+    if (t.includes('image') || t.includes('jpg') || t.includes('png')) return '🖼️';
+    if (t.includes('word') || t.includes('doc')) return '📝';
+    if (t.includes('excel') || t.includes('xls')) return '📊';
+    return '📎';
+  };
+  container.innerHTML = `<div class="pane-wrap">
+    <div class="pane-header"><div class="pane-title">📎 ${tab.title}</div><span class="badge">${items.length}개</span></div>
+    <div class="form-box">
+      <div class="form-row">
+        <input class="f-inp" id="fName" placeholder="파일/링크 이름 *">
+        <input class="f-inp" id="fType" placeholder="종류 (예: PDF, 이미지, 링크)">
+      </div>
+      <div class="form-row">
+        <input class="f-inp" id="fUrl" placeholder="URL 또는 링크 주소">
+        <input class="f-inp" id="fNote" placeholder="비고">
+        <button class="f-btn" onclick="addFile('${tab.id}')">추가</button>
+      </div>
+    </div>
+    <div class="file-list">${items.map(item=>`
+      <div class="file-item">
+        <div class="file-icon">${fileIcon(item.data.type||'')}</div>
+        <div class="file-info">
+          <div class="file-name">${item.data.name||''}</div>
+          <div class="file-meta">${item.data.type||''}${item.data.note?' · '+item.data.note:''}</div>
+          ${item.data.url?`<a class="file-link" href="${item.data.url}" target="_blank">${item.data.url}</a>`:''}
+        </div>
+        <button class="del-btn" onclick="deleteItem('${item.id}','${tab.id}')">삭제</button>
+      </div>`).join('')}
+    </div>
+    ${!items.length?`<div class="empty-state"><div class="icon">📎</div><p>파일이나 링크를 추가해 보세요</p></div>`:''}
+  </div>`;
+}
+
+async function addFile(tabId) {
+  const name = document.getElementById('fName').value.trim();
+  if (!name) { alert('이름을 입력하세요'); return; }
+  const data = {
+    name, type: document.getElementById('fType').value.trim(),
+    url: document.getElementById('fUrl').value.trim(),
+    note: document.getElementById('fNote').value.trim()
+  };
+  await sbPost('tab_items', { tab_id: tabId, data, sort_order: 0 });
+  ['fName','fType','fUrl','fNote'].forEach(id=>document.getElementById(id).value='');
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderFiles(document.getElementById('tabContent'), tab, items);
+}
+
+// ── Common Delete ──
+async function deleteItem(id, tabId) {
+  if (!confirm('삭제하시겠습니까?')) return;
+  await sbDelete('tab_items', id);
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  const container = document.getElementById('tabContent');
+  if (tab.type === 'schedule') renderSchedItems(items, currentSchedDate);
+  else if (tab.type === 'checklist') renderChecklist(container, tab, items);
+  else if (tab.type === 'list') renderList(container, tab, items);
+  else if (tab.type === 'card') renderCards(container, tab, items);
+  else if (tab.type === 'map') renderMap(container, tab, items);
+  else if (tab.type === 'file') renderFiles(container, tab, items);
+  else if (tab.type === 'budget') renderBudget(container, tab, items);
+}
+
+// ── BUDGET ──
+function calcBudget(items, currency) {
+  const rows = items.filter(i => i.data.currency === currency);
+  const income = rows.filter(i=>i.data.type==='in').reduce((s,i)=>s+parseFloat((i.data.amount||'0').replace(/,/g,'')),0);
+  const expense = rows.filter(i=>i.data.type==='out').reduce((s,i)=>s+parseFloat((i.data.amount||'0').replace(/,/g,'')),0);
+  return { income, expense, balance: income - expense };
+}
+
+function renderBudget(container, tab, items) {
+  const sym = { krw:'₩', eur:'€' };
+  const summaryHtml = ['krw','eur'].map(cur => {
+    const { income, expense, balance } = calcBudget(items, cur);
+    const label = cur === 'krw' ? '원화 (KRW)' : '유로 (EUR)';
+    const balColor = balance >= 0 ? '#a5d6a7' : '#ef9a9a';
+    return `<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 20px;flex:1">
+      <div style="font-size:12px;font-weight:800;color:var(--sub);margin-bottom:10px">${label}</div>
+      <div style="display:flex;gap:16px;font-size:13px">
+        <div><div style="color:var(--sub);font-size:11px">입금</div><div style="color:#a5d6a7;font-weight:700">${sym[cur]}${income.toLocaleString()}</div></div>
+        <div><div style="color:var(--sub);font-size:11px">출금</div><div style="color:#ef9a9a;font-weight:700">${sym[cur]}${expense.toLocaleString()}</div></div>
+        <div><div style="color:var(--sub);font-size:11px">잔액</div><div style="color:${balColor};font-weight:800">${sym[cur]}${balance.toLocaleString()}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const rowsHtml = ['krw','eur'].map(cur => {
+    const curItems = items.filter(i=>i.data.currency===cur);
+    const label = cur==='krw'?'원화 (KRW)':'유로 (EUR)';
+    const inRows = curItems.filter(i=>i.data.type==='in');
+    const outRows = curItems.filter(i=>i.data.type==='out');
+    const mkRows = arr => arr.map(item=>`
+      <tr>
+        <td>${item.data.date||''}</td>
+        <td>${item.data.item||''}</td>
+        <td style="color:${item.data.type==='in'?'#a5d6a7':'#ef9a9a'};font-weight:700">${sym[cur]}${item.data.amount||''}</td>
+        <td style="color:var(--sub)">${item.data.note||''}</td>
+        <td><button class="del-btn" onclick="deleteItem('${item.id}','${tab.id}')">삭제</button></td>
+      </tr>`).join('');
+    return `<div style="margin-bottom:20px">
+      <div style="font-size:13px;font-weight:800;color:#9fa8da;margin-bottom:8px">${label}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#a5d6a7;margin-bottom:6px">▶ 입금</div>
+          <div style="overflow-x:auto"><table class="list-table"><thead><tr><th>날짜</th><th>항목</th><th>금액</th><th>비고</th><th></th></tr></thead><tbody>${mkRows(inRows)}</tbody></table></div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#ef9a9a;margin-bottom:6px">◀ 출금</div>
+          <div style="overflow-x:auto"><table class="list-table"><thead><tr><th>날짜</th><th>항목</th><th>금액</th><th>비고</th><th></th></tr></thead><tbody>${mkRows(outRows)}</tbody></table></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  container.innerHTML = `<div class="pane-wrap">
+    <div class="pane-header"><div class="pane-title">💰 ${tab.title}</div></div>
+    <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap">${summaryHtml}</div>
+    <div class="form-box">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--accent2)">＋ 내역 추가</div>
+      <div class="form-row">
+        <select class="f-sel" id="bCur"><option value="krw">₩ 원화</option><option value="eur">€ 유로</option></select>
+        <select class="f-sel" id="bType"><option value="in">▶ 입금</option><option value="out">◀ 출금</option></select>
+        <input class="f-inp" id="bDate" type="date">
+        <input class="f-inp" id="bItem" placeholder="항목 *">
+      </div>
+      <div class="form-row">
+        <input class="f-inp" id="bAmount" placeholder="금액 *">
+        <input class="f-inp" id="bNote" placeholder="비고">
+        <button class="f-btn" onclick="addBudgetItem('${tab.id}')">추가</button>
+      </div>
+    </div>
+    ${rowsHtml}
+  </div>`;
+}
+
+async function addBudgetItem(tabId) {
+  const item = document.getElementById('bItem').value.trim();
+  const amount = document.getElementById('bAmount').value.trim();
+  if (!item || !amount) { alert('항목과 금액을 입력하세요'); return; }
+  const data = {
+    currency: document.getElementById('bCur').value,
+    type: document.getElementById('bType').value,
+    date: document.getElementById('bDate').value,
+    item, amount,
+    note: document.getElementById('bNote').value.trim()
+  };
+  await sbPost('tab_items', { tab_id: tabId, data, sort_order: 0 });
+  ['bDate','bItem','bAmount','bNote'].forEach(id=>document.getElementById(id).value='');
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderBudget(document.getElementById('tabContent'), tab, items);
+}
+
+// ── Start ──
+loadProjects();
+</script>
+</body>
+</html>

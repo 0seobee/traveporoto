@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✈️ 내 여행 플래너</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0f1a;--surface:#13162a;--card:#181c30;--border:#252940;
+  --text:#e8eaf6;--sub:#7b80a0;--accent:#5c6bc0;--accent2:#7986cb;
+}
+body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;min-height:100vh}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);height:52px;display:flex;align-items:center;padding:0 24px;gap:12px}
+.nav-logo{font-size:18px;font-weight:800}
+.nav-spacer{flex:1}
+.nav-btn{background:var(--accent);color:#fff;border:none;border-radius:20px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
+.nav-btn:hover{background:#7986cb}
+
+.hero{padding:100px 24px 48px;text-align:center;max-width:700px;margin:0 auto}
+.hero-emoji{font-size:52px;margin-bottom:16px}
+.hero-title{font-size:clamp(28px,5vw,48px);font-weight:900;line-height:1.1;margin-bottom:10px}
+.hero-title span{color:#9fa8da}
+.hero-sub{color:var(--sub);font-size:15px}
+
+.section{padding:0 24px 80px;max-width:1100px;margin:0 auto}
+.sec-label{font-size:11px;font-weight:800;letter-spacing:3px;color:#7986cb;text-transform:uppercase;margin-bottom:16px}
+
+.project-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+
+/* 포르투갈 고정 카드 */
+.pt-card{background:linear-gradient(135deg,#b71c1c,#c62828,#1a237e);border-radius:20px;overflow:hidden;cursor:pointer;transition:.2s;position:relative;text-decoration:none;display:block}
+.pt-card:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(183,28,28,.4)}
+.pt-card-cover{height:140px;display:flex;align-items:center;justify-content:center;font-size:56px;position:relative}
+.pt-card-cover::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(0,0,0,.5))}
+.pt-badge{position:absolute;top:12px;right:12px;background:rgba(255,255,255,.2);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.3);border-radius:12px;padding:3px 10px;font-size:10px;font-weight:800;color:#fff;z-index:1}
+.pt-card-body{padding:16px 18px 18px}
+.pt-card-name{font-size:17px;font-weight:900;color:#fff;margin-bottom:4px}
+.pt-card-dest{font-size:12px;color:rgba(255,255,255,.7);margin-bottom:8px}
+.pt-card-meta{display:flex;gap:8px;flex-wrap:wrap}
+.pt-meta-tag{background:rgba(255,255,255,.15);border-radius:10px;padding:3px 10px;font-size:11px;color:rgba(255,255,255,.9)}
+
+/* 일반 프로젝트 카드 */
+.project-card{background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden;cursor:pointer;transition:.2s;position:relative;text-decoration:none;display:block}
+.project-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.project-card-cover{height:100px;display:flex;align-items:center;justify-content:center;font-size:44px}
+.project-card-body{padding:14px 16px}
+.project-card-name{font-size:15px;font-weight:800;margin-bottom:4px}
+.project-card-dest{font-size:12px;color:var(--sub);margin-bottom:6px}
+.project-card-dates{font-size:11px;color:var(--accent2);background:rgba(92,107,192,.12);border-radius:10px;padding:3px 10px;display:inline-block}
+.project-card-actions{position:absolute;top:8px;right:8px;display:flex;gap:4px;opacity:0;transition:.2s}
+.project-card:hover .project-card-actions{opacity:1}
+.card-act-btn{background:rgba(0,0,0,.5);border:none;color:#fff;border-radius:8px;width:26px;height:26px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:.2s;text-decoration:none}
+.card-act-btn:hover{background:rgba(229,57,53,.7)}
+
+/* 새 여행 추가 카드 */
+.new-card{border:2px dashed var(--border);background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:200px;color:var(--sub);font-size:14px;font-weight:600;cursor:pointer;border-radius:18px;transition:.2s}
+.new-card:hover{border-color:var(--accent);color:var(--accent2)}
+.new-card .plus{font-size:36px;opacity:.6}
+
+/* 모달 */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-bg.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:18px;font-weight:800;margin-bottom:20px}
+.modal-label{font-size:12px;color:var(--sub);margin-bottom:6px;display:block;font-weight:600}
+.modal-inp{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;padding:10px 14px;font-family:inherit;outline:none;margin-bottom:14px}
+.modal-inp:focus{border-color:var(--accent)}
+.modal-btns{display:flex;gap:10px;margin-top:4px}
+.modal-btn{flex:1;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
+.modal-btn.primary{background:var(--accent);color:#fff}
+.modal-btn.primary:hover{background:#7986cb}
+.modal-btn.cancel{background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--text)}
+.emoji-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.emoji-opt{font-size:24px;cursor:pointer;padding:4px;border-radius:8px;transition:.2s}
+.emoji-opt:hover,.emoji-opt.on{background:rgba(92,107,192,.2)}
+.color-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.color-opt{width:32px;height:32px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:.2s}
+.color-opt:hover,.color-opt.on{border-color:#fff}
+
+@media(max-width:600px){.project-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">✈️ 내 여행 플래너</div>
+  <div class="nav-spacer"></div>
+  <button class="nav-btn" onclick="openModal()">+ 새 여행</button>
+</nav>
+
+<div class="hero">
+  <div class="hero-emoji">🗺️</div>
+  <div class="hero-title">내 모든 여행을<br><span>한 곳에서</span></div>
+  <div class="hero-sub">여행을 추가하고 일정·경비·지도를 자유롭게 계획하세요</div>
+</div>
+
+<div class="section">
+  <div class="sec-label">📌 진행 중인 여행</div>
+  <div class="project-grid">
+
+    <!-- 포르투갈 고정 카드 -->
+    <a class="pt-card" href="index.html">
+      <div class="pt-badge">진행중 D-32</div>
+      <div class="pt-card-cover">🇵🇹</div>
+      <div class="pt-card-body">
+        <div class="pt-card-name">포르투갈 7박 8일</div>
+        <div class="pt-card-dest">🌍 리스본 · 신트라 · 포르투 · 가이아</div>
+        <div class="pt-card-meta">
+          <span class="pt-meta-tag">2026.07.31 ~ 08.07</span>
+          <span class="pt-meta-tag">지도 103곳</span>
+          <span class="pt-meta-tag">경비 관리</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- 동적 카드들 -->
+    <div id="projectGrid"></div>
+
+    <!-- 새 여행 추가 -->
+    <div class="new-card" onclick="openModal()">
+      <div class="plus">＋</div>
+      <span>새 여행 추가</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- 모달 -->
+<div class="modal-bg" id="projectModal">
+  <div class="modal">
+    <div class="modal-title">새 여행 만들기</div>
+    <label class="modal-label">여행 이름 *</label>
+    <input class="modal-inp" id="pName" placeholder="예: 도쿄 봄 여행">
+    <label class="modal-label">목적지</label>
+    <input class="modal-inp" id="pDest" placeholder="예: 일본 도쿄">
+    <label class="modal-label">여행 기간</label>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <input class="modal-inp" id="pStart" type="date" style="margin:0;flex:1">
+      <span style="color:var(--sub);line-height:40px">~</span>
+      <input class="modal-inp" id="pEnd" type="date" style="margin:0;flex:1">
+    </div>
+    <label class="modal-label">아이콘</label>
+    <div class="emoji-grid" id="emojiGrid"></div>
+    <label class="modal-label">커버 색상</label>
+    <div class="color-grid" id="colorGrid"></div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="closeModal()">취소</button>
+      <button class="modal-btn primary" onclick="saveProject()">만들기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SB_URL = 'https://inxvbiyfwndjqouvgjdq.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlueHZiaXlmd25kanFvdXZnamRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2Njk1NTYsImV4cCI6MjA5ODI0NTU1Nn0.N_7GGA4RoOxLKkPoZ1yEIqhYeF7pxGerx_NbLK2vBN8';
+const SB_H  = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
+
+const EMOJIS = ['✈️','🌍','🏝️','🗺️','🏔️','🎌','🏰','🌆','🌊','🍜','🎭','🚢','🚂','🏕️','🎒','📸'];
+const COLORS = ['#1a237e','#1b5e20','#4a148c','#b71c1c','#e65100','#006064','#37474f','#880e4f','#1565c0','#2e7d32','#6a1b9a','#c62828'];
+let selectedEmoji = '✈️', selectedColor = '#1a237e';
+let projects = [];
+
+// D-day 계산
+function dday(start) {
+  if (!start) return '';
+  const diff = Math.ceil((new Date(start) - new Date()) / 86400000);
+  if (diff > 0) return `D-${diff}`;
+  if (diff === 0) return 'D-Day';
+  return `D+${Math.abs(diff)}`;
+}
+
+async function loadProjects() {
+  const r = await fetch(`${SB_URL}/rest/v1/projects?order=sort_order.asc,created_at.asc`, { headers: SB_H });
+  projects = r.ok ? await r.json() : [];
+  // 포르투갈 프로젝트는 허브에서 고정 카드로 표시하므로 제외
+  const others = projects.filter(p => p.name !== '포르투갈 7박 8일');
+  renderProjects(others);
+}
+
+function renderProjects(list) {
+  const grid = document.getElementById('projectGrid');
+  grid.style.display = 'contents';
+  grid.innerHTML = list.map(p => {
+    const dates = p.start_date ? `${p.start_date}${p.end_date ? ' ~ ' + p.end_date : ''}` : '';
+    const dd = dday(p.start_date);
+    return `<a class="project-card" href="planner.html?project=${p.id}">
+      <div class="project-card-cover" style="background:${p.cover_color||'#1a237e'}">${p.cover_emoji||'✈️'}</div>
+      <div class="project-card-actions" onclick="event.preventDefault()">
+        <span class="card-act-btn" title="삭제" onclick="deleteProject('${p.id}',event)">🗑️</span>
+      </div>
+      <div class="project-card-body">
+        <div class="project-card-name">${p.name}</div>
+        <div class="project-card-dest">${p.destination||''}</div>
+        ${dates ? `<div class="project-card-dates">${dates}${dd ? ' · ' + dd : ''}</div>` : ''}
+      </div>
+    </a>`;
+  }).join('');
+}
+
+// 모달
+function initEmojiGrid() {
+  document.getElementById('emojiGrid').innerHTML = EMOJIS.map(e =>
+    `<span class="emoji-opt${e===selectedEmoji?' on':''}" onclick="selEmoji(this,'${e}')">${e}</span>`
+  ).join('');
+}
+function initColorGrid() {
+  document.getElementById('colorGrid').innerHTML = COLORS.map(c =>
+    `<div class="color-opt${c===selectedColor?' on':''}" style="background:${c}" onclick="selColor(this,'${c}')"></div>`
+  ).join('');
+}
+function selEmoji(el,e){document.querySelectorAll('.emoji-opt').forEach(x=>x.classList.remove('on'));el.classList.add('on');selectedEmoji=e;}
+function selColor(el,c){document.querySelectorAll('.color-opt').forEach(x=>x.classList.remove('on'));el.classList.add('on');selectedColor=c;}
+
+function openModal() {
+  ['pName','pDest','pStart','pEnd'].forEach(id=>document.getElementById(id).value='');
+  selectedEmoji='✈️'; selectedColor='#1a237e';
+  initEmojiGrid(); initColorGrid();
+  document.getElementById('projectModal').classList.add('open');
+}
+function closeModal() { document.getElementById('projectModal').classList.remove('open'); }
+
+async function saveProject() {
+  const name = document.getElementById('pName').value.trim();
+  if (!name) { alert('여행 이름을 입력해 주세요'); return; }
+  const data = {
+    name, destination: document.getElementById('pDest').value.trim(),
+    start_date: document.getElementById('pStart').value,
+    end_date: document.getElementById('pEnd').value,
+    cover_emoji: selectedEmoji, cover_color: selectedColor,
+    sort_order: projects.length
+  };
+  const r = await fetch(`${SB_URL}/rest/v1/projects`, { method:'POST', headers:SB_H, body:JSON.stringify(data) });
+  if (r.ok) {
+    const created = await r.json();
+    closeModal();
+    // planner.html로 바로 이동
+    window.location.href = `planner.html?project=${created[0].id}`;
+  }
+}
+
+async function deleteProject(id, e) {
+  e.stopPropagation();
+  if (!confirm('이 여행을 삭제하시겠습니까?')) return;
+  await fetch(`${SB_URL}/rest/v1/projects?id=eq.${id}`, { method:'DELETE', headers:SB_H });
+  await loadProjects();
+}
+
+loadProjects();
+</script>
+</body>
+</html>
