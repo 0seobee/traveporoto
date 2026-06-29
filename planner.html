@@ -643,13 +643,13 @@ async function loadWikiImages(dest, preview) {
     if (!pages.length) { preview.innerHTML = `<div style="color:#7b80a0;font-size:12px">이미지를 찾을 수 없습니다</div>`; return; }
 
     const titles = pages.map(p => encodeURIComponent(p.title)).join('|');
-    const imgUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${titles}&prop=pageimages&format=json&pithumbsize=400&piprop=thumbnail&origin=*`;
+    const imgUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${titles}&prop=pageimages&format=json&pithumbsize=1200&piprop=thumbnail&origin=*`;
     const imgRes = await fetch(imgUrl);
     const imgData = await imgRes.json();
     const pageObjs = Object.values(imgData.query?.pages || {});
     const images = pageObjs.filter(p => p.thumbnail?.source).map(p => ({
-      thumb: p.thumbnail.source,
-      full: p.thumbnail.source.replace(/\/\d+px-/, '/1600px-')
+      thumb: p.thumbnail.source.replace(/\/\d+px-/, '/200px-'),
+      full: p.thumbnail.source  // 1200px 요청했으므로 그대로 사용
     }));
 
     preview.innerHTML = '';
@@ -682,11 +682,20 @@ async function autoSetBg() {
 }
 
 async function applyBgUrl(url) {
-  await sbPatch('projects', currentProject.id, { cover_bg: url });
-  currentProject.cover_bg = url;
-  closeBgPicker();
+  // 즉시 화면에 반영
   const el = document.getElementById('heroBgEl');
   if (el) el.style.backgroundImage = `url('${url}')`;
+  currentProject.cover_bg = url;
+  closeBgPicker();
+  // Supabase 저장
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/projects?id=eq.${currentProject.id}`, {
+      method: 'PATCH',
+      headers: { ...SB_H, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ cover_bg: url })
+    });
+    if (!r.ok) console.error('배경 저장 실패', r.status, await r.text());
+  } catch(e) { console.error('배경 저장 오류', e); }
 }
 
 async function saveBgUrl() {
