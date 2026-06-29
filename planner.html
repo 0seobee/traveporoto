@@ -410,6 +410,9 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
 
 // ── Dashboard ──
 function goHome() {
+  if (window.parent !== window && window.parent.closeProjectOverlay) {
+    window.parent.closeProjectOverlay(); return;
+  }
   location.href = 'hub.html';
   document.getElementById('navMainBtn').textContent = '+ 새 여행';
   document.getElementById('navMainBtn').onclick = openProjectModal;
