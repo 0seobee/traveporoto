@@ -1463,7 +1463,11 @@ function renderCards(container, tab, items) {
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:700;color:#e8eaf6;margin-bottom:3px">${item.data.title||''}</div>
         ${item.data.detail?`<div style="font-size:12px;color:#9fa8da;line-height:1.55">${item.data.detail}</div>`:''}
-        ${item.data.link?`<a href="${item.data.link}" target="_blank" style="font-size:11px;color:#7986cb;text-decoration:none;margin-top:3px;display:inline-block">🔗 링크 바로가기</a>`:''}
+        <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
+          ${item.data.link?`<a href="${item.data.link}" target="_blank" style="font-size:11px;color:#7986cb;text-decoration:none">🔗 링크</a>`:''}
+          ${item.data.lat&&item.data.lng?`<a href="https://maps.google.com/?q=${item.data.lat},${item.data.lng}" target="_blank" style="font-size:11px;color:#43a047;text-decoration:none">📍 지도 보기</a>`:''}
+          ${item.data.place?`<span style="font-size:11px;color:#7b80a0">📍 ${item.data.place}</span>`:''}
+        </div>
       </div>
       <button class="del-btn" onclick="event.stopPropagation();deleteItem('${item.id}','${tab.id}')">삭제</button>
     </div>`).join('');
@@ -1481,20 +1485,66 @@ function renderCards(container, tab, items) {
     <div class="pane-header"><div class="pane-title">🃏 ${tab.title}</div><span class="badge">${items.length}개</span></div>
     <div class="form-box">
       <div class="form-row">
-        <input class="f-inp" id="cIcon" placeholder="아이콘" style="max-width:72px;text-align:center;font-size:18px">
+        <button id="cIconBtn" onclick="toggleCardEmojiPicker()" style="width:48px;height:40px;background:rgba(255,255,255,.06);border:1px solid #3a3f6b;border-radius:8px;font-size:20px;cursor:pointer;flex-shrink:0;position:relative" title="이모지 선택">📌</button>
+        <input type="hidden" id="cIcon" value="📌">
         <input class="f-inp" id="cTitle" placeholder="제목 *" style="flex:2">
         <input class="f-inp" id="cDetail" placeholder="설명/내용">
       </div>
-      <div class="form-row">
+      <div class="form-row" style="position:relative">
+        <input class="f-inp" id="cPlace" placeholder="📍 장소 검색" oninput="cardPlaceSearch(this)" autocomplete="off">
+        <div id="cPlaceSuggest" style="display:none;position:absolute;top:42px;left:0;right:0;background:#1e2240;border:1px solid #3a3f6b;border-radius:8px;z-index:50;max-height:160px;overflow-y:auto"></div>
         <input class="f-inp" id="cLink" placeholder="링크 URL (선택)">
-        <input class="f-inp" id="cGroup" placeholder="카드 그룹" list="cGroupList" style="max-width:180px">
+      </div>
+      <div class="form-row">
+        <input class="f-inp" id="cGroup" placeholder="카드 그룹" list="cGroupList">
         <datalist id="cGroupList">${groupOpts}</datalist>
         <button class="f-btn" onclick="addCard('${tab.id}')">추가</button>
       </div>
     </div>
+    <div id="cardEmojiPicker" style="display:none;background:#1e2240;border:1px solid #3a3f6b;border-radius:12px;padding:12px;margin-bottom:12px;flex-wrap:wrap;gap:4px">
+      ${CAT_EMOJIS.concat(['🏨','🍽️','☕','🍷','🚇','🚕','🚶','🧭','💰','📞','🎵','🎨','⛪','🏛️','🌸','🌊','🏔️','🗼','🎡','🛒','💈','🎪']).map(e=>
+        `<span onclick="setCardIcon('${e}')" style="font-size:22px;cursor:pointer;padding:4px;border-radius:6px;transition:.1s" onmouseover="this.style.background='rgba(92,107,192,.3)'" onmouseout="this.style.background=''">${e}</span>`
+      ).join('')}
+    </div>
     <div class="icard-grid">${groupHtml}</div>
     ${!items.length?`<div class="empty-state"><div class="icon">🃏</div><p>그룹명과 항목을 추가해 보세요</p></div>`:''}
   </div>`;
+}
+
+function toggleCardEmojiPicker() {
+  const p = document.getElementById('cardEmojiPicker');
+  p.style.display = p.style.display === 'none' ? 'flex' : 'none';
+}
+function setCardIcon(emoji) {
+  document.getElementById('cIcon').value = emoji;
+  document.getElementById('cIconBtn').textContent = emoji;
+  document.getElementById('cardEmojiPicker').style.display = 'none';
+}
+
+let cardPlaceLat = null, cardPlaceLng = null, cardPlaceName = '';
+async function cardPlaceSearch(input) {
+  const q = input.value.trim();
+  const box = document.getElementById('cPlaceSuggest');
+  cardPlaceLat = null; cardPlaceLng = null; cardPlaceName = '';
+  if (q.length < 2) { box.style.display = 'none'; return; }
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&accept-language=ko`);
+    const list = await r.json();
+    if (!list.length) { box.style.display = 'none'; return; }
+    box.style.display = 'block';
+    box.innerHTML = list.map(p => `
+      <div onclick="selectCardPlace('${p.display_name.replace(/'/g,'`')}',${p.lat},${p.lon})"
+        style="padding:8px 12px;cursor:pointer;font-size:12px;color:#c5cae9;border-bottom:1px solid #252940"
+        onmouseover="this.style.background='rgba(92,107,192,.2)'" onmouseout="this.style.background=''">
+        📍 ${p.display_name}
+      </div>`).join('');
+  } catch(e) { box.style.display = 'none'; }
+}
+function selectCardPlace(name, lat, lng) {
+  cardPlaceLat = lat; cardPlaceLng = lng;
+  cardPlaceName = name.split(',')[0];
+  document.getElementById('cPlace').value = cardPlaceName;
+  document.getElementById('cPlaceSuggest').style.display = 'none';
 }
 
 async function addCard(tabId) {
@@ -1505,10 +1555,15 @@ async function addCard(tabId) {
     title,
     detail: document.getElementById('cDetail').value.trim(),
     link: document.getElementById('cLink').value.trim(),
-    group: document.getElementById('cGroup').value.trim()
+    group: document.getElementById('cGroup').value.trim(),
+    place: cardPlaceName || document.getElementById('cPlace').value.trim(),
+    lat: cardPlaceLat, lng: cardPlaceLng
   };
   await sbPost('tab_items', { tab_id: tabId, data, sort_order: 0 });
-  ['cIcon','cTitle','cDetail','cLink'].forEach(id=>document.getElementById(id).value='');
+  ['cTitle','cDetail','cLink','cPlace'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('cIcon').value = '📌';
+  document.getElementById('cIconBtn').textContent = '📌';
+  cardPlaceLat = null; cardPlaceLng = null; cardPlaceName = '';
   const tab = currentTab;
   const newItems = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
   renderCards(document.getElementById('tabContent'), tab, newItems);
