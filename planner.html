@@ -266,21 +266,7 @@ textarea.f-inp{resize:vertical;min-height:60px}
   <button class="nav-btn" id="navMainBtn" onclick="openProjectModal()">+ 새 여행</button>
 </nav>
 
-<!-- DASHBOARD -->
-<div class="view active" id="dashboard">
-  <div style="padding:32px 24px;max-width:1100px;margin:0 auto">
-    <div class="dash-header">
-      <div class="dash-title">내 여행 프로젝트</div>
-      <div class="dash-sub">여행을 추가하고 탭으로 자유롭게 계획하세요</div>
-    </div>
-    <div class="project-grid" id="projectGrid">
-      <div class="project-card project-card-new" onclick="openProjectModal()">
-        <div class="plus">＋</div>
-        <span>새 여행 추가</span>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- DASHBOARD (removed) -->
 
 <!-- PROJECT VIEW -->
 <div class="view" id="project-view">
@@ -424,10 +410,7 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
 
 // ── Dashboard ──
 function goHome() {
-  document.getElementById('dashboard').classList.add('active');
-  document.getElementById('project-view').classList.remove('active');
-  document.getElementById('navBack').style.display = 'none';
-  document.getElementById('navProjectName').style.display = 'none';
+  location.href = 'hub.html';
   document.getElementById('navMainBtn').textContent = '+ 새 여행';
   document.getElementById('navMainBtn').onclick = openProjectModal;
   currentProject = null;
@@ -521,7 +504,6 @@ async function deleteProject(id) {
 async function openProject(id) {
   currentProject = projects.find(p => p.id === id);
   if (!currentProject) return;
-  document.getElementById('dashboard').classList.remove('active');
   document.getElementById('project-view').classList.add('active');
   document.getElementById('navBack').style.display = 'block';
   document.getElementById('navProjectName').style.display = 'block';
