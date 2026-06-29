@@ -203,6 +203,21 @@ textarea.f-inp{resize:vertical;min-height:60px}
 .map-coord-row{display:flex;gap:6px;margin-bottom:6px}
 .map-coord-hint{font-size:10px;color:var(--sub);margin-bottom:6px}
 
+/* ── SLIDES ── */
+.slide-viewer{display:flex;flex-direction:column;gap:12px;padding:8px 0}
+.slide-stage{position:relative;background:#111;border-radius:14px;overflow:hidden;aspect-ratio:16/9;cursor:pointer}
+.slide-stage img{width:100%;height:100%;object-fit:contain;display:block;transition:opacity .2s}
+.slide-nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:none;background:rgba(0,0,0,.5);color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;z-index:2}
+.slide-nav:hover{background:var(--accent)}
+.slide-prev{left:12px}.slide-next{right:12px}
+.slide-counter{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;font-size:13px;font-weight:700;padding:4px 14px;border-radius:20px;z-index:2;pointer-events:none}
+.slide-thumbs{display:flex;gap:8px;overflow-x:auto;padding:4px 2px}
+.slide-thumbs::-webkit-scrollbar{height:4px}
+.slide-thumbs::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.slide-thumb{height:52px;border-radius:6px;cursor:pointer;border:2px solid transparent;opacity:.5;transition:.15s;flex-shrink:0;object-fit:cover}
+.slide-thumb.on{border-color:var(--accent);opacity:1}
+.slide-thumb:hover{opacity:.85}
+
 /* ── FILE ── */
 .file-list{display:flex;flex-direction:column;gap:8px}
 .file-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px}
@@ -805,6 +820,7 @@ async function renderTabContent(tab) {
   else if (tab.type === 'map') renderMap(container, tab, items);
   else if (tab.type === 'file') renderFiles(container, tab, items);
   else if (tab.type === 'budget') renderBudget(container, tab, items);
+  else if (tab.type === 'slides') renderSlides(container, tab);
 }
 
 // ── SCHEDULE ──
@@ -1957,6 +1973,7 @@ async function deleteItem(id, tabId) {
   else if (tab.type === 'map') renderMap(container, tab, items);
   else if (tab.type === 'file') renderFiles(container, tab, items);
   else if (tab.type === 'budget') renderBudget(container, tab, items);
+  else if (tab.type === 'slides') renderSlides(container, tab);
 }
 
 // ── BUDGET ──
@@ -1966,6 +1983,64 @@ function calcBudget(items, currency) {
   const expense = rows.filter(i=>i.data.type==='out').reduce((s,i)=>s+parseFloat((i.data.amount||'0').replace(/,/g,'')),0);
   return { income, expense, balance: income - expense };
 }
+
+// ── SLIDES ──
+function renderSlides(container, tab) {
+  const cfg = tab.config || {};
+  const dir = cfg.slideDir || 'slides/shamon';
+  const total = cfg.slideCount || 19;
+  let cur = 1;
+
+  container.innerHTML = `<div class="slide-viewer">
+    <div class="slide-stage" id="slideStage">
+      <button class="slide-nav slide-prev" onclick="slideMov(-1)">‹</button>
+      <img id="slideImg" src="${dir}/slide-1.png" alt="슬라이드 1">
+      <button class="slide-nav slide-next" onclick="slideMov(1)">›</button>
+      <div class="slide-counter"><span id="slideCur">1</span> / ${total}</div>
+    </div>
+    <div class="slide-thumbs" id="slideThumbs">
+      ${Array.from({length:total},(_,i)=>
+        `<img class="slide-thumb${i===0?' on':''}" src="${dir}/slide-${i+1}.png" alt="${i+1}" onclick="slideGo(${i+1})">`
+      ).join('')}
+    </div>
+  </div>`;
+
+  window._slideTotal = total;
+  window._slideDir = dir;
+  window._slideCur = 1;
+
+  // 키보드 화살표
+  container._slideKeyHandler = e => {
+    if (e.key === 'ArrowRight') slideMov(1);
+    if (e.key === 'ArrowLeft')  slideMov(-1);
+  };
+  document.addEventListener('keydown', container._slideKeyHandler);
+}
+
+window.slideMov = function(d) {
+  const total = window._slideTotal || 19;
+  window._slideCur = Math.max(1, Math.min(total, (window._slideCur||1) + d));
+  slideGo(window._slideCur);
+};
+
+window.slideGo = function(n) {
+  window._slideCur = n;
+  const img = document.getElementById('slideImg');
+  const cur = document.getElementById('slideCur');
+  const thumbs = document.querySelectorAll('.slide-thumb');
+  if (!img) return;
+  img.style.opacity = '0';
+  setTimeout(() => {
+    img.src = `${window._slideDir}/slide-${n}.png`;
+    img.alt = `슬라이드 ${n}`;
+    img.style.opacity = '1';
+  }, 120);
+  if (cur) cur.textContent = n;
+  thumbs.forEach((t,i) => t.classList.toggle('on', i+1===n));
+  // 썸네일 스크롤
+  const activeThumb = thumbs[n-1];
+  if (activeThumb) activeThumb.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+};
 
 function renderBudget(container, tab, items) {
   const sym = { krw:'₩', eur:'€' };
