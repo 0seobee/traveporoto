@@ -87,7 +87,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.95
 <nav>
   <div class="nav-logo">✈️ 내 여행 플래너</div>
   <div class="nav-spacer"></div>
-  <button class="nav-btn" onclick="openModal()">+ 새 여행</button>
+  <button class="nav-btn" onclick="window.location.href='planner.html'">+ 새 여행</button>
 </nav>
 
 <div class="hero">
@@ -119,36 +119,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.95
     <div id="projectGrid"></div>
 
     <!-- 새 여행 추가 -->
-    <div class="new-card" onclick="openModal()">
+    <div class="new-card" onclick="window.location.href='planner.html'">
       <div class="plus">＋</div>
       <span>새 여행 추가</span>
     </div>
 
-  </div>
-</div>
-
-<!-- 모달 -->
-<div class="modal-bg" id="projectModal">
-  <div class="modal">
-    <div class="modal-title">새 여행 만들기</div>
-    <label class="modal-label">여행 이름 *</label>
-    <input class="modal-inp" id="pName" placeholder="예: 도쿄 봄 여행">
-    <label class="modal-label">목적지</label>
-    <input class="modal-inp" id="pDest" placeholder="예: 일본 도쿄">
-    <label class="modal-label">여행 기간</label>
-    <div style="display:flex;gap:8px;margin-bottom:14px">
-      <input class="modal-inp" id="pStart" type="date" style="margin:0;flex:1">
-      <span style="color:var(--sub);line-height:40px">~</span>
-      <input class="modal-inp" id="pEnd" type="date" style="margin:0;flex:1">
-    </div>
-    <label class="modal-label">아이콘</label>
-    <div class="emoji-grid" id="emojiGrid"></div>
-    <label class="modal-label">커버 색상</label>
-    <div class="color-grid" id="colorGrid"></div>
-    <div class="modal-btns">
-      <button class="modal-btn cancel" onclick="closeModal()">취소</button>
-      <button class="modal-btn primary" onclick="saveProject()">만들기</button>
-    </div>
   </div>
 </div>
 
