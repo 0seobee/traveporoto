@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -53,11 +54,32 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;background:rgba(13,15,26,.95
 /* ── PROJECT VIEW ── */
 #project-view{display:none;flex-direction:column}
 #project-view.active{display:flex}
-.project-header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;gap:16px}
-.project-header-emoji{font-size:32px}
+.project-header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:16px}
+.project-header-emoji{font-size:28px}
 .project-header-info{flex:1}
-.project-header-name{font-size:20px;font-weight:800}
+.project-header-name{font-size:18px;font-weight:800}
 .project-header-meta{font-size:12px;color:var(--sub);margin-top:2px}
+
+/* ── HERO ── */
+.project-hero{position:relative;min-height:70vh;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;flex-shrink:0}
+.hero-bg{position:absolute;inset:0;background-size:cover;background-position:center;background-color:#1a237e;transition:.5s}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.15) 0%,rgba(0,0,0,.65) 60%,rgba(0,0,0,.85) 100%)}
+.hero-body{position:relative;z-index:1;padding:40px 48px;color:#fff}
+.hero-emoji{font-size:56px;margin-bottom:16px;filter:drop-shadow(0 4px 12px rgba(0,0,0,.4))}
+.hero-title{font-size:clamp(32px,6vw,64px);font-weight:900;line-height:1.1;margin-bottom:10px;text-shadow:0 2px 16px rgba(0,0,0,.5)}
+.hero-sub{font-size:15px;color:rgba(255,255,255,.75);margin-bottom:24px}
+.hero-stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px}
+.hero-stat{background:rgba(255,255,255,.12);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:10px 18px;text-align:center}
+.hero-stat-val{font-size:22px;font-weight:900;display:block}
+.hero-stat-label{font-size:11px;color:rgba(255,255,255,.7);margin-top:2px;display:block}
+.hero-btns{display:flex;gap:10px;flex-wrap:wrap}
+.hero-btn{border:none;border-radius:24px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;display:flex;align-items:center;gap:6px}
+.hero-btn.primary{background:#e53935;color:#fff}
+.hero-btn.primary:hover{background:#ef5350}
+.hero-btn.secondary{background:rgba(255,255,255,.15);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.3);color:#fff}
+.hero-btn.secondary:hover{background:rgba(255,255,255,.25)}
+.hero-bg-btn{position:absolute;top:16px;right:16px;z-index:2;background:rgba(0,0,0,.4);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:.2s}
+.hero-bg-btn:hover{background:rgba(0,0,0,.6)}
 
 /* ── TAB BAR ── */
 .tab-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;gap:4px;overflow-x:auto;min-height:46px}
@@ -132,6 +154,15 @@ textarea.f-inp{resize:vertical;min-height:60px}
 .info-card-link:hover{text-decoration:underline}
 .info-card-actions{display:flex;gap:6px;margin-top:8px}
 
+#schedSheetBox.open{display:flex!important}
+.pay-toggle{background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--sub);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;white-space:nowrap}
+.pay-toggle.on{background:rgba(92,107,192,.25);border-color:var(--accent);color:#fff}
+.sched-cost-bar{background:rgba(92,107,192,.08);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:12px}
+.sched-cost-item{display:flex;align-items:center;gap:5px}
+.sched-cost-label{color:var(--sub);font-weight:600}
+.sched-cost-val{font-weight:800;color:var(--text)}
+.sched-cost-cash{color:#66bb6a}
+.sched-cost-card{color:#42a5f5}
 /* ── SCHEDULE ── */
 .sched-dates{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
 .date-tab{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:6px}
@@ -264,6 +295,7 @@ textarea.f-inp{resize:vertical;min-height:60px}
   <div class="tab-bar" id="tabBar">
     <button class="tab-add-btn" onclick="openTabModal()">＋ 탭 추가</button>
   </div>
+  <input type="file" id="heroBgInput" accept="image/*" style="display:none" onchange="uploadHeroBg(this)">
   <div class="tab-content" id="tabContent"></div>
 </div>
 
@@ -505,6 +537,8 @@ async function openProject(id) {
   document.getElementById('navMainBtn').onclick = openTabModal;
   renderProjectHeader();
   await loadTabs();
+  // 탭 없으면 히어로, 있으면 히어로 먼저 표시
+  showProjectHero();
 }
 
 function renderProjectHeader() {
@@ -518,15 +552,148 @@ function renderProjectHeader() {
     </div>`;
 }
 
+async function showProjectHero() {
+  const p = currentProject;
+  const allItems = await sbGet('tab_items', `tab_id=in.(${tabs.map(t=>t.id).join(',') || 'null'})`);
+  const days = (p.start_date && p.end_date)
+    ? Math.ceil((new Date(p.end_date)-new Date(p.start_date))/86400000)+1 : null;
+  const mapTab = tabs.find(t=>t.type==='map');
+  const schedTab = tabs.find(t=>t.type==='schedule');
+  const placeCount = mapTab ? allItems.filter(i=>i.tab_id===mapTab.id).length : 0;
+  const schedCount = schedTab ? allItems.filter(i=>i.tab_id===schedTab.id).length : 0;
+  const dates = (p.start_date && p.end_date) ? `${p.start_date} ~ ${p.end_date}` : (p.start_date||'');
+
+  const stats = [
+    days ? {val: days, label:'총 일수'} : null,
+    schedCount ? {val: schedCount, label:'일정'} : null,
+    placeCount ? {val: placeCount, label:'장소'} : null,
+    tabs.length ? {val: tabs.length, label:'탭'} : null,
+  ].filter(Boolean);
+
+  const bgStyle = p.cover_bg
+    ? `background-image:url('${p.cover_bg}');background-color:${p.cover_color||'#1a237e'}`
+    : `background-color:${p.cover_color||'#1a237e'}`;
+
+  const heroHtml = `<div class="project-hero" id="projectHero">
+    <div class="hero-bg" id="heroBgEl" style="${bgStyle}"></div>
+    <div class="hero-overlay"></div>
+    <button class="hero-bg-btn" onclick="openBgPicker()">🖼️ 배경 변경</button>
+    <div class="hero-body">
+      <div class="hero-emoji">${p.cover_emoji||'✈️'}</div>
+      <div class="hero-title">${p.name}</div>
+      <div class="hero-sub">${[p.destination, dates].filter(Boolean).join(' · ')}</div>
+      ${stats.length ? `<div class="hero-stats">${stats.map(s=>`
+        <div class="hero-stat"><span class="hero-stat-val">${s.val}</span><span class="hero-stat-label">${s.label}</span></div>`).join('')}
+      </div>` : ''}
+      <div class="hero-btns">
+        ${schedTab ? `<button class="hero-btn primary" onclick="openTab('${schedTab.id}')">📅 일정 보기</button>` : ''}
+        ${mapTab ? `<button class="hero-btn secondary" onclick="openTab('${mapTab.id}')">🗺️ 지도 보기</button>` : ''}
+        ${tabs.filter(t=>t.type!=='schedule'&&t.type!=='map').slice(0,3).map(t=>
+          `<button class="hero-btn secondary" onclick="openTab('${t.id}')">${t.title}</button>`).join('')}
+      </div>
+    </div>
+  </div>`;
+
+  const tabContent = document.getElementById('tabContent');
+  tabContent.innerHTML = heroHtml;
+  // 탭 바에서 선택 해제
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('on'));
+}
+
+function openBgPicker() {
+  document.getElementById('bgPickerModal')?.remove();
+  const menu = document.createElement('div');
+  menu.id = 'bgPickerModal';
+  menu.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:999;background:#1e2240;border:1px solid #3a3f6b;border-radius:16px;padding:20px;width:360px;box-shadow:0 8px 40px rgba(0,0,0,.6)';
+  const dest = currentProject.destination || currentProject.name || '';
+  menu.innerHTML = `
+    <div style="font-size:15px;font-weight:800;color:#e8eaf6;margin-bottom:16px">🖼️ 배경 이미지 설정</div>
+    ${dest ? `
+    <div style="font-size:12px;color:#7b80a0;margin-bottom:6px">목적지 자동 추천</div>
+    <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap" id="bgAutoPreview"></div>
+    <button class="f-btn" id="bgAutoBtn" style="width:100%;margin-bottom:14px;background:linear-gradient(135deg,#5c6bc0,#7986cb)" onclick="autoSetBg()">✨ '${dest}' 대표 이미지로 자동 설정</button>
+    <div style="border-top:1px solid #2a2f52;margin-bottom:14px"></div>` : ''}
+    <div style="font-size:12px;color:#7b80a0;margin-bottom:6px">이미지 URL 직접 입력</div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <input id="bgUrlInput" class="f-inp" placeholder="https://..." value="${currentProject.cover_bg||''}" style="flex:1">
+      <button class="f-btn" onclick="saveBgUrl()">적용</button>
+    </div>
+    <button class="f-btn" style="width:100%;margin-bottom:10px;background:rgba(255,255,255,.06);border:1px solid #3a3f6b;color:#e8eaf6" onclick="document.getElementById('heroBgInput').click();closeBgPicker()">📁 파일에서 업로드</button>
+    ${currentProject.cover_bg ? `<button style="width:100%;background:rgba(229,57,53,.1);border:1px solid rgba(229,57,53,.3);color:#ef9a9a;border-radius:8px;padding:8px;font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:6px" onclick="removeBg()">배경 제거</button>` : ''}
+    <div style="text-align:right;margin-top:8px"><button onclick="closeBgPicker()" style="background:none;border:none;color:#7b80a0;cursor:pointer;font-family:inherit;font-size:13px">닫기</button></div>
+  `;
+  // 자동 미리보기 썸네일 3장 생성
+  if (dest) {
+    const preview = menu.querySelector('#bgAutoPreview');
+    const keywords = encodeURIComponent(dest + ',travel');
+    [1,2,3].forEach(i => {
+      const img = document.createElement('img');
+      img.src = `https://source.unsplash.com/120x70/?${keywords}&sig=${i}`;
+      img.style.cssText = 'width:calc(33% - 4px);height:60px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:.2s';
+      img.title = '이 이미지로 설정';
+      img.onclick = () => applyBgUrl(`https://source.unsplash.com/1600x900/?${keywords}&sig=${i}`);
+      img.onmouseover = () => img.style.borderColor = '#7986cb';
+      img.onmouseout = () => img.style.borderColor = 'transparent';
+      preview.appendChild(img);
+    });
+  }
+  document.body.appendChild(menu);
+}
+function closeBgPicker() { document.getElementById('bgPickerModal')?.remove(); }
+
+async function autoSetBg() {
+  const dest = currentProject.destination || currentProject.name || '';
+  if (!dest) return;
+  const btn = document.getElementById('bgAutoBtn');
+  if (btn) { btn.textContent = '⏳ 불러오는 중...'; btn.disabled = true; }
+  const url = `https://source.unsplash.com/1600x900/?${encodeURIComponent(dest + ',travel')}`;
+  await applyBgUrl(url);
+}
+
+async function applyBgUrl(url) {
+  await sbPatch('projects', currentProject.id, { cover_bg: url });
+  currentProject.cover_bg = url;
+  closeBgPicker();
+  const el = document.getElementById('heroBgEl');
+  if (el) el.style.backgroundImage = `url('${url}')`;
+}
+
+async function saveBgUrl() {
+  const url = document.getElementById('bgUrlInput').value.trim();
+  await sbPatch('projects', currentProject.id, { cover_bg: url });
+  currentProject.cover_bg = url;
+  closeBgPicker();
+  document.getElementById('heroBgEl').style.backgroundImage = url ? `url('${url}')` : '';
+}
+
+async function uploadHeroBg(input) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+  const reader = new FileReader();
+  reader.onload = async e => {
+    const base64 = e.target.result;
+    await sbPatch('projects', currentProject.id, { cover_bg: base64 });
+    currentProject.cover_bg = base64;
+    const el = document.getElementById('heroBgEl');
+    if (el) el.style.backgroundImage = `url('${base64}')`;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function removeBg() {
+  await sbPatch('projects', currentProject.id, { cover_bg: '' });
+  currentProject.cover_bg = '';
+  closeBgPicker();
+  const el = document.getElementById('heroBgEl');
+  if (el) el.style.backgroundImage = '';
+}
+
 // ── Tabs ──
 async function loadTabs() {
   tabs = await sbGet('tabs', `project_id=eq.${currentProject.id}&order=sort_order.asc,created_at.asc`);
   renderTabBar();
-  if (tabs.length > 0) openTab(tabs[0].id);
-  else {
-    document.getElementById('tabContent').innerHTML =
-      `<div class="empty-state"><div class="icon">📂</div><p>탭을 추가해서 여행을 계획하세요!</p></div>`;
-  }
+  // 히어로 화면에서 탭 자동 열기 하지 않음 — openProject에서 showProjectHero() 호출
 }
 
 function renderTabBar() {
@@ -587,7 +754,7 @@ async function renderTabContent(tab) {
 }
 
 // ── SCHEDULE ──
-let schedDates = [], currentSchedDate = null;
+let schedDates = [], currentSchedDate = null, currentPayMethod = 'cash';
 
 async function renderSchedule(container, tab, items) {
   schedDates = [...new Set(items.map(i => i.data.date).filter(Boolean))].sort();
@@ -597,19 +764,57 @@ async function renderSchedule(container, tab, items) {
   container.innerHTML = `<div class="pane-wrap">
     <div class="pane-header">
       <div class="pane-title">📅 ${tab.title}</div>
+      <div style="display:flex;gap:8px">
+        <button class="add-btn" style="font-size:12px;background:rgba(92,107,192,.2);border:1px solid var(--accent)" onclick="document.getElementById('schedXlsInput').click()">📊 Excel 가져오기</button>
+        <button class="add-btn" style="font-size:12px;background:rgba(92,107,192,.2);border:1px solid var(--accent)" onclick="document.getElementById('schedSheetBox').classList.toggle('open')">🔗 구글시트 연결</button>
+      </div>
+    </div>
+    <input type="file" id="schedXlsInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="importSchedExcel(this,'${tab.id}')">
+    <div id="schedSheetBox" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;gap:8px;flex-direction:column">
+      <div style="font-size:12px;color:var(--sub);margin-bottom:4px">구글 시트를 <b style="color:var(--text)">링크가 있는 모든 사용자 보기</b>로 공유 후 URL을 붙여넣으세요</div>
+      <div style="display:flex;gap:8px">
+        <input class="f-inp" id="schedSheetUrl" placeholder="https://docs.google.com/spreadsheets/d/..." style="flex:1">
+        <button class="f-btn" onclick="importSchedSheet('${tab.id}')">가져오기</button>
+      </div>
     </div>
     <div class="sched-dates" id="schedDates"></div>
+    <div class="sched-cost-bar" id="schedCostBar"></div>
     <div id="schedItems"></div>
     <div class="form-box" style="margin-top:20px">
       <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--accent2)">＋ 일정 추가</div>
       <div class="form-row">
-        <input class="f-inp" id="sDate" type="date" style="max-width:160px">
-        <input class="f-inp" id="sTime" type="time" placeholder="시간" style="max-width:120px">
-        <input class="f-inp" id="sPlace" placeholder="장소">
+        <div class="f-inp" style="max-width:120px;display:flex;align-items:center;gap:3px;padding:6px 10px">
+          <input id="sTimeH" maxlength="2" placeholder="HH" inputmode="numeric"
+            style="background:none;border:none;color:var(--text);font-size:13px;width:28px;outline:none;text-align:center;font-family:inherit"
+            oninput="this.value=this.value.replace(/\D/g,'');if(this.value.length===2)document.getElementById('sTimeM').focus()"
+            onblur="if(this.value.length===1)this.value='0'+this.value">
+          <span style="color:var(--accent2);font-weight:700">:</span>
+          <input id="sTimeM" maxlength="2" placeholder="MM" inputmode="numeric"
+            style="background:none;border:none;color:var(--text);font-size:13px;width:28px;outline:none;text-align:center;font-family:inherit"
+            oninput="this.value=this.value.replace(/\D/g,'')"
+            onblur="if(this.value.length===1)this.value='0'+this.value">
+        </div>
+        <div style="position:relative;flex:1">
+          <input class="f-inp" id="sPlace" placeholder="🔍 장소 검색" style="width:100%" autocomplete="off"
+            oninput="searchPlace(this.value)" onblur="setTimeout(()=>document.getElementById('placeDropdown').innerHTML='',200)">
+          <div id="placeDropdown" style="position:absolute;top:100%;left:0;right:0;z-index:500;background:#1e2240;border:1px solid #3a3f6b;border-radius:10px;overflow:hidden;margin-top:4px;box-shadow:0 8px 24px rgba(0,0,0,.5)"></div>
+        </div>
       </div>
       <div class="form-row">
         <input class="f-inp" id="sContent" placeholder="내용">
-        <input class="f-inp" id="sCost" placeholder="예상비용" style="max-width:140px">
+      </div>
+      <div class="form-row" style="align-items:center">
+        <select class="f-sel" id="sCurrency" style="width:70px;flex:none">
+          <option value="KRW">₩</option>
+          <option value="EUR">€</option>
+          <option value="USD">$</option>
+          <option value="JPY">¥</option>
+        </select>
+        <input class="f-inp" id="sCost" placeholder="예상비용" style="flex:1" type="number" min="0">
+        <div style="display:flex;gap:4px;flex:none">
+          <button id="sPayCash" class="pay-toggle on" onclick="setPayMethod('cash')">💵 현금</button>
+          <button id="sPayCard" class="pay-toggle" onclick="setPayMethod('card')">💳 카드</button>
+        </div>
       </div>
       <div class="form-row">
         <input class="f-inp" id="sNote" placeholder="메모/노트">
@@ -622,7 +827,12 @@ async function renderSchedule(container, tab, items) {
 }
 
 function renderSchedDates(items) {
-  schedDates = [...new Set(items.map(i => i.data.date).filter(Boolean))].sort();
+  // items가 있으면 그 날짜로 갱신, 없으면 기존 schedDates 유지
+  if (items.length > 0) {
+    const fromItems = [...new Set(items.map(i => i.data.date).filter(Boolean))].sort();
+    // 로컬에서 추가된 날짜도 병합
+    schedDates = [...new Set([...fromItems, ...schedDates])].sort();
+  }
   const el = document.getElementById('schedDates');
   if (!el) return;
   el.innerHTML = schedDates.map(d =>
@@ -632,10 +842,24 @@ function renderSchedDates(items) {
   ).join('') + `<button class="add-btn" style="font-size:11px;padding:5px 12px" onclick="addSchedDate()">＋ 날짜</button>`;
 }
 
-function switchSchedDate(d, el) {
+async function switchSchedDate(d, el) {
   document.querySelectorAll('.date-tab').forEach(x=>x.classList.remove('on'));
   el.classList.add('on');
   currentSchedDate = d;
+  fillSchedDateInputs(d);
+  const items = await sbGet('tab_items', `tab_id=eq.${currentTab.id}&order=sort_order.asc,created_at.asc`);
+  renderSchedItems(items, d);
+}
+
+function fillSchedDateInputs(d) {
+  if (!d) return;
+  const m = d.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) {
+    const y = document.getElementById('sDateY'); if(y) y.value = m[1];
+    const mo = document.getElementById('sDateM'); if(mo) mo.value = m[2];
+    const day = document.getElementById('sDateD'); if(day) day.value = m[3];
+  }
+  // YYYY-MM-DD 형식이 아니면(예: 1일차) 날짜 칸은 비워둠
 }
 
 function addSchedDate() {
@@ -713,42 +937,218 @@ function confirmAddSchedDate() {
 function renderSchedItems(items, date) {
   const el = document.getElementById('schedItems');
   if (!el) return;
+  const sym = { KRW:'₩', EUR:'€', USD:'$', JPY:'¥' };
   const filtered = date ? items.filter(i => i.data.date === date) : items;
+  renderCostBar(filtered, date, items);
   if (!filtered.length) {
     el.innerHTML = `<div class="empty-state"><div class="icon">📅</div><p>일정을 추가해 보세요</p></div>`;
     return;
   }
   el.innerHTML = `<div class="sched-timeline">${
-    filtered.sort((a,b)=>(a.data.time||'').localeCompare(b.data.time||'')).map(item => `
-    <div class="sched-item">
-      <div class="sched-time">${item.data.time||''}</div>
-      <div class="sched-body">
-        <div class="sched-place">${item.data.place||''}</div>
-        <div class="sched-content">${item.data.content||''}</div>
-        ${item.data.note?`<div class="sched-note">💡 ${item.data.note}</div>`:''}
-        ${item.data.cost?`<div class="sched-cost">💰 ${item.data.cost}</div>`:''}
-      </div>
-      <div class="sched-item-actions">
-        <button class="del-btn" onclick="deleteItem('${item.id}','${currentTab.id}')">삭제</button>
-      </div>
-    </div>`).join('')
+    filtered.sort((a,b)=>(a.data.time||'').localeCompare(b.data.time||'')).map(item => {
+      const costVal = item.data.cost ? parseFloat(item.data.cost) : 0;
+      const cur = item.data.currency || 'KRW';
+      const pay = item.data.payMethod || '';
+      const payBadge = pay==='cash'?'<span style="color:#66bb6a;font-size:10px;font-weight:700">현금</span>':pay==='card'?'<span style="color:#42a5f5;font-size:10px;font-weight:700">카드</span>':'';
+      const costStr = costVal ? `${sym[cur]||cur}${costVal.toLocaleString()} ${payBadge}` : '';
+      return `<div class="sched-item">
+        <div class="sched-time">${item.data.time||''}</div>
+        <div class="sched-body">
+          <div class="sched-place">${item.data.place||''}</div>
+          <div class="sched-content">${item.data.content||''}</div>
+          ${item.data.note?`<div class="sched-note">💡 ${item.data.note}</div>`:''}
+          ${costStr?`<div class="sched-cost">💰 ${costStr}</div>`:''}
+        </div>
+        <div class="sched-item-actions">
+          <button class="del-btn" onclick="deleteItem('${item.id}','${currentTab.id}')">삭제</button>
+        </div>
+      </div>`;
+    }).join('')
   }</div>`;
 }
 
+function setPayMethod(method) {
+  currentPayMethod = method;
+  document.getElementById('sPayCash').classList.toggle('on', method === 'cash');
+  document.getElementById('sPayCard').classList.toggle('on', method === 'card');
+}
+
+function calcSchedCost(items, date) {
+  const filtered = date ? items.filter(i => i.data.date === date) : items;
+  const result = {};
+  filtered.forEach(item => {
+    const c = item.data.cost;
+    if (!c || isNaN(parseFloat(c))) return;
+    const cur = item.data.currency || 'KRW';
+    const pay = item.data.payMethod || 'cash';
+    if (!result[cur]) result[cur] = { cash: 0, card: 0 };
+    result[cur][pay] += parseFloat(c);
+  });
+  return result;
+}
+
+function renderCostBar(items, date, allItems) {
+  const daily = calcSchedCost(items, date);
+  const total = calcSchedCost(allItems, null);
+  const fmt = (v, cur) => {
+    if (cur === 'KRW' || cur === 'JPY') return Math.round(v).toLocaleString();
+    return v.toFixed(2);
+  };
+  const sym = { KRW:'₩', EUR:'€', USD:'$', JPY:'¥' };
+
+  const dailyHtml = Object.entries(daily).map(([cur, v]) =>
+    `<span class="sched-cost-item"><span class="sched-cost-label">${sym[cur]||cur} 일별</span>
+    <span class="sched-cost-cash">현금 ${fmt(v.cash,cur)}</span>
+    <span style="color:var(--sub)">·</span>
+    <span class="sched-cost-card">카드 ${fmt(v.card,cur)}</span></span>`
+  ).join('');
+
+  const totalHtml = Object.entries(total).map(([cur, v]) =>
+    `<span class="sched-cost-item"><span class="sched-cost-label">${sym[cur]||cur} 전체</span>
+    <span class="sched-cost-val">${fmt(v.cash+v.card,cur)}</span></span>`
+  ).join('');
+
+  const bar = document.getElementById('schedCostBar');
+  if (bar) bar.innerHTML = dailyHtml + (totalHtml ? `<span style="margin-left:auto;opacity:.5">│</span>${totalHtml}` : '');
+}
+
 async function addSchedItem(tabId) {
-  const date = document.getElementById('sDate').value || currentSchedDate || '';
-  const time = document.getElementById('sTime').value;
+  const date = currentSchedDate || '';
+  const h = document.getElementById('sTimeH').value.padStart(2,'0');
+  const mn = document.getElementById('sTimeM').value.padStart(2,'0');
+  const time = (h !== '00' || mn !== '00') ? `${h}:${mn}` : '';
   const place = document.getElementById('sPlace').value.trim();
   const content = document.getElementById('sContent').value.trim();
   const cost = document.getElementById('sCost').value.trim();
+  const currency = document.getElementById('sCurrency').value;
+  const payMethod = currentPayMethod;
   const note = document.getElementById('sNote').value.trim();
   if (!place && !content) { alert('장소 또는 내용을 입력하세요'); return; }
-  await sbPost('tab_items', { tab_id: tabId, data: { date, time, place, content, cost, note }, sort_order: 0 });
-  ['sDate','sTime','sPlace','sContent','sCost','sNote'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  await sbPost('tab_items', { tab_id: tabId, data: { date, time, place, content, cost, currency, payMethod, note }, sort_order: 0 });
+  ['sTimeH','sTimeM','sPlace','sContent','sCost','sNote'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
   renderSchedDates(items);
   if (date) currentSchedDate = date;
   renderSchedItems(items, currentSchedDate);
+}
+
+// ── 일정 Excel/구글시트 가져오기 ──
+const SCHED_COL_MAP = {
+  date:    ['날짜','date','일자','day'],
+  time:    ['시간','time','출발','시각'],
+  place:   ['장소','place','위치','location','목적지'],
+  content: ['내용','일정','content','활동','activity','title','제목'],
+  cost:    ['비용','금액','cost','price','예산','예상비용'],
+  note:    ['메모','노트','note','비고','memo','remark'],
+};
+
+function detectCols(headers) {
+  const map = {};
+  headers.forEach((h, i) => {
+    const norm = (h||'').toString().trim().toLowerCase();
+    for (const [field, keywords] of Object.entries(SCHED_COL_MAP)) {
+      if (!map[field] && keywords.some(k => norm.includes(k))) map[field] = i;
+    }
+  });
+  return map;
+}
+
+function rowsToItems(rows, colMap) {
+  return rows.map(row => {
+    const get = f => (colMap[f] !== undefined ? (row[colMap[f]]||'').toString().trim() : '');
+    const date = get('date');
+    const time = get('time').replace(/[^0-9:]/g,'').slice(0,5);
+    const place = get('place');
+    const content = get('content');
+    const cost = get('cost');
+    const note = get('note');
+    if (!date && !place && !content) return null;
+    return { date, time, place, content, cost, note };
+  }).filter(Boolean);
+}
+
+async function importSchedExcel(input, tabId) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+  const data = await file.arrayBuffer();
+  const wb = XLSX.read(data, { type: 'array', cellDates: true });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+  if (rows.length < 2) { alert('데이터가 없습니다.'); return; }
+  const colMap = detectCols(rows[0]);
+  const items = rowsToItems(rows.slice(1), colMap);
+  await batchInsertSchedItems(items, tabId);
+}
+
+async function importSchedSheet(tabId) {
+  const url = document.getElementById('schedSheetUrl').value.trim();
+  if (!url) return;
+  const m = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  if (!m) { alert('올바른 구글 시트 URL이 아닙니다.'); return; }
+  const id = m[1];
+  const gidMatch = url.match(/gid=(\d+)/);
+  const gid = gidMatch ? gidMatch[1] : '0';
+  const csvUrl = `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`;
+  try {
+    const res = await fetch(csvUrl);
+    if (!res.ok) throw new Error('fetch 실패');
+    const text = await res.text();
+    const rows = text.split('\n').map(r => r.split(',').map(c => c.replace(/^"|"$/g,'').trim()));
+    if (rows.length < 2) { alert('데이터가 없습니다.'); return; }
+    const colMap = detectCols(rows[0]);
+    const items = rowsToItems(rows.slice(1), colMap);
+    await batchInsertSchedItems(items, tabId);
+    document.getElementById('schedSheetBox').classList.remove('open');
+    document.getElementById('schedSheetUrl').value = '';
+  } catch(e) {
+    alert('가져오기 실패.\n시트가 "링크가 있는 모든 사용자" 공개인지 확인해 주세요.');
+  }
+}
+
+// ── 장소 검색 (Nominatim) ──
+let placeSearchTimer = null;
+async function searchPlace(q) {
+  clearTimeout(placeSearchTimer);
+  const dd = document.getElementById('placeDropdown');
+  if (!q || q.length < 2) { dd.innerHTML = ''; return; }
+  placeSearchTimer = setTimeout(async () => {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=6&accept-language=ko`, {
+        headers: { 'Accept-Language': 'ko' }
+      });
+      const data = await res.json();
+      if (!data.length) { dd.innerHTML = `<div style="padding:10px 14px;font-size:12px;color:#7b80a0">검색 결과 없음</div>`; return; }
+      dd.innerHTML = data.map(p => {
+        const name = p.display_name.split(',').slice(0,3).join(', ');
+        return `<div onclick="selectPlace('${p.display_name.replace(/'/g,"\\'")}',${p.lat},${p.lon})"
+          style="padding:9px 14px;font-size:13px;cursor:pointer;border-bottom:1px solid #2a2f50;transition:.15s"
+          onmouseover="this.style.background='rgba(92,107,192,.2)'" onmouseout="this.style.background=''">${name}</div>`;
+      }).join('');
+    } catch(e) { dd.innerHTML = ''; }
+  }, 350);
+}
+
+function selectPlace(name, lat, lng) {
+  // 짧게 정리 (앞 2개 항목만)
+  const short = name.split(',').slice(0,2).join(', ');
+  document.getElementById('sPlace').value = short;
+  document.getElementById('placeDropdown').innerHTML = '';
+  // 좌표도 저장 (일정 저장 시 활용)
+  document.getElementById('sPlace').dataset.lat = lat;
+  document.getElementById('sPlace').dataset.lng = lng;
+}
+
+async function batchInsertSchedItems(items, tabId) {
+  if (!items.length) { alert('인식된 데이터가 없습니다.\n날짜·장소·내용 열이 있는지 확인해 주세요.'); return; }
+  if (!confirm(`${items.length}개 일정을 가져오시겠습니까?\n(기존 일정은 유지됩니다)`)) return;
+  const rows = items.map((p, i) => ({ tab_id: tabId, data: p, sort_order: i }));
+  for (let i = 0; i < rows.length; i += 50) {
+    await fetch(`${SB_URL}/rest/v1/tab_items`, { method:'POST', headers:SB_H, body:JSON.stringify(rows.slice(i,i+50)) });
+  }
+  const allItems = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderSchedDates(allItems);
+  renderSchedItems(allItems, currentSchedDate || allItems[0]?.data?.date);
 }
 
 // ── CHECKLIST ──
@@ -1400,11 +1800,16 @@ async function addBudgetItem(tabId) {
 
 // ── Start ──
 (async () => {
+  const params = new URLSearchParams(location.search);
+  const pid = params.get('project');
+  const isNew = params.get('new');
+  if (!pid && !isNew) { location.href = 'hub.html'; return; }
   await loadProjects();
-  const pid = new URLSearchParams(location.search).get('project');
   if (pid) {
     const p = projects.find(x => x.id === pid);
     if (p) openProject(pid);
+  } else if (isNew) {
+    openProjectModal();
   }
 })();
 </script>
