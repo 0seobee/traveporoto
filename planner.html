@@ -622,32 +622,63 @@ function openBgPicker() {
     ${currentProject.cover_bg ? `<button style="width:100%;background:rgba(229,57,53,.1);border:1px solid rgba(229,57,53,.3);color:#ef9a9a;border-radius:8px;padding:8px;font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:6px" onclick="removeBg()">배경 제거</button>` : ''}
     <div style="text-align:right;margin-top:8px"><button onclick="closeBgPicker()" style="background:none;border:none;color:#7b80a0;cursor:pointer;font-family:inherit;font-size:13px">닫기</button></div>
   `;
-  // 자동 미리보기 썸네일 3장 생성
+  // Wikipedia API로 목적지 이미지 검색
   if (dest) {
     const preview = menu.querySelector('#bgAutoPreview');
-    const keywords = encodeURIComponent(dest + ',travel');
-    [1,2,3].forEach(i => {
-      const img = document.createElement('img');
-      img.src = `https://source.unsplash.com/120x70/?${keywords}&sig=${i}`;
-      img.style.cssText = 'width:calc(33% - 4px);height:60px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:.2s';
-      img.title = '이 이미지로 설정';
-      img.onclick = () => applyBgUrl(`https://source.unsplash.com/1600x900/?${keywords}&sig=${i}`);
-      img.onmouseover = () => img.style.borderColor = '#7986cb';
-      img.onmouseout = () => img.style.borderColor = 'transparent';
-      preview.appendChild(img);
-    });
+    loadWikiImages(dest, preview);
   }
   document.body.appendChild(menu);
 }
 function closeBgPicker() { document.getElementById('bgPickerModal')?.remove(); }
 
+async function loadWikiImages(dest, preview) {
+  // 로딩 표시
+  preview.innerHTML = `<div style="color:#7b80a0;font-size:12px;padding:8px 0">🔍 이미지 검색 중...</div>`;
+  try {
+    // Wikipedia 검색으로 관련 페이지 찾기
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(dest)}&srlimit=3&format=json&origin=*`;
+    const searchRes = await fetch(searchUrl);
+    const searchData = await searchRes.json();
+    const pages = searchData.query?.search || [];
+    if (!pages.length) { preview.innerHTML = `<div style="color:#7b80a0;font-size:12px">이미지를 찾을 수 없습니다</div>`; return; }
+
+    const titles = pages.map(p => encodeURIComponent(p.title)).join('|');
+    const imgUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${titles}&prop=pageimages&format=json&pithumbsize=400&piprop=thumbnail&origin=*`;
+    const imgRes = await fetch(imgUrl);
+    const imgData = await imgRes.json();
+    const pageObjs = Object.values(imgData.query?.pages || {});
+    const images = pageObjs.filter(p => p.thumbnail?.source).map(p => ({
+      thumb: p.thumbnail.source,
+      full: p.thumbnail.source.replace(/\/\d+px-/, '/1600px-')
+    }));
+
+    preview.innerHTML = '';
+    if (!images.length) { preview.innerHTML = `<div style="color:#7b80a0;font-size:12px">이미지를 찾을 수 없습니다</div>`; return; }
+
+    images.forEach(img => {
+      const el = document.createElement('img');
+      el.src = img.thumb;
+      el.style.cssText = 'width:calc(33% - 4px);height:64px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:.15s';
+      el.title = '이 이미지로 설정';
+      el.onclick = () => applyBgUrl(img.full);
+      el.onmouseover = () => el.style.borderColor = '#7986cb';
+      el.onmouseout = () => el.style.borderColor = 'transparent';
+      preview.appendChild(el);
+    });
+
+    // 자동 설정 버튼도 첫 번째 이미지로 연결
+    const btn = document.getElementById('bgAutoBtn');
+    if (btn && images[0]) {
+      btn.onclick = () => applyBgUrl(images[0].full);
+      btn.disabled = false;
+    }
+  } catch(e) {
+    preview.innerHTML = `<div style="color:#ef9a9a;font-size:12px">이미지 로드 실패</div>`;
+  }
+}
+
 async function autoSetBg() {
-  const dest = currentProject.destination || currentProject.name || '';
-  if (!dest) return;
-  const btn = document.getElementById('bgAutoBtn');
-  if (btn) { btn.textContent = '⏳ 불러오는 중...'; btn.disabled = true; }
-  const url = `https://source.unsplash.com/1600x900/?${encodeURIComponent(dest + ',travel')}`;
-  await applyBgUrl(url);
+  // loadWikiImages에서 버튼 클릭 핸들러가 연결됨 — 로딩 중엔 아무것도 안 함
 }
 
 async function applyBgUrl(url) {
