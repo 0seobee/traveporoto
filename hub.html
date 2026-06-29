@@ -80,11 +80,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.95
 .color-opt:hover,.color-opt.on{border-color:#fff}
 
 @media(max-width:600px){.project-grid{grid-template-columns:1fr}}
-
-/* 프로젝트 iframe 오버레이 */
-.project-overlay{position:fixed;inset:0;z-index:1000;display:none;flex-direction:column;background:var(--bg)}
-.project-overlay.open{display:flex}
-.project-overlay iframe{flex:1;border:none;width:100%;height:100%}
 </style>
 </head>
 <body>
@@ -130,11 +125,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.95
     </div>
 
   </div>
-</div>
-
-<!-- 프로젝트 iframe 오버레이 -->
-<div class="project-overlay" id="projectOverlay">
-  <iframe id="projectFrame" src="about:blank"></iframe>
 </div>
 
 <!-- 새 여행 모달 -->
@@ -197,9 +187,9 @@ function renderProjects(list) {
   grid.innerHTML = list.map(p => {
     const dates = p.start_date ? `${p.start_date}${p.end_date ? ' ~ ' + p.end_date : ''}` : '';
     const dd = dday(p.start_date);
-    return `<div class="project-card" onclick="openProjectOverlay('${p.id}')">
+    return `<a class="project-card" href="planner.html?project=${p.id}">
       <div class="project-card-cover" style="background:${p.cover_color||'#1a237e'}">${p.cover_emoji||'✈️'}</div>
-      <div class="project-card-actions" onclick="event.stopPropagation()">
+      <div class="project-card-actions" onclick="event.preventDefault()">
         <span class="card-act-btn" title="삭제" onclick="deleteProject('${p.id}',event)">🗑️</span>
       </div>
       <div class="project-card-body">
@@ -207,7 +197,7 @@ function renderProjects(list) {
         <div class="project-card-dest">${p.destination||''}</div>
         ${dates ? `<div class="project-card-dates">${dates}${dd ? ' · ' + dd : ''}</div>` : ''}
       </div>
-    </div>`;
+    </a>`;
   }).join('');
 }
 
@@ -256,34 +246,6 @@ async function deleteProject(id, e) {
   await fetch(`${SB_URL}/rest/v1/projects?id=eq.${id}`, { method:'DELETE', headers:SB_H });
   await loadProjects();
 }
-
-// 프로젝트 오버레이
-function openProjectOverlay(id) {
-  const overlay = document.getElementById('projectOverlay');
-  const frame = document.getElementById('projectFrame');
-  frame.src = `planner.html?project=${id}`;
-  overlay.classList.add('open');
-  history.pushState({projectId: id}, '', `?project=${id}`);
-}
-function closeProjectOverlay() {
-  const overlay = document.getElementById('projectOverlay');
-  const frame = document.getElementById('projectFrame');
-  overlay.classList.remove('open');
-  frame.src = 'about:blank';
-  history.pushState({}, '', 'hub.html');
-  loadProjects();
-}
-
-// 브라우저 뒤로가기 처리
-window.addEventListener('popstate', e => {
-  if (!e.state?.projectId) closeProjectOverlay();
-});
-
-// URL에 ?project= 있으면 바로 열기
-(function(){
-  const pid = new URLSearchParams(location.search).get('project');
-  if (pid) openProjectOverlay(pid);
-})();
 
 loadProjects();
 </script>
