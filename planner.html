@@ -1271,20 +1271,21 @@ function renderChecklist(container, tab, items) {
       <span class="badge">${done}/${items.length} · ${pct}%</span>
     </div>
     <div class="progress-bar-wrap" style="margin-bottom:16px"><div class="progress-bar" style="width:${pct}%"></div></div>
-    <div class="form-box" style="margin-bottom:8px">
+    <div class="form-box" style="margin-bottom:12px">
       <div class="form-row">
         <input class="f-inp" id="clText" placeholder="준비물 입력" style="flex:1">
-        <select class="f-inp" id="clCat" style="max-width:130px">
-          <option value="">카테고리</option>
+        <select class="f-inp" id="clCat" style="max-width:160px" onchange="handleCatSelect(this,'${tab.id}')">
+          <option value="">카테고리 선택</option>
           ${catOptions}
+          <option value="__add__" style="color:#7986cb;font-weight:700">＋ 직접 추가...</option>
         </select>
         <button class="f-btn" onclick="addClItem('${tab.id}')">추가</button>
       </div>
     </div>
-    <div style="margin-bottom:16px;display:flex;flex-wrap:wrap;gap:6px;align-items:center">
-      <button onclick="openAddCatModal('${tab.id}')" style="background:none;border:1px dashed #3a3f6b;color:#7b80a0;border-radius:8px;padding:4px 12px;font-size:12px;cursor:pointer;font-family:inherit">＋ 카테고리 추가</button>
-      ${customCats.map(c=>`<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(92,107,192,.15);border:1px solid #3a3f6b;border-radius:8px;padding:3px 10px;font-size:12px;color:#9fa8da">${c}<span onclick="removeCat('${tab.id}','${c}')" style="cursor:pointer;opacity:.6;margin-left:2px">✕</span></span>`).join('')}
-    </div>
+    ${customCats.length ? `<div style="margin-bottom:12px;display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+      <span style="font-size:11px;color:#7b80a0">내 카테고리:</span>
+      ${customCats.map(c=>`<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(92,107,192,.15);border:1px solid #3a3f6b;border-radius:8px;padding:3px 10px;font-size:12px;color:#9fa8da">${c}<span onclick="removeCat('${tab.id}','${c}')" style="cursor:pointer;opacity:.6;margin-left:2px" title="삭제">✕</span></span>`).join('')}
+    </div>` : ''}
     <div class="cl-list">${groupHtml}
       ${!items.length?`<div class="empty-state"><div class="icon">✅</div><p>준비물을 추가해 보세요</p></div>`:''}
     </div>
@@ -1299,6 +1300,13 @@ const CAT_EMOJIS = [
   '🎿','🏖️','🥾','⛺','🎣','🤿','🏋️',
   '🎁','🛍️','🧧','📦','✈️','🚂','🚢','🏨','📸','🗺️'
 ];
+
+function handleCatSelect(sel, tabId) {
+  if (sel.value === '__add__') {
+    sel.value = '';
+    openAddCatModal(tabId);
+  }
+}
 
 function openAddCatModal(tabId) {
   document.getElementById('addCatModal')?.remove();
