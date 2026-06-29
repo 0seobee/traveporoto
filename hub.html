@@ -235,10 +235,8 @@ async function saveProject() {
   };
   const r = await fetch(`${SB_URL}/rest/v1/projects`, { method:'POST', headers:SB_H, body:JSON.stringify(data) });
   if (r.ok) {
-    const created = await r.json();
     closeModal();
-    // planner.html로 바로 이동
-    window.location.href = `planner.html?project=${created[0].id}`;
+    await loadProjects();
   }
 }
 
