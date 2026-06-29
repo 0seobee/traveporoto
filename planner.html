@@ -130,6 +130,8 @@ textarea.f-inp{resize:vertical;min-height:60px}
 .cl-text{flex:1;font-size:13px}
 .cl-item.done .cl-text{text-decoration:line-through}
 .cl-cat-badge{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(92,107,192,.15);color:var(--accent2)}
+.cl-group{margin-bottom:12px}
+.cl-group-label{font-size:11px;font-weight:800;letter-spacing:1px;color:#7986cb;text-transform:uppercase;padding:4px 2px 6px;border-bottom:1px solid var(--border);margin-bottom:6px}
 
 /* ── LIST (TABLE) ── */
 .list-table{width:100%;border-collapse:collapse;margin-top:8px}
@@ -1225,33 +1227,110 @@ async function batchInsertSchedItems(items, tabId) {
 }
 
 // ── CHECKLIST ──
+const CL_DEFAULT_CATS = ['의류','세면도구','전자기기','서류/증명','의약품','간식/식품','액티비티','기타'];
+
 function renderChecklist(container, tab, items) {
-  const cats = [...new Set(items.map(i=>i.data.cat).filter(Boolean))];
+  const customCats = JSON.parse(localStorage.getItem(`clCats_${tab.id}`) || '[]');
+  const allCats = [...CL_DEFAULT_CATS, ...customCats];
+  const usedCats = [...new Set(items.map(i=>i.data.cat).filter(Boolean))];
   const done = items.filter(i=>i.data.done).length;
   const pct = items.length ? Math.round(done/items.length*100) : 0;
+
+  const grouped = {};
+  const noCat = [];
+  items.forEach(item => {
+    if (item.data.cat) { if (!grouped[item.data.cat]) grouped[item.data.cat] = []; grouped[item.data.cat].push(item); }
+    else noCat.push(item);
+  });
+
+  const renderItems = arr => arr.map(item=>`
+    <div class="cl-item${item.data.done?' done':''}" onclick="toggleClItem('${item.id}','${tab.id}',${!item.data.done})">
+      <div class="cl-check">${item.data.done?'✓':''}</div>
+      <div class="cl-text">${item.data.text||''}</div>
+      <button class="del-btn" onclick="event.stopPropagation();deleteItem('${item.id}','${tab.id}')">삭제</button>
+    </div>`).join('');
+
+  const groupHtml = [
+    ...allCats.filter(c=>grouped[c]).map(c=>`
+      <div class="cl-group">
+        <div class="cl-group-label">${c} <span style="color:#7b80a0;font-size:11px;font-weight:400">${grouped[c].filter(i=>i.data.done).length}/${grouped[c].length}</span></div>
+        ${renderItems(grouped[c])}
+      </div>`),
+    ...usedCats.filter(c=>!allCats.includes(c)&&grouped[c]).map(c=>`
+      <div class="cl-group">
+        <div class="cl-group-label">${c} <span style="color:#7b80a0;font-size:11px;font-weight:400">${grouped[c].filter(i=>i.data.done).length}/${grouped[c].length}</span></div>
+        ${renderItems(grouped[c])}
+      </div>`),
+    noCat.length ? `<div class="cl-group"><div class="cl-group-label" style="color:#7b80a0">미분류</div>${renderItems(noCat)}</div>` : ''
+  ].join('');
+
+  const catOptions = allCats.map(c=>`<option value="${c}">${c}</option>`).join('');
+
   container.innerHTML = `<div class="pane-wrap">
     <div class="pane-header">
       <div class="pane-title">✅ ${tab.title}</div>
-      <span class="badge">${done}/${items.length}</span>
+      <span class="badge">${done}/${items.length} · ${pct}%</span>
     </div>
-    <div class="progress-bar-wrap"><div class="progress-bar" style="width:${pct}%"></div></div>
-    <div class="form-box" style="margin-bottom:16px">
+    <div class="progress-bar-wrap" style="margin-bottom:16px"><div class="progress-bar" style="width:${pct}%"></div></div>
+    <div class="form-box" style="margin-bottom:8px">
       <div class="form-row">
-        <input class="f-inp" id="clText" placeholder="항목 입력">
-        <input class="f-inp" id="clCat" placeholder="카테고리 (선택)" style="max-width:160px">
+        <input class="f-inp" id="clText" placeholder="준비물 입력" style="flex:1">
+        <select class="f-inp" id="clCat" style="max-width:130px">
+          <option value="">카테고리</option>
+          ${catOptions}
+        </select>
         <button class="f-btn" onclick="addClItem('${tab.id}')">추가</button>
       </div>
     </div>
-    <div class="cl-list">${items.map(item=>`
-      <div class="cl-item${item.data.done?' done':''}" onclick="toggleClItem('${item.id}','${tab.id}',${!item.data.done})">
-        <div class="cl-check">${item.data.done?'✓':''}</div>
-        <div class="cl-text">${item.data.text||''}</div>
-        ${item.data.cat?`<span class="cl-cat-badge">${item.data.cat}</span>`:''}
-        <button class="del-btn" onclick="event.stopPropagation();deleteItem('${item.id}','${tab.id}')">삭제</button>
-      </div>`).join('')}
+    <div style="margin-bottom:16px;display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+      <button onclick="openAddCatModal('${tab.id}')" style="background:none;border:1px dashed #3a3f6b;color:#7b80a0;border-radius:8px;padding:4px 12px;font-size:12px;cursor:pointer;font-family:inherit">＋ 카테고리 추가</button>
+      ${customCats.map(c=>`<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(92,107,192,.15);border:1px solid #3a3f6b;border-radius:8px;padding:3px 10px;font-size:12px;color:#9fa8da">${c}<span onclick="removeCat('${tab.id}','${c}')" style="cursor:pointer;opacity:.6;margin-left:2px">✕</span></span>`).join('')}
     </div>
-    ${!items.length?`<div class="empty-state"><div class="icon">✅</div><p>항목을 추가해 보세요</p></div>`:''}
+    <div class="cl-list">${groupHtml}
+      ${!items.length?`<div class="empty-state"><div class="icon">✅</div><p>준비물을 추가해 보세요</p></div>`:''}
+    </div>
   </div>`;
+}
+
+function openAddCatModal(tabId) {
+  document.getElementById('addCatModal')?.remove();
+  const m = document.createElement('div');
+  m.id = 'addCatModal';
+  m.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:999;background:#1e2240;border:1px solid #3a3f6b;border-radius:16px;padding:20px;width:300px;box-shadow:0 8px 40px rgba(0,0,0,.6)';
+  m.innerHTML = `
+    <div style="font-size:14px;font-weight:800;color:#e8eaf6;margin-bottom:12px">＋ 카테고리 추가</div>
+    <input id="newCatInput" class="f-inp" placeholder="카테고리 이름" style="width:100%;margin-bottom:12px">
+    <div style="display:flex;gap:8px">
+      <button class="f-btn" style="flex:1" onclick="confirmAddCat('${tabId}')">추가</button>
+      <button onclick="document.getElementById('addCatModal').remove()" style="flex:1;background:rgba(255,255,255,.06);border:1px solid #3a3f6b;color:#e8eaf6;border-radius:8px;padding:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">취소</button>
+    </div>`;
+  document.body.appendChild(m);
+  m.querySelector('#newCatInput').focus();
+  m.querySelector('#newCatInput').onkeydown = e => { if (e.key==='Enter') confirmAddCat(tabId); if (e.key==='Escape') m.remove(); };
+}
+
+async function confirmAddCat(tabId) {
+  const name = document.getElementById('newCatInput')?.value.trim();
+  if (!name) return;
+  const key = `clCats_${tabId}`;
+  const cats = JSON.parse(localStorage.getItem(key) || '[]');
+  if (!cats.includes(name) && !CL_DEFAULT_CATS.includes(name)) {
+    cats.push(name);
+    localStorage.setItem(key, JSON.stringify(cats));
+  }
+  document.getElementById('addCatModal')?.remove();
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderChecklist(document.getElementById('tabContent'), tab, items);
+}
+
+async function removeCat(tabId, cat) {
+  const key = `clCats_${tabId}`;
+  const cats = JSON.parse(localStorage.getItem(key) || '[]').filter(c => c !== cat);
+  localStorage.setItem(key, JSON.stringify(cats));
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderChecklist(document.getElementById('tabContent'), tab, items);
 }
 
 async function addClItem(tabId) {
