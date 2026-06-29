@@ -143,19 +143,9 @@ textarea.f-inp{resize:vertical;min-height:60px}
 .list-done{opacity:.45;text-decoration:line-through}
 
 /* ── CARD ── */
-.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
-.info-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:.2s}
-.info-card:hover{border-color:var(--accent)}
-.info-card-img{width:100%;height:130px;object-fit:cover;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:36px;color:var(--sub)}
-.info-card-img img{width:100%;height:100%;object-fit:cover}
-.info-card-body{padding:12px 14px}
-.info-card-title{font-size:14px;font-weight:700;margin-bottom:4px}
-.info-card-desc{font-size:12px;color:var(--sub);line-height:1.5;margin-bottom:8px}
-.info-card-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
-.tag{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(92,107,192,.15);color:var(--accent2)}
-.info-card-link{font-size:11px;color:var(--accent2);text-decoration:none}
-.info-card-link:hover{text-decoration:underline}
-.info-card-actions{display:flex;gap:6px;margin-top:8px}
+.icard-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.icard-group{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px 18px}
+.icard-group-title{font-size:13px;font-weight:800;color:#7986cb;letter-spacing:.5px;padding-bottom:8px;margin-bottom:4px;border-bottom:1px solid var(--border)}
 
 #schedSheetBox.open{display:flex!important}
 .pay-toggle{background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--sub);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;white-space:nowrap}
@@ -1415,40 +1405,53 @@ async function toggleListItem(id, tabId, done) {
 
 // ── CARD ──
 function renderCards(container, tab, items) {
+  const groups = {};
+  const noGroup = [];
+  items.forEach(item => {
+    const g = item.data.group || '';
+    if (g) { if (!groups[g]) groups[g] = []; groups[g].push(item); }
+    else noGroup.push(item);
+  });
+  const existingGroups = [...new Set(items.map(i=>i.data.group).filter(Boolean))];
+  const groupOpts = existingGroups.map(g=>`<option value="${g}">${g}</option>`).join('');
+
+  const renderGroupItems = arr => arr.map(item=>`
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+      <span style="font-size:20px;flex-shrink:0;margin-top:1px">${item.data.icon||'📌'}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;color:#e8eaf6;margin-bottom:3px">${item.data.title||''}</div>
+        ${item.data.detail?`<div style="font-size:12px;color:#9fa8da;line-height:1.55">${item.data.detail}</div>`:''}
+        ${item.data.link?`<a href="${item.data.link}" target="_blank" style="font-size:11px;color:#7986cb;text-decoration:none;margin-top:3px;display:inline-block">🔗 링크 바로가기</a>`:''}
+      </div>
+      <button class="del-btn" onclick="event.stopPropagation();deleteItem('${item.id}','${tab.id}')">삭제</button>
+    </div>`).join('');
+
+  const groupHtml = [
+    ...existingGroups.map(g=>`
+      <div class="icard-group">
+        <div class="icard-group-title">${g}</div>
+        ${renderGroupItems(groups[g])}
+      </div>`),
+    noGroup.length?`<div class="icard-group"><div class="icard-group-title">기타</div>${renderGroupItems(noGroup)}</div>`:''
+  ].join('');
+
   container.innerHTML = `<div class="pane-wrap">
     <div class="pane-header"><div class="pane-title">🃏 ${tab.title}</div><span class="badge">${items.length}개</span></div>
     <div class="form-box">
       <div class="form-row">
-        <input class="f-inp" id="cTitle" placeholder="제목 *">
-        <input class="f-inp" id="cTags" placeholder="태그 (쉼표로 구분)">
+        <input class="f-inp" id="cIcon" placeholder="아이콘" style="max-width:72px;text-align:center;font-size:18px">
+        <input class="f-inp" id="cTitle" placeholder="제목 *" style="flex:2">
+        <input class="f-inp" id="cDetail" placeholder="설명/내용">
       </div>
       <div class="form-row">
-        <textarea class="f-inp" id="cDesc" placeholder="설명" rows="2"></textarea>
-      </div>
-      <div class="form-row">
-        <input class="f-inp" id="cImg" placeholder="이미지 URL (선택)">
         <input class="f-inp" id="cLink" placeholder="링크 URL (선택)">
+        <input class="f-inp" id="cGroup" placeholder="카드 그룹" list="cGroupList" style="max-width:180px">
+        <datalist id="cGroupList">${groupOpts}</datalist>
         <button class="f-btn" onclick="addCard('${tab.id}')">추가</button>
       </div>
     </div>
-    <div class="card-grid">${items.map(item=>{
-      const tags = (item.data.tags||'').split(',').filter(Boolean);
-      return `<div class="info-card">
-        ${item.data.img ? `<div class="info-card-img"><img src="${item.data.img}" onerror="this.parentElement.innerHTML='🖼️'"></div>`
-          : `<div class="info-card-img">🃏</div>`}
-        <div class="info-card-body">
-          <div class="info-card-title">${item.data.title||''}</div>
-          ${item.data.desc?`<div class="info-card-desc">${item.data.desc}</div>`:''}
-          ${tags.length?`<div class="info-card-tags">${tags.map(t=>`<span class="tag">${t.trim()}</span>`).join('')}</div>`:''}
-          ${item.data.link?`<a class="info-card-link" href="${item.data.link}" target="_blank">🔗 ${item.data.link}</a>`:''}
-          <div class="info-card-actions">
-            <button class="del-btn" onclick="deleteItem('${item.id}','${tab.id}')">삭제</button>
-          </div>
-        </div>
-      </div>`;
-    }).join('')}
-    </div>
-    ${!items.length?`<div class="empty-state"><div class="icon">🃏</div><p>카드를 추가해 보세요</p></div>`:''}
+    <div class="icard-grid">${groupHtml}</div>
+    ${!items.length?`<div class="empty-state"><div class="icon">🃏</div><p>그룹명과 항목을 추가해 보세요</p></div>`:''}
   </div>`;
 }
 
@@ -1456,16 +1459,17 @@ async function addCard(tabId) {
   const title = document.getElementById('cTitle').value.trim();
   if (!title) { alert('제목을 입력하세요'); return; }
   const data = {
-    title, desc: document.getElementById('cDesc').value.trim(),
-    tags: document.getElementById('cTags').value.trim(),
-    img: document.getElementById('cImg').value.trim(),
-    link: document.getElementById('cLink').value.trim()
+    icon: document.getElementById('cIcon').value.trim() || '📌',
+    title,
+    detail: document.getElementById('cDetail').value.trim(),
+    link: document.getElementById('cLink').value.trim(),
+    group: document.getElementById('cGroup').value.trim()
   };
   await sbPost('tab_items', { tab_id: tabId, data, sort_order: 0 });
-  ['cTitle','cDesc','cTags','cImg','cLink'].forEach(id=>document.getElementById(id).value='');
+  ['cIcon','cTitle','cDetail','cLink'].forEach(id=>document.getElementById(id).value='');
   const tab = currentTab;
-  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
-  renderCards(document.getElementById('tabContent'), tab, items);
+  const newItems = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderCards(document.getElementById('tabContent'), tab, newItems);
 }
 
 // ── MAP ──
