@@ -6,6 +6,7 @@
 <title>🗺️ 여행 플래너</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -148,11 +149,18 @@ textarea.f-inp{resize:vertical;min-height:60px}
 .sched-item-actions{display:flex;gap:4px;flex-shrink:0}
 
 /* ── MAP ── */
-.map-layout{display:grid;grid-template-columns:1fr 300px;gap:0;height:calc(100vh - 160px)}
-@media(max-width:768px){.map-layout{grid-template-columns:1fr;height:auto}}
+.map-wrap{display:flex;flex-direction:column;height:calc(100vh - 160px)}
+.map-layer-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.map-layer-btn{border:none;border-radius:16px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;opacity:.45;color:#fff}
+.map-layer-btn.on{opacity:1}
+.map-layout{display:grid;grid-template-columns:1fr 300px;gap:0;flex:1;overflow:hidden}
+@media(max-width:768px){.map-layout{grid-template-columns:1fr}}
 #tab-map-el{width:100%;height:100%;min-height:400px}
 .map-sidebar{background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
-.map-sidebar-header{padding:14px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700}
+.map-sidebar-header{padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px}
+.map-sidebar-header .badge{font-size:11px;background:rgba(92,107,192,.2);color:var(--accent2);border-radius:10px;padding:1px 8px}
+.map-kml-btn{margin-left:auto;background:rgba(92,107,192,.15);border:1px solid var(--accent);color:var(--accent2);border-radius:12px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:.2s}
+.map-kml-btn:hover{background:rgba(92,107,192,.3)}
 .map-place-list{flex:1;overflow-y:auto;padding:8px}
 .map-place-list::-webkit-scrollbar{width:4px}
 .map-place-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
@@ -160,6 +168,7 @@ textarea.f-inp{resize:vertical;min-height:60px}
 .map-place-item:hover{border-color:var(--accent)}
 .map-place-name{font-size:13px;font-weight:700;margin-bottom:2px}
 .map-place-desc{font-size:11px;color:var(--sub)}
+.map-place-layer{display:inline-block;font-size:10px;font-weight:700;border-radius:8px;padding:1px 7px;color:#fff;margin-top:4px}
 .map-add-form{padding:12px;border-top:1px solid var(--border)}
 .map-add-form .f-inp{margin-bottom:6px;width:100%}
 .map-coord-row{display:flex;gap:6px;margin-bottom:6px}
@@ -225,6 +234,7 @@ textarea.f-inp{resize:vertical;min-height:60px}
 
 <!-- NAV -->
 <nav>
+  <a href="hub.html" style="background:rgba(255,255,255,.08);border:1px solid var(--border);color:var(--text);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap">← 허브</a>
   <div class="nav-logo" onclick="goHome()">🗺️ 여행 플래너</div>
   <button class="nav-back" id="navBack" onclick="goHome()">← 목록</button>
   <div class="nav-project-name" id="navProjectName"></div>
@@ -629,10 +639,74 @@ function switchSchedDate(d, el) {
 }
 
 function addSchedDate() {
-  const d = prompt('날짜를 입력하세요 (예: 2026-08-01 또는 1일차)');
-  if (!d) return;
-  if (!schedDates.includes(d)) schedDates.push(d);
-  currentSchedDate = d;
+  // 기존 팝업 있으면 제거
+  const existing = document.getElementById('datePickerPop');
+  if (existing) { existing.remove(); return; }
+
+  const btn = event.currentTarget;
+  const pop = document.createElement('div');
+  pop.id = 'datePickerPop';
+  pop.style.cssText = 'position:absolute;z-index:999;background:#1e2240;border:1px solid #3a3f6b;border-radius:12px;padding:14px;box-shadow:0 8px 32px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:8px;min-width:220px';
+
+  const rect = btn.getBoundingClientRect();
+  pop.style.top = (rect.bottom + window.scrollY + 6) + 'px';
+  pop.style.left = rect.left + 'px';
+
+  pop.innerHTML = `
+    <div style="font-size:12px;font-weight:700;color:#9fa8da;margin-bottom:4px">날짜 추가</div>
+    <div style="display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.06);border:1px solid #3a3f6b;border-radius:8px;padding:7px 12px">
+      <input id="dpY" maxlength="4" placeholder="YYYY" inputmode="numeric"
+        style="background:none;border:none;color:#e8eaf6;font-size:15px;font-weight:700;width:48px;outline:none;text-align:center;font-family:inherit">
+      <span style="color:#5c6bc0;font-weight:700">-</span>
+      <input id="dpM" maxlength="2" placeholder="MM" inputmode="numeric"
+        style="background:none;border:none;color:#e8eaf6;font-size:15px;font-weight:700;width:30px;outline:none;text-align:center;font-family:inherit">
+      <span style="color:#5c6bc0;font-weight:700">-</span>
+      <input id="dpD" maxlength="2" placeholder="DD" inputmode="numeric"
+        style="background:none;border:none;color:#e8eaf6;font-size:15px;font-weight:700;width:30px;outline:none;text-align:center;font-family:inherit">
+    </div>
+    <input id="datePickerLabel" placeholder="또는 직접 입력 (예: 1일차)" style="background:rgba(255,255,255,.06);border:1px solid #3a3f6b;border-radius:8px;color:#e8eaf6;font-size:13px;padding:7px 10px;font-family:inherit;outline:none;width:100%">
+    <button onclick="confirmAddSchedDate()" style="background:#5c6bc0;color:#fff;border:none;border-radius:8px;padding:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;width:100%">추가</button>
+  `;
+
+  document.body.appendChild(pop);
+
+  const dpY = pop.querySelector('#dpY');
+  const dpM = pop.querySelector('#dpM');
+  const dpD = pop.querySelector('#dpD');
+  dpY.focus();
+
+  // 숫자만 허용
+  [dpY, dpM, dpD].forEach(el => el.addEventListener('keypress', e => { if (!/\d/.test(e.key)) e.preventDefault(); }));
+
+  // 자동 포커스 이동
+  dpY.addEventListener('input', () => { if (dpY.value.length === 4) dpM.focus(); });
+  dpM.addEventListener('input', () => {
+    if (dpM.value.length === 2) { dpD.focus(); return; }
+    if (dpM.value.length === 1 && parseInt(dpM.value) > 1) { dpM.value = '0' + dpM.value; dpD.focus(); }
+  });
+  dpD.addEventListener('input', () => {
+    if (dpD.value.length === 1 && parseInt(dpD.value) > 3) dpD.value = '0' + dpD.value;
+  });
+
+  // 외부 클릭 시 닫기
+  setTimeout(() => document.addEventListener('click', function outsideClick(e) {
+    if (!pop.contains(e.target) && e.target !== btn) { pop.remove(); document.removeEventListener('click', outsideClick); }
+  }), 100);
+}
+
+function confirmAddSchedDate() {
+  const y = document.getElementById('dpY')?.value;
+  const m = document.getElementById('dpM')?.value;
+  const d = document.getElementById('dpD')?.value;
+  const dateStr = (y && m && d) ? `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}` : '';
+  const label = document.getElementById('datePickerLabel')?.value.trim() || dateStr;
+  document.getElementById('datePickerPop')?.remove();
+  if (!label) return;
+  if (!schedDates.includes(label)) schedDates.push(label);
+  currentSchedDate = label;
+  // sDate 기본값 설정
+  const dateInput = document.getElementById('sDate');
+  if (dateInput && label.match(/^\d{4}-\d{2}-\d{2}$/)) dateInput.value = label;
   renderSchedDates([]);
 }
 
@@ -842,39 +916,100 @@ async function addCard(tabId) {
 }
 
 // ── MAP ──
+const LAYER_PALETTE = ['#e53935','#43a047','#fb8c00','#1e88e5','#8e24aa','#00acc1','#f06292','#6d4c41','#546e7a','#fdd835','#00897b','#5e35b1'];
+let mapAllItems = [], mapActiveLayers = new Set(), mapLayerColors = {};
+
+function getLayerColor(layer) {
+  if (!layer) return '#5c6bc0';
+  if (!mapLayerColors[layer]) {
+    const idx = Object.keys(mapLayerColors).length % LAYER_PALETTE.length;
+    mapLayerColors[layer] = LAYER_PALETTE[idx];
+  }
+  return mapLayerColors[layer];
+}
+
 function renderMap(container, tab, items) {
-  container.innerHTML = `<div class="map-layout">
-    <div id="tab-map-el"></div>
-    <div class="map-sidebar">
-      <div class="map-sidebar-header">📍 장소 목록 <span class="badge">${items.length}곳</span></div>
-      <div class="map-place-list" id="mapPlaceList">${items.map(item=>`
-        <div class="map-place-item" onclick="focusMarker(${item.data.lat},${item.data.lng})">
-          <div class="map-place-name">${item.data.name||''}</div>
-          <div class="map-place-desc">${item.data.desc||''}</div>
-          <div style="display:flex;justify-content:flex-end;margin-top:4px">
-            <button class="del-btn" onclick="event.stopPropagation();deleteItem('${item.id}','${tab.id}')">삭제</button>
-          </div>
-        </div>`).join('')}
-      </div>
-      <div class="map-add-form">
-        <div style="font-size:12px;font-weight:700;color:var(--accent2);margin-bottom:8px">＋ 장소 추가</div>
-        <input class="f-inp" id="mName" placeholder="장소 이름 *" style="margin-bottom:6px;width:100%">
-        <input class="f-inp" id="mDesc" placeholder="설명 (선택)" style="margin-bottom:6px;width:100%">
-        <div class="map-coord-hint">지도를 클릭하면 좌표가 자동 입력됩니다</div>
-        <div class="map-coord-row">
-          <input class="f-inp" id="mLat" placeholder="위도" style="flex:1">
-          <input class="f-inp" id="mLng" placeholder="경도" style="flex:1">
+  mapAllItems = items;
+  mapLayerColors = {};
+  const layers = [...new Set(items.map(i => i.data.layer||'').filter(Boolean))];
+  layers.forEach(l => getLayerColor(l));
+  mapActiveLayers = new Set([...layers, '']);
+
+  const layerBarHtml = layers.length > 0 ? `<div class="map-layer-bar">
+    <span style="font-size:11px;color:var(--sub);font-weight:700;white-space:nowrap">레이어:</span>
+    ${layers.map(l=>`<button class="map-layer-btn on" data-layer="${l}" style="background:${getLayerColor(l)}" onclick="toggleMapLayer(this,'${l}')">${l}</button>`).join('')}
+  </div>` : '';
+
+  container.innerHTML = `<div class="map-wrap">
+    ${layerBarHtml}
+    <div class="map-layout">
+      <div id="tab-map-el"></div>
+      <div class="map-sidebar">
+        <div class="map-sidebar-header">
+          📍 장소 목록 <span class="badge" id="mapCount">${items.length}곳</span>
+          <button class="map-kml-btn" onclick="document.getElementById('kmlFileInput').click()">📂 KML 가져오기</button>
         </div>
-        <button class="f-btn" style="width:100%" onclick="addMapPlace('${tab.id}')">추가</button>
+        <input type="file" id="kmlFileInput" accept=".kml,.kmz" style="display:none" onchange="importKML(this,'${tab.id}')">
+        <div class="map-place-list" id="mapPlaceList">${renderPlaceList(items, tab.id)}</div>
+        <div class="map-add-form">
+          <div style="font-size:12px;font-weight:700;color:var(--accent2);margin-bottom:8px">＋ 장소 추가</div>
+          <div style="position:relative;margin-bottom:6px">
+            <input class="f-inp" id="mGurl" placeholder="🗺️ 구글맵 URL 붙여넣기 (자동 입력)" style="width:100%;padding-right:60px" oninput="parseGmapUrl(this.value)">
+            <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--sub)">자동</span>
+          </div>
+          <input class="f-inp" id="mName" placeholder="장소 이름 *" style="margin-bottom:6px;width:100%">
+          <input class="f-inp" id="mDesc" placeholder="설명 (선택)" style="margin-bottom:6px;width:100%">
+          <input class="f-inp" id="mLayer" placeholder="레이어 (예: 맛집, 1일차)" style="margin-bottom:6px;width:100%">
+          <div class="map-coord-hint">구글맵 URL 붙여넣기 또는 지도를 직접 클릭하면 좌표가 입력됩니다</div>
+          <div class="map-coord-row">
+            <input class="f-inp" id="mLat" placeholder="위도" style="flex:1">
+            <input class="f-inp" id="mLng" placeholder="경도" style="flex:1">
+          </div>
+          <button class="f-btn" style="width:100%" onclick="addMapPlace('${tab.id}')">추가</button>
+        </div>
       </div>
     </div>
   </div>`;
   initLeafletTab(items, tab.id);
 }
 
+function renderPlaceList(items, tabId) {
+  return items.map(item => {
+    const color = getLayerColor(item.data.layer||'');
+    const layerBadge = item.data.layer ? `<div class="map-place-layer" style="background:${color}">${item.data.layer}</div>` : '';
+    return `<div class="map-place-item" id="mpi-${item.id}" onclick="focusMarker(${item.data.lat},${item.data.lng})">
+      <div class="map-place-name">${item.data.name||''}</div>
+      <div class="map-place-desc">${item.data.desc||''}</div>
+      ${layerBadge}
+      <div style="display:flex;justify-content:flex-end;margin-top:4px">
+        <button class="del-btn" onclick="event.stopPropagation();deleteItem('${item.id}','${tabId}')">삭제</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleMapLayer(btn, layer) {
+  btn.classList.toggle('on');
+  if (mapActiveLayers.has(layer)) mapActiveLayers.delete(layer);
+  else mapActiveLayers.add(layer);
+  Object.entries(lMarkers).forEach(([id, m]) => {
+    const item = mapAllItems.find(i=>i.id===id);
+    const l = item?.data?.layer || '';
+    if (mapActiveLayers.has(l) || (!l && mapActiveLayers.has(''))) m.addTo(leafletMap);
+    else if (leafletMap.hasLayer(m)) leafletMap.removeLayer(m);
+  });
+  const visible = mapAllItems.filter(i => mapActiveLayers.has(i.data.layer||''));
+  document.getElementById('mapCount').textContent = `${visible.length}곳`;
+  // 목록도 필터
+  mapAllItems.forEach(item => {
+    const el = document.getElementById('mpi-'+item.id);
+    if (el) el.style.display = mapActiveLayers.has(item.data.layer||'') ? '' : 'none';
+  });
+}
+
 function initLeafletTab(items, tabId) {
   if (leafletMap) { leafletMap.remove(); leafletMap = null; }
-  leafletMap = L.map('tab-map-el').setView([37.5665, 126.9780], 5);
+  leafletMap = window.leafletMap = L.map('tab-map-el').setView([37.5665, 126.9780], 5);
   L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&hl=ko&x={x}&y={y}&z={z}', {
     maxZoom:20, subdomains:['0','1','2','3']
   }).addTo(leafletMap);
@@ -892,18 +1027,201 @@ function initLeafletTab(items, tabId) {
 
 function addLeafletMarker(item) {
   if (!item.data.lat || !item.data.lng) return;
+  const color = getLayerColor(item.data.layer||'');
   const icon = L.divIcon({
-    html:`<div style="width:12px;height:12px;border-radius:50%;background:#5c6bc0;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.5)"></div>`,
+    html:`<div style="width:12px;height:12px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.5)"></div>`,
     className:'', iconSize:[12,12], iconAnchor:[6,6]
   });
   const m = L.marker([item.data.lat, item.data.lng], { icon })
-    .bindPopup(`<b>${item.data.name||''}</b>${item.data.desc?'<br>'+item.data.desc:''}`)
+    .bindPopup(`<b>${item.data.name||''}</b>${item.data.layer?'<br><small>'+item.data.layer+'</small>':''}${item.data.desc?'<br>'+item.data.desc:''}`)
     .addTo(leafletMap);
   lMarkers[item.id] = m;
 }
 
 function focusMarker(lat, lng) {
   if (leafletMap && lat && lng) leafletMap.setView([lat, lng], 15);
+}
+
+// ── KML 가져오기 ──
+async function importKML(input, tabId) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+
+  let text;
+  if (file.name.toLowerCase().endsWith('.kmz')) {
+    // KMZ = ZIP 압축 해제 후 doc.kml 추출
+    const zip = await JSZip.loadAsync(await file.arrayBuffer());
+    const kmlFile = zip.file(/\.kml$/i)[0];
+    if (!kmlFile) { alert('KMZ 안에 KML 파일이 없습니다.'); return; }
+    text = await kmlFile.async('text');
+  } else {
+    text = await file.text();
+  }
+
+  const parser = new DOMParser();
+  const xml = parser.parseFromString(text, 'text/xml');
+
+  const places = [];
+
+  // 태그명으로 첫 번째 자식 텍스트 반환 (네임스페이스 무관)
+  function childText(el, tag) {
+    const els = el.getElementsByTagName(tag);
+    for (let i = 0; i < els.length; i++) {
+      if (els[i].parentNode === el) return els[i].textContent.trim();
+    }
+    return '';
+  }
+
+  // Placemark에서 장소 정보 추출
+  function extractPlace(pm, layerName) {
+    const name = childText(pm, 'name') || '이름 없음';
+    const descEls = pm.getElementsByTagName('description');
+    const desc = descEls.length ? descEls[0].textContent.replace(/<[^>]+>/g, '').trim() : '';
+    // 좌표: lng,lat,alt 형식
+    const coordEls = pm.getElementsByTagName('coordinates');
+    if (!coordEls.length) return null;
+    const parts = coordEls[0].textContent.trim().split(/[\s,]+/);
+    const lng = parseFloat(parts[0]);
+    const lat = parseFloat(parts[1]);
+    if (isNaN(lat) || isNaN(lng)) return null;
+    return { name, desc, lat, lng, layer: layerName };
+  }
+
+  // Folder를 재귀적으로 순회
+  function parseFolder(folder, defaultLayer) {
+    const layerName = childText(folder, 'name') || defaultLayer;
+    for (const child of folder.children) {
+      const tag = child.localName || child.tagName;
+      if (tag === 'Placemark') {
+        const p = extractPlace(child, layerName);
+        if (p) places.push(p);
+      } else if (tag === 'Folder') {
+        parseFolder(child, layerName);
+      }
+    }
+  }
+
+  // NetworkLink 감지 → href에서 실제 KML 로드
+  const netLinks = xml.getElementsByTagName('NetworkLink');
+  if (netLinks.length > 0 && places.length === 0) {
+    const hrefEls = xml.getElementsByTagName('href');
+    const urls = [];
+    for (let i = 0; i < hrefEls.length; i++) {
+      const u = hrefEls[i].textContent.trim();
+      if (u.startsWith('http')) urls.push(u);
+    }
+    if (urls.length === 0) { alert('NetworkLink URL을 찾지 못했습니다.'); return; }
+
+    // CORS 프록시를 통해 실제 KML 데이터 가져오기
+    const proxies = [
+      u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+      u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+      u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+    ];
+    for (const url of urls) {
+      let fetched = false;
+      for (const makeProxy of proxies) {
+        try {
+          const res = await fetch(makeProxy(url));
+          if (!res.ok) continue;
+          const kmlText = await res.text();
+          if (!kmlText.includes('<')) continue;
+          const xml2 = parser.parseFromString(kmlText, 'text/xml');
+          const docEls2 = xml2.getElementsByTagName('Document');
+          const root2 = docEls2.length ? docEls2[0] : xml2.documentElement;
+          let hasFolders2 = false;
+          for (const child of root2.children) {
+            const tag = child.localName || child.tagName;
+            if (tag === 'Folder') { parseFolder(child, '기타'); hasFolders2 = true; }
+          }
+          if (!hasFolders2) {
+            const allPm = xml2.getElementsByTagName('Placemark');
+            for (let i = 0; i < allPm.length; i++) {
+              const p = extractPlace(allPm[i], '기타');
+              if (p) places.push(p);
+            }
+          }
+          if (places.length > 0) { fetched = true; break; }
+        } catch(e) { console.warn('KML fetch 실패:', e); }
+      }
+      if (fetched) break;
+      // 모든 프록시 실패 시 URL 직접 안내
+      if (!fetched && places.length === 0) {
+        const directUrl = url.includes('forcekml') ? url : url + (url.includes('?') ? '&' : '?') + 'forcekml=1';
+        if (window.confirm(`자동 가져오기에 실패했습니다.\n\n아래 방법으로 직접 KML 파일을 다운받아 가져오기 해주세요:\n\n1. 아래 URL을 브라우저 주소창에 붙여넣기\n2. 파일이 다운로드되면 그 파일로 다시 KML 가져오기\n\n[확인]을 누르면 URL이 클립보드에 복사됩니다.`)) {
+          navigator.clipboard.writeText(directUrl).catch(()=>{});
+        }
+      }
+    }
+  } else {
+    // 일반 KML: Document 또는 최상위에서 시작
+    const docEls = xml.getElementsByTagName('Document');
+    const root = docEls.length ? docEls[0] : xml.documentElement;
+    let hasFolders = false;
+    for (const child of root.children) {
+      const tag = child.localName || child.tagName;
+      if (tag === 'Folder') { parseFolder(child, '기타'); hasFolders = true; }
+    }
+    if (!hasFolders) {
+      const allPm = xml.getElementsByTagName('Placemark');
+      for (let i = 0; i < allPm.length; i++) {
+        const p = extractPlace(allPm[i], '기타');
+        if (p) places.push(p);
+      }
+    }
+  }
+
+  if (places.length === 0) {
+    alert('가져올 장소가 없습니다.\n\n구글 My Maps에서 KML 내보내기 시 "네트워크 링크 유지" 옵션을 해제하거나,\n지도가 공개(공유) 상태인지 확인해 주세요.');
+    return;
+  }
+
+  if (!window.confirm(`${places.length}개 장소를 가져오시겠습니까?\n\n기존 장소는 유지됩니다.`)) return;
+
+  // Supabase 일괄 저장
+  const rows = places.map((p, i) => ({ tab_id: tabId, data: p, sort_order: i }));
+  const batchSize = 50;
+  for (let i = 0; i < rows.length; i += batchSize) {
+    await fetch(`${SB_URL}/rest/v1/tab_items`, {
+      method: 'POST',
+      headers: SB_H,
+      body: JSON.stringify(rows.slice(i, i + batchSize))
+    });
+  }
+
+  // 지도 새로고침
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderMap(document.getElementById('tabContent'), currentTab, items);
+}
+
+function parseGmapUrl(url) {
+  if (!url) return;
+  let lat, lng, name = '';
+
+  // @lat,lng,zoom 형식 (가장 일반적)
+  let m = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (m) { lat = parseFloat(m[1]); lng = parseFloat(m[2]); }
+
+  // ?q=lat,lng 형식
+  if (!lat) { m = url.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/); if (m) { lat=parseFloat(m[1]); lng=parseFloat(m[2]); } }
+
+  // ll=lat,lng 형식
+  if (!lat) { m = url.match(/ll=(-?\d+\.\d+),(-?\d+\.\d+)/); if (m) { lat=parseFloat(m[1]); lng=parseFloat(m[2]); } }
+
+  // !3d lat !4d lng 형식 (Place ID URL)
+  if (!lat) { m = url.match(/!3d(-?\d+\.\d+).*!4d(-?\d+\.\d+)/); if (m) { lat=parseFloat(m[1]); lng=parseFloat(m[2]); } }
+
+  // 장소명 추출 (/maps/place/이름/)
+  m = url.match(/maps\/place\/([^/@?]+)/);
+  if (m) name = decodeURIComponent(m[1].replace(/\+/g,' ')).replace(/_/g,' ');
+
+  if (lat && lng) {
+    document.getElementById('mLat').value = lat.toFixed(6);
+    document.getElementById('mLng').value = lng.toFixed(6);
+    if (name && !document.getElementById('mName').value) document.getElementById('mName').value = name;
+    if (window.leafletMap) window.leafletMap.setView([lat, lng], 16);
+  }
 }
 
 async function addMapPlace(tabId) {
@@ -913,8 +1231,9 @@ async function addMapPlace(tabId) {
   if (!name) { alert('장소 이름을 입력하세요'); return; }
   if (!lat || !lng) { alert('지도를 클릭하거나 좌표를 입력하세요'); return; }
   const desc = document.getElementById('mDesc').value.trim();
-  await sbPost('tab_items', { tab_id: tabId, data: { name, desc, lat, lng }, sort_order: 0 });
-  ['mName','mDesc','mLat','mLng'].forEach(id=>document.getElementById(id).value='');
+  const layer = document.getElementById('mLayer').value.trim();
+  await sbPost('tab_items', { tab_id: tabId, data: { name, desc, lat, lng, layer }, sort_order: 0 });
+  ['mGurl','mName','mDesc','mLayer','mLat','mLng'].forEach(id=>document.getElementById(id).value='');
   const tab = currentTab;
   const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
   renderMap(document.getElementById('tabContent'), tab, items);
