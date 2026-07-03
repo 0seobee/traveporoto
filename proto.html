@@ -199,6 +199,23 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.92
 .edit-reset-btn{background:rgba(239,83,80,.1);color:#ef9a9a;border:1px solid rgba(239,83,80,.25);border-radius:10px;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
 .edit-reset-btn:hover{background:rgba(239,83,80,.2)}
 
+/* ── 맛집 편집 UI ── */
+.rest-row{position:relative}
+.rest-row-btns{position:absolute;top:6px;right:6px;display:flex;gap:4px;opacity:0;transition:.15s}
+.rest-row:hover .rest-row-btns{opacity:1}
+.rr-edit-btn,.rr-del-btn{border:none;border-radius:7px;padding:3px 8px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1.5}
+.rr-edit-btn{background:rgba(92,107,192,.2);color:#9fa8da}
+.rr-del-btn{background:rgba(229,57,53,.15);color:#ef9a9a}
+.rest-add-row-btn{display:block;width:100%;border:1.5px dashed rgba(255,255,255,.12);background:transparent;color:var(--sub);padding:9px;cursor:pointer;border-radius:10px;font-size:12px;font-family:inherit;transition:.2s;text-align:center;margin-top:4px}
+.rest-add-row-btn:hover{border-color:var(--accent);color:#9fa8da;background:rgba(92,107,192,.07)}
+/* 맛집 모달 */
+.rest-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:900;align-items:center;justify-content:center;padding:20px}
+.rest-modal-bg.open{display:flex}
+.rest-modal{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.rest-modal h3{font-size:16px;font-weight:700;margin-bottom:18px;color:#c5cae9}
+/* 읽기전용 모드 */
+body.readonly .rest-row-btns,body.readonly .rest-add-row-btn{display:none!important}
+
 /* 삭제 버튼 */
 .delete-btn{background:rgba(229,57,53,.12);color:#ef9a9a;border:1px solid rgba(229,57,53,.25);border-radius:10px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:3px;transition:.2s;font-family:inherit}
 .delete-btn:hover{background:rgba(229,57,53,.28);color:#ef5350}
@@ -1050,128 +1067,182 @@ html{scroll-behavior:smooth;scroll-padding-top:60px}
   <div class="sec-title">🍽️ 추천 맛집</div>
   <div class="sec-sub">Google Maps 평점 4.0↑ · 가성비 기준 · 2인 저녁 추정가 포함</div>
 
+  <!-- 리스본 점심 -->
+  <div style="margin:28px 0 10px;font-size:13px;font-weight:800;color:#a5d6a7;letter-spacing:.06em">☀️ 리스본 — 날짜별 점심 식당</div>
+  <div class="rest-grid" id="rg-lisbon-lunch">
+    <div class="rest-day-card" data-card-id="rc-ls-lunch-0801">
+      <div class="rest-day-label">8/1 (토) · 벨렘 점심</div>
+      <div class="rest-row best" data-rest-id="rr-ls-l1">
+        <div class="rest-stars">⭐미슐랭</div>
+        <div class="rest-info">
+          <div class="rest-name">Canalha (카날랴)</div>
+          <div class="rest-desc">미슐랭 셰프 비스트로 · 오징어 오믈렛·관자 · 예약필수 canalha.pt · R. da Junqueira 207</div>
+        </div>
+        <div class="rest-price">€25~50/인</div>
+        <div class="rest-row-btns"><button class="rr-edit-btn" onclick="openRestModal('rr-ls-l1','rc-ls-lunch-0801')">✏️</button><button class="rr-del-btn" onclick="deleteRest('rr-ls-l1')">🗑️</button></div>
+      </div>
+      <div class="rest-row alt" data-rest-id="rr-ls-l2">
+        <div class="rest-stars">⭐빕구르망</div>
+        <div class="rest-info">
+          <div class="rest-name">O Frade (오 프라드)</div>
+          <div class="rest-desc">미슐랭 빕 구르망 · 오리밥·레이저 클램 · TheFork 예약 · Calçada da Ajuda 14</div>
+        </div>
+        <div class="rest-price">€25/인</div>
+        <div class="rest-row-btns"><button class="rr-edit-btn" onclick="openRestModal('rr-ls-l2','rc-ls-lunch-0801')">✏️</button><button class="rr-del-btn" onclick="deleteRest('rr-ls-l2')">🗑️</button></div>
+      </div>
+      <div class="rest-row alt" data-rest-id="rr-ls-l3">
+        <div class="rest-stars">⭐뷰맛집</div>
+        <div class="rest-info">
+          <div class="rest-name">Terraço de Belém</div>
+          <div class="rest-desc">테주강 뷰 테라스 · 문어구이·해물밥 · TheFork 예약 · Av. Brasília</div>
+        </div>
+        <div class="rest-price">€20~35/인</div>
+        <div class="rest-row-btns"><button class="rr-edit-btn" onclick="openRestModal('rr-ls-l3','rc-ls-lunch-0801')">✏️</button><button class="rr-del-btn" onclick="deleteRest('rr-ls-l3')">🗑️</button></div>
+      </div>
+      <button class="rest-add-row-btn" onclick="openRestModal(null,'rc-ls-lunch-0801')">＋ 식당 추가</button>
+    </div>
+  </div>
+
   <!-- 리스본 저녁 -->
   <div style="margin:28px 0 10px;font-size:13px;font-weight:800;color:#9fa8da;letter-spacing:.06em">🇵🇹 리스본 — 날짜별 저녁 식당</div>
   <div class="rest-grid">
-    <div class="rest-day-card">
+    <div class="rest-day-card" data-card-id="rc-ls-dinner-0801">
       <div class="rest-day-label">8/1 (토) · 바이샤/산타아폴로니아</div>
-      <div class="rest-row best">
+      <div class="rest-row best" data-rest-id="rr-ls-d1">
         <div class="rest-stars">⭐4.7</div>
         <div class="rest-info">
           <div class="rest-name">Taberna Sal Grosso</div>
           <div class="rest-desc">문어·감바스·소꼬리 타파스 · 소형(예약 권장)</div>
         </div>
         <div class="rest-price">€ · €20~30/인</div>
+        <div class="rest-row-btns"><button class="rr-edit-btn" onclick="openRestModal('rr-ls-d1','rc-ls-dinner-0801')">✏️</button><button class="rr-del-btn" onclick="deleteRest('rr-ls-d1')">🗑️</button></div>
       </div>
-      <div class="rest-row alt">
+      <div class="rest-row alt" data-rest-id="rr-ls-d2">
         <div class="rest-stars">⭐4.5</div>
         <div class="rest-info">
           <div class="rest-name">Taberna da Baixa</div>
           <div class="rest-desc">해산물밥·감바스 · 숙소 근처 · 매일 ~22시</div>
         </div>
         <div class="rest-price">€€ · €20~30/인</div>
+        <div class="rest-row-btns"><button class="rr-edit-btn" onclick="openRestModal('rr-ls-d2','rc-ls-dinner-0801')">✏️</button><button class="rr-del-btn" onclick="deleteRest('rr-ls-d2')">🗑️</button></div>
       </div>
+      <button class="rest-add-row-btn" onclick="openRestModal(null,'rc-ls-dinner-0801')">＋ 식당 추가</button>
     </div>
-    <div class="rest-day-card">
+    <div class="rest-day-card" data-card-id="rc-ls-dinner-0802">
       <div class="rest-day-label">8/2 (일) · 벨렘/LX팩토리</div>
-      <div class="rest-row best">
+      <div class="rest-row best" data-rest-id="rr-ls-d3">
         <div class="rest-stars">⭐4.8</div>
         <div class="rest-info">
           <div class="rest-name">O Rio Marisqueira</div>
           <div class="rest-desc">해산물밥·문어·감바스 · 벨렘 현지 · 일 ~22:30</div>
         </div>
         <div class="rest-price">€€ · €25~35/인</div>
+        <div class="rest-row-btns"><button class="rr-edit-btn" onclick="openRestModal('rr-ls-d3','rc-ls-dinner-0802')">✏️</button><button class="rr-del-btn" onclick="deleteRest('rr-ls-d3')">🗑️</button></div>
       </div>
-      <div class="rest-row alt">
+      <div class="rest-row alt" data-rest-id="rr-ls-d4">
         <div class="rest-stars">⭐4.3</div>
         <div class="rest-info">
           <div class="rest-name">Chickinho (LX Factory)</div>
           <div class="rest-desc">페리페리 치킨 · 플리마켓 후 가볍게 · 일 영업 ✓</div>
         </div>
         <div class="rest-price">€ · €10~15/인</div>
+        <div class="rest-row-btns"><button class="rr-edit-btn" onclick="openRestModal('rr-ls-d4','rc-ls-dinner-0802')">✏️</button><button class="rr-del-btn" onclick="deleteRest('rr-ls-d4')">🗑️</button></div>
       </div>
+      <button class="rest-add-row-btn" onclick="openRestModal(null,'rc-ls-dinner-0802')">＋ 식당 추가</button>
     </div>
   </div>
 
   <!-- 포르투 저녁 -->
   <div style="margin:28px 0 10px;font-size:13px;font-weight:800;color:#9fa8da;letter-spacing:.06em">🇵🇹 포르투 — 날짜별 저녁 식당</div>
   <div class="rest-grid">
-    <div class="rest-day-card">
+    <div class="rest-day-card" data-card-id="rc-pt-dinner-0803">
       <div class="rest-day-label">8/3 (월) · 히베이라 — 도착일 가볍게</div>
-      <div class="rest-row best">
+      <div class="rest-row best" data-rest-id="rr-pt-d1">
         <div class="rest-stars">⭐4.8</div>
         <div class="rest-info">
           <div class="rest-name">Bó tá quente</div>
           <div class="rest-desc">수제 비파나 · 월 ~22:30 ✓ · 빠르고 든든하게</div>
         </div>
         <div class="rest-price">€ · €8~12/인</div>
+        <div class="rest-row-btns"><button class="rr-edit-btn" onclick="openRestModal('rr-pt-d1','rc-pt-dinner-0803')">✏️</button><button class="rr-del-btn" onclick="deleteRest('rr-pt-d1')">🗑️</button></div>
       </div>
-      <div class="rest-row alt">
+      <div class="rest-row alt" data-rest-id="rr-pt-d2">
         <div class="rest-stars">⭐4.7</div>
         <div class="rest-info">
           <div class="rest-name">Ribeira Square</div>
           <div class="rest-desc">강변뷰 해산물밥 · 월 18~23시 ✓ · 한국인 선호</div>
         </div>
         <div class="rest-price">€€ · €20~30/인</div>
+        <div class="rest-row-btns"><button class="rr-edit-btn" onclick="openRestModal('rr-pt-d2','rc-pt-dinner-0803')">✏️</button><button class="rr-del-btn" onclick="deleteRest('rr-pt-d2')">🗑️</button></div>
       </div>
       <div style="font-size:11px;color:#ef9a9a;padding:8px 4px 0">⚠️ Taberna dos Mercadores 월·화 휴무</div>
+      <button class="rest-add-row-btn" onclick="openRestModal(null,'rc-pt-dinner-0803')">＋ 식당 추가</button>
     </div>
-    <div class="rest-day-card">
-      <div class="rest-day-label">8/4 (화) · 기존 유지</div>
-      <div class="rest-row best">
-        <div class="rest-stars">⭐4.4</div>
+    <div class="rest-day-card" data-card-id="rc-pt-dinner-0804">
+      <div class="rest-day-label">8/4 (화) · 동 루이스 다리 근처</div>
+      <div class="rest-row best" data-rest-id="rr-pt-d3">
+        <div class="rest-stars">⭐미정</div>
         <div class="rest-info">
-          <div class="rest-name">카페 산티아고</div>
-          <div class="rest-desc">프란세지냐 명물 · 가성비 양호 · 유지 추천</div>
+          <div class="rest-name">현지 식당 (추후 확정)</div>
+          <div class="rest-desc">동 루이스 다리 근처 · 19:00 저녁 · 석양 감상 후 귀환</div>
         </div>
-        <div class="rest-price">€ · €15~25/인</div>
+        <div class="rest-price">€25~40/2인</div>
+        <div class="rest-row-btns"><button class="rr-edit-btn" onclick="openRestModal('rr-pt-d3','rc-pt-dinner-0804')">✏️</button><button class="rr-del-btn" onclick="deleteRest('rr-pt-d3')">🗑️</button></div>
       </div>
-      <div class="rest-row alt">
+      <div class="rest-row alt" data-rest-id="rr-pt-d4">
         <div class="rest-stars">⭐4.3</div>
         <div class="rest-info">
           <div class="rest-name">A Tasquinha</div>
           <div class="rest-desc">문어밥 · 화 저녁 영업 ✓ · 대안</div>
         </div>
         <div class="rest-price">€€</div>
+        <div class="rest-row-btns"><button class="rr-edit-btn" onclick="openRestModal('rr-pt-d4','rc-pt-dinner-0804')">✏️</button><button class="rr-del-btn" onclick="deleteRest('rr-pt-d4')">🗑️</button></div>
       </div>
+      <button class="rest-add-row-btn" onclick="openRestModal(null,'rc-pt-dinner-0804')">＋ 식당 추가</button>
     </div>
-    <div class="rest-day-card">
+    <div class="rest-day-card" data-card-id="rc-pt-dinner-0805">
       <div class="rest-day-label">8/5 (수) · 마토지뉴스 — 교체 추천</div>
-      <div class="rest-row best">
+      <div class="rest-row best" data-rest-id="rr-pt-d5">
         <div class="rest-stars">⭐4.5</div>
         <div class="rest-info">
           <div class="rest-name">Cantinho Senhor do Padrão</div>
           <div class="rest-desc">숯불 정어리·문어 · 해변 근처 · 수 ~23시 ✓</div>
         </div>
         <div class="rest-price">€ · €15~22/인</div>
+        <div class="rest-row-btns"><button class="rr-edit-btn" onclick="openRestModal('rr-pt-d5','rc-pt-dinner-0805')">✏️</button><button class="rr-del-btn" onclick="deleteRest('rr-pt-d5')">🗑️</button></div>
       </div>
-      <div class="rest-row alt">
+      <div class="rest-row alt" data-rest-id="rr-pt-d6">
         <div class="rest-stars">⭐4.3</div>
         <div class="rest-info">
           <div class="rest-name">Casa Açoreana</div>
           <div class="rest-desc">€20 풀코스 메뉴 · 현지인 식당 · 현금 권장</div>
         </div>
         <div class="rest-price">€ · €20/인 풀코스</div>
+        <div class="rest-row-btns"><button class="rr-edit-btn" onclick="openRestModal('rr-pt-d6','rc-pt-dinner-0805')">✏️</button><button class="rr-del-btn" onclick="deleteRest('rr-pt-d6')">🗑️</button></div>
       </div>
+      <button class="rest-add-row-btn" onclick="openRestModal(null,'rc-pt-dinner-0805')">＋ 식당 추가</button>
     </div>
-    <div class="rest-day-card">
+    <div class="rest-day-card" data-card-id="rc-pt-dinner-0806">
       <div class="rest-day-label">8/6 (목) · 기존 유지</div>
-      <div class="rest-row best">
+      <div class="rest-row best" data-rest-id="rr-pt-d7">
         <div class="rest-stars">⭐4.3</div>
         <div class="rest-info">
           <div class="rest-name">Pedro dos Frangos</div>
           <div class="rest-desc">치킨 구이 명물 · 가성비 최고 · 유지 추천</div>
         </div>
         <div class="rest-price">€ · €10~15/인</div>
+        <div class="rest-row-btns"><button class="rr-edit-btn" onclick="openRestModal('rr-pt-d7','rc-pt-dinner-0806')">✏️</button><button class="rr-del-btn" onclick="deleteRest('rr-pt-d7')">🗑️</button></div>
       </div>
-      <div class="rest-row alt">
+      <div class="rest-row alt" data-rest-id="rr-pt-d8">
         <div class="rest-stars">⭐4.5</div>
         <div class="rest-info">
           <div class="rest-name">Casa Guedes Tradicional</div>
           <div class="rest-desc">돼지목살 샌드위치 명물 · 현지인 단골 · 대안</div>
         </div>
         <div class="rest-price">€ · €5~8/인</div>
+        <div class="rest-row-btns"><button class="rr-edit-btn" onclick="openRestModal('rr-pt-d8','rc-pt-dinner-0806')">✏️</button><button class="rr-del-btn" onclick="deleteRest('rr-pt-d8')">🗑️</button></div>
       </div>
+      <button class="rest-add-row-btn" onclick="openRestModal(null,'rc-pt-dinner-0806')">＋ 식당 추가</button>
     </div>
   </div>
 
@@ -2894,8 +2965,181 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 저장된 편집/삭제 내용 반영
   loadEdits();
+
+  // 맛집 섹션 저장 내용 반영
+  loadDiningEdits();
 });
+
+// ===== 맛집 섹션 CRUD =====
+const DINING_KEY = 'pt-dining-edits';
+const DINING_ADD_KEY = 'pt-dining-adds';
+let _rmTarget = null;   // 편집 중인 rest-id (null이면 추가 모드)
+let _rmCardId = null;   // 소속 카드 id
+
+function loadDiningEdits() {
+  const edits = JSON.parse(localStorage.getItem(DINING_KEY) || '{}');
+  const adds  = JSON.parse(localStorage.getItem(DINING_ADD_KEY) || '{}');
+
+  // 편집·삭제 반영
+  Object.entries(edits).forEach(([rid, data]) => {
+    const row = document.querySelector(`[data-rest-id="${rid}"]`);
+    if (!row) return;
+    if (data._deleted) { row.style.display = 'none'; return; }
+    if (data.stars) { const el = row.querySelector('.rest-stars'); if (el) el.textContent = data.stars; }
+    if (data.name)  { const el = row.querySelector('.rest-name');  if (el) el.textContent = data.name; }
+    if (data.desc)  { const el = row.querySelector('.rest-desc');  if (el) el.textContent = data.desc; }
+    if (data.price) { const el = row.querySelector('.rest-price'); if (el) el.textContent = data.price; }
+  });
+
+  // 추가 항목 렌더링
+  Object.entries(adds).forEach(([cardId, items]) => {
+    const card = document.querySelector(`[data-card-id="${cardId}"]`);
+    if (!card) return;
+    const addBtn = card.querySelector('.rest-add-row-btn');
+    items.forEach(item => {
+      if (card.querySelector(`[data-rest-id="${item.id}"]`)) return; // 이미 있으면 skip
+      const div = document.createElement('div');
+      div.className = 'rest-row alt';
+      div.dataset.restId = item.id;
+      div.innerHTML = `
+        <div class="rest-stars">${item.stars||'⭐'}</div>
+        <div class="rest-info">
+          <div class="rest-name">${item.name||''}</div>
+          <div class="rest-desc">${item.desc||''}</div>
+        </div>
+        <div class="rest-price">${item.price||''}</div>
+        <div class="rest-row-btns">
+          <button class="rr-edit-btn" onclick="openRestModal('${item.id}','${cardId}')">✏️</button>
+          <button class="rr-del-btn" onclick="deleteRest('${item.id}')">🗑️</button>
+        </div>`;
+      card.insertBefore(div, addBtn || null);
+    });
+  });
+}
+
+function openRestModal(restId, cardId) {
+  _rmTarget = restId;
+  _rmCardId = cardId;
+  const modal = document.getElementById('restModalBg');
+  const isEdit = !!restId;
+  document.getElementById('rmTitle').textContent = isEdit ? '✏️ 식당 수정' : '➕ 식당 추가';
+  document.getElementById('rmDeleteBtn').style.display = isEdit ? 'inline-flex' : 'none';
+
+  if (isEdit) {
+    // 현재 DOM 값 or localStorage 값 읽기
+    const saved = JSON.parse(localStorage.getItem(DINING_KEY) || '{}')[restId] || {};
+    const row = document.querySelector(`[data-rest-id="${restId}"]`);
+    document.getElementById('rmStars').value = saved.stars || (row && row.querySelector('.rest-stars') ? row.querySelector('.rest-stars').textContent : '');
+    document.getElementById('rmName').value  = saved.name  || (row && row.querySelector('.rest-name')  ? row.querySelector('.rest-name').textContent : '');
+    document.getElementById('rmDesc').value  = saved.desc  || (row && row.querySelector('.rest-desc')  ? row.querySelector('.rest-desc').textContent : '');
+    document.getElementById('rmPrice').value = saved.price || (row && row.querySelector('.rest-price') ? row.querySelector('.rest-price').textContent : '');
+  } else {
+    document.getElementById('rmStars').value = '';
+    document.getElementById('rmName').value  = '';
+    document.getElementById('rmDesc').value  = '';
+    document.getElementById('rmPrice').value = '';
+  }
+  modal.classList.add('open');
+  document.getElementById('rmName').focus();
+}
+
+function closeRestModal() {
+  document.getElementById('restModalBg').classList.remove('open');
+}
+
+function saveRest() {
+  const stars = document.getElementById('rmStars').value.trim();
+  const name  = document.getElementById('rmName').value.trim();
+  const desc  = document.getElementById('rmDesc').value.trim();
+  const price = document.getElementById('rmPrice').value.trim();
+  if (!name) { alert('식당 이름을 입력해주세요.'); return; }
+
+  if (_rmTarget) {
+    // 수정 모드: DINING_KEY 저장 후 DOM 반영
+    const edits = JSON.parse(localStorage.getItem(DINING_KEY) || '{}');
+    edits[_rmTarget] = { stars, name, desc, price };
+    localStorage.setItem(DINING_KEY, JSON.stringify(edits));
+    const row = document.querySelector(`[data-rest-id="${_rmTarget}"]`);
+    if (row) {
+      if (row.querySelector('.rest-stars')) row.querySelector('.rest-stars').textContent = stars;
+      if (row.querySelector('.rest-name'))  row.querySelector('.rest-name').textContent  = name;
+      if (row.querySelector('.rest-desc'))  row.querySelector('.rest-desc').textContent  = desc;
+      if (row.querySelector('.rest-price')) row.querySelector('.rest-price').textContent = price;
+    }
+  } else {
+    // 추가 모드: DINING_ADD_KEY 저장 후 DOM 추가
+    const adds = JSON.parse(localStorage.getItem(DINING_ADD_KEY) || '{}');
+    if (!adds[_rmCardId]) adds[_rmCardId] = [];
+    const newId = 'dr-' + _rmCardId + '-' + Date.now();
+    adds[_rmCardId].push({ id: newId, stars, name, desc, price });
+    localStorage.setItem(DINING_ADD_KEY, JSON.stringify(adds));
+
+    const card = document.querySelector(`[data-card-id="${_rmCardId}"]`);
+    if (card) {
+      const addBtn = card.querySelector('.rest-add-row-btn');
+      const div = document.createElement('div');
+      div.className = 'rest-row alt';
+      div.dataset.restId = newId;
+      div.innerHTML = `
+        <div class="rest-stars">${stars||'⭐'}</div>
+        <div class="rest-info">
+          <div class="rest-name">${name}</div>
+          <div class="rest-desc">${desc}</div>
+        </div>
+        <div class="rest-price">${price}</div>
+        <div class="rest-row-btns">
+          <button class="rr-edit-btn" onclick="openRestModal('${newId}','${_rmCardId}')">✏️</button>
+          <button class="rr-del-btn" onclick="deleteRest('${newId}')">🗑️</button>
+        </div>`;
+      card.insertBefore(div, addBtn || null);
+    }
+  }
+  closeRestModal();
+  showToast('💾 저장되었습니다');
+}
+
+function deleteRestConfirm() {
+  closeRestModal();
+  showConfirm('이 식당을 삭제할까요?', () => deleteRest(_rmTarget));
+}
+
+function deleteRest(restId) {
+  // DINING_ADD_KEY에서 먼저 찾기
+  const adds = JSON.parse(localStorage.getItem(DINING_ADD_KEY) || '{}');
+  let removedFromAdds = false;
+  Object.keys(adds).forEach(cid => {
+    const idx = adds[cid].findIndex(i => i.id === restId);
+    if (idx !== -1) { adds[cid].splice(idx, 1); removedFromAdds = true; }
+  });
+  if (removedFromAdds) {
+    localStorage.setItem(DINING_ADD_KEY, JSON.stringify(adds));
+  } else {
+    // 원본 행 → DINING_KEY에 _deleted 표시
+    const edits = JSON.parse(localStorage.getItem(DINING_KEY) || '{}');
+    edits[restId] = { _deleted: true };
+    localStorage.setItem(DINING_KEY, JSON.stringify(edits));
+  }
+  const row = document.querySelector(`[data-rest-id="${restId}"]`);
+  if (row) row.style.display = 'none';
+  showToast('🗑️ 삭제되었습니다');
+}
 </script>
+
+<!-- 맛집 편집 모달 -->
+<div class="rest-modal-bg" id="restModalBg" onclick="if(event.target===this)closeRestModal()">
+  <div class="rest-modal">
+    <h3 id="rmTitle">✏️ 식당 수정</h3>
+    <div class="edit-field"><label>별점 / 등급</label><input id="rmStars" placeholder="예: ⭐4.7 또는 ⭐미슐랭" /></div>
+    <div class="edit-field"><label>식당 이름</label><input id="rmName" placeholder="식당 이름" /></div>
+    <div class="edit-field"><label>설명</label><textarea id="rmDesc" placeholder="주소, 특징 등"></textarea></div>
+    <div class="edit-field"><label>가격</label><input id="rmPrice" placeholder="예: €20~30/인" /></div>
+    <div class="edit-modal-btns">
+      <button id="rmDeleteBtn" class="delete-btn" style="display:none;padding:10px 14px;font-size:12px" onclick="deleteRestConfirm()">🗑️ 삭제</button>
+      <button class="edit-cancel-btn" onclick="closeRestModal()">취소</button>
+      <button class="edit-save-btn" onclick="saveRest()">저장</button>
+    </div>
+  </div>
+</div>
 
 <!-- 편집 모달 -->
 <div class="edit-modal-bg" id="editModalBg" onclick="if(event.target===this)closeEditModal()">
