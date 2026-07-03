@@ -242,8 +242,8 @@ body.readonly .rest-card-btns,body.readonly .rest-add-card-btn,body.readonly .re
 .rdf-btn:hover{border-color:#9fa8da;color:#9fa8da}
 .rdf-btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
 /* ── 섹션 accordion ── */
-.rest-grid{overflow:hidden;transition:max-height .38s cubic-bezier(.4,0,.2,1)}
-.rest-grid.collapsed{max-height:0!important;margin:0}
+.rest-grid,.info-grid,.sg-body{overflow:hidden;transition:max-height .38s cubic-bezier(.4,0,.2,1)}
+.rest-grid.collapsed,.info-grid.collapsed,.sg-body.collapsed{max-height:0!important;margin:0}
 .rs-toggle-btn{background:transparent;border:none;color:var(--sub);font-size:13px;cursor:pointer;padding:0 4px;transition:.2s;line-height:1;margin-left:auto}
 .rs-toggle-btn:hover{color:#c5cae9}
 /* ── 후보 접기/펼치기 ── */
@@ -1850,8 +1850,11 @@ body.readonly .add-day-btn{display:none!important}
   </div><!-- section-wrap 닫기 -->
 
   <!-- 블로그 추천 추가 맛집 -->
-  <div style="margin:28px 0 10px;font-size:13px;font-weight:800;color:#9fa8da;letter-spacing:.06em">📝 블로그 추천 — 포르투 추가 맛집</div>
-  <div class="rest-grid">
+  <div class="rest-section-header" style="margin:28px 0 10px">
+    <div style="font-size:13px;font-weight:800;color:#9fa8da;letter-spacing:.06em">📝 블로그 추천 — 포르투 추가 맛집</div>
+    <button class="rs-toggle-btn" onclick="toggleSection(this,'sg-blog')">▼</button>
+  </div>
+  <div class="rest-grid" id="sg-blog">
     <div class="rest-day-card">
       <div class="rest-day-label">🦞 해물밥 · 가이아 강변</div>
       <div class="rest-row best">
@@ -1900,8 +1903,11 @@ body.readonly .add-day-btn{display:none!important}
 
   <!-- 낮/간식 스팟 -->
   <!-- 해산물 Ramiro 대안 -->
-  <div style="margin:28px 0 10px;font-size:13px;font-weight:800;color:#9fa8da;letter-spacing:.06em">🦞 해산물 — Cervejaria Ramiro 대안</div>
-  <div class="rest-grid">
+  <div class="rest-section-header" style="margin:28px 0 10px">
+    <div style="font-size:13px;font-weight:800;color:#9fa8da;letter-spacing:.06em">🦞 해산물 — Cervejaria Ramiro 대안</div>
+    <button class="rs-toggle-btn" onclick="toggleSection(this,'sg-seafood')">▼</button>
+  </div>
+  <div class="rest-grid" id="sg-seafood">
     <div class="rest-day-card">
       <div class="rest-day-label">리스본 · Av. da Liberdade 155</div>
       <div class="rest-row best">
@@ -1916,8 +1922,11 @@ body.readonly .add-day-btn{display:none!important}
   </div>
 
   <!-- 포르투갈 전통 육류 -->
-  <div style="margin:28px 0 10px;font-size:13px;font-weight:800;color:#9fa8da;letter-spacing:.06em">🥩 포르투갈 전통 육류 — 리스본</div>
-  <div class="rest-grid">
+  <div class="rest-section-header" style="margin:28px 0 10px">
+    <div style="font-size:13px;font-weight:800;color:#9fa8da;letter-spacing:.06em">🥩 포르투갈 전통 육류 — 리스본</div>
+    <button class="rs-toggle-btn" onclick="toggleSection(this,'sg-meat')">▼</button>
+  </div>
+  <div class="rest-grid" id="sg-meat">
     <div class="rest-day-card">
       <div class="rest-day-label">🐂 소고기 전문</div>
       <div class="rest-row best">
@@ -1988,8 +1997,11 @@ body.readonly .add-day-btn{display:none!important}
     </div>
   </div>
 
-  <div style="margin:28px 0 10px;font-size:13px;font-weight:800;color:#9fa8da;letter-spacing:.06em">☀️ 낮 / 간식 필수 스팟</div>
-  <div class="info-grid">
+  <div class="rest-section-header" style="margin:28px 0 10px">
+    <div style="font-size:13px;font-weight:800;color:#9fa8da;letter-spacing:.06em">☀️ 낮 / 간식 필수 스팟</div>
+    <button class="rs-toggle-btn" onclick="toggleSection(this,'sg-snack')">▼</button>
+  </div>
+  <div class="info-grid" id="sg-snack">
     <div class="icard">
       <div class="icard-head">🇵🇹 리스본</div>
       <div class="icard-body">
@@ -2007,8 +2019,11 @@ body.readonly .add-day-btn{display:none!important}
   </div>
 
   <!-- 간식·디저트 가이드 -->
-  <div style="margin:36px 0 10px;font-size:13px;font-weight:800;color:#ffcc80;letter-spacing:.06em">☕ 간식·디저트·카페 완전 가이드</div>
-  <div class="rest-grid">
+  <div class="rest-section-header" style="margin:36px 0 10px">
+    <div style="font-size:13px;font-weight:800;color:#ffcc80;letter-spacing:.06em">☕ 간식·디저트·카페 완전 가이드</div>
+    <button class="rs-toggle-btn" onclick="toggleSection(this,'sg-dessert')">▼</button>
+  </div>
+  <div class="rest-grid" id="sg-dessert">
     <div class="rest-day-card">
       <div class="rest-day-label">🥐 에그타르트 — 리스본</div>
       <div class="rest-row best">
@@ -2126,8 +2141,11 @@ body.readonly .add-day-btn{display:none!important}
   </div>
 
   <!-- 예약 체크리스트 -->
-  <div style="margin:36px 0 10px;font-size:13px;font-weight:800;color:#ef9a9a;letter-spacing:.06em">📋 예약 마스터 체크리스트</div>
-  <div class="rest-grid">
+  <div class="rest-section-header" style="margin:36px 0 10px">
+    <div style="font-size:13px;font-weight:800;color:#ef9a9a;letter-spacing:.06em">📋 예약 마스터 체크리스트</div>
+    <button class="rs-toggle-btn" onclick="toggleSection(this,'sg-reservation')">▼</button>
+  </div>
+  <div class="rest-grid" id="sg-reservation">
     <div class="rest-day-card">
       <div class="rest-day-label">🔴 즉시 예약 필요</div>
       <div class="rest-row best">
@@ -3920,9 +3938,9 @@ function initRestSection() {
     });
   });
 
-  // accordion max-height 초기화
-  document.querySelectorAll('.rest-grid').forEach(grid => {
-    grid.style.maxHeight = grid.scrollHeight + 'px';
+  // accordion max-height 초기화 (rest-grid + info-grid)
+  document.querySelectorAll('.rest-grid, .info-grid').forEach(el => {
+    el.style.maxHeight = el.scrollHeight + 'px';
   });
 
   renderConfirmed();
