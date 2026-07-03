@@ -3814,9 +3814,268 @@ document.addEventListener('DOMContentLoaded', () => {
   initRestSection();
   // 예약 체크리스트 초기화
   initResChecklist();
+  // 정적 섹션 편집 초기화 (sg-meat, sg-dessert, sg-reservation, sg-snack)
+  initStaticSections();
   // 진행 상태 초기 렌더
   updateHeroProgress();
 });
+
+// ===== 정적 섹션 편집 초기화 =====
+const SG_SNACK_KEY = 'pt-sg-snack';
+
+function initStaticSections() {
+  // ── rest-day-card 구조 섹션 (sg-meat, sg-dessert, sg-reservation) ──
+  ['sg-meat', 'sg-dessert', 'sg-reservation'].forEach(sgId => {
+    const grid = document.getElementById(sgId);
+    if (!grid) return;
+    const isResv = (sgId === 'sg-reservation');
+
+    grid.querySelectorAll('.rest-day-card').forEach((card, ci) => {
+      const cardId = sgId + '-c' + ci;
+      card.dataset.cardId = cardId;
+
+      // rest-card-header 주입
+      const label = card.querySelector('.rest-day-label');
+      if (label && !card.querySelector('.rest-card-header')) {
+        const header = document.createElement('div');
+        header.className = 'rest-card-header';
+        const newLabel = label.cloneNode(true);
+        newLabel.dataset.labelFor = cardId;
+        const btnWrap = document.createElement('div');
+        btnWrap.className = 'rest-card-btns';
+        btnWrap.innerHTML = `<button class="rc-edit-btn" onclick="openCardModal('${cardId}','${sgId}')">✏️ 수정</button><button class="rc-del-btn" onclick="deleteCard('${cardId}')">🗑️</button>`;
+        header.appendChild(newLabel);
+        header.appendChild(btnWrap);
+        label.replaceWith(header);
+      }
+
+      // 각 행: data-rest-id + 편집/삭제 버튼
+      card.querySelectorAll('.rest-row').forEach((row, ri) => {
+        const restId = cardId + '-r' + ri;
+        if (!row.dataset.restId) row.dataset.restId = restId;
+        if (!row.querySelector('.rest-row-btns')) {
+          const rowBtns = document.createElement('div');
+          rowBtns.className = 'rest-row-btns';
+          rowBtns.innerHTML = `<button class="rr-edit-btn" onclick="openRestModal('${restId}','${cardId}')">✏️</button><button class="rr-del-btn" onclick="deleteRest('${restId}')">🗑️</button>`;
+          rowBtns.addEventListener('click', e => e.stopPropagation()); // 예약 체크 버블 차단
+          row.appendChild(rowBtns);
+          // 확정 지정 버튼 (예약 섹션 제외)
+          if (!isResv) {
+            const confirmBtn = document.createElement('button');
+            confirmBtn.className = 'confirm-btn';
+            confirmBtn.textContent = '확정 지정';
+            confirmBtn.onclick = () => setConfirmed(restId, cardId);
+            rowBtns.prepend(confirmBtn);
+          }
+        }
+      });
+
+      // 항목 추가 버튼
+      if (!card.querySelector('.rest-add-row-btn')) {
+        const addBtn = document.createElement('button');
+        addBtn.className = 'rest-add-row-btn';
+        addBtn.textContent = isResv ? '＋ 예약 항목 추가' : '＋ 식당 추가';
+        addBtn.onclick = () => openRestModal(null, cardId);
+        card.appendChild(addBtn);
+      }
+    });
+
+    // 카드 추가 버튼 (섹션 하단)
+    const nextEl = grid.nextElementSibling;
+    if (!nextEl || !nextEl.classList.contains('rest-add-card-wrap')) {
+      const wrap = document.createElement('div');
+      wrap.className = 'rest-add-card-wrap';
+      wrap.style.marginTop = '8px';
+      wrap.innerHTML = `<button class="rest-add-card-btn" onclick="openCardModal(null,'${sgId}')">＋ 카드 추가</button>`;
+      grid.insertAdjacentElement('afterend', wrap);
+    }
+  });
+
+  // ── sg-snack (info-grid / icard / irow 구조) ──
+  (function() {
+    const grid = document.getElementById('sg-snack');
+    if (!grid) return;
+    const saved = JSON.parse(localStorage.getItem(SG_SNACK_KEY) || '{}');
+
+    grid.querySelectorAll('.icard').forEach((icard, ci) => {
+      const cardId = 'sg-snack-c' + ci;
+      icard.dataset.cardId = cardId;
+
+      // icard-head에 삭제 버튼
+      const head = icard.querySelector('.icard-head');
+      if (head && !head.querySelector('.sg-snack-head-del')) {
+        head.style.cssText += ';display:flex;align-items:center;justify-content:space-between';
+        const delBtn = document.createElement('button');
+        delBtn.className = 'sg-snack-head-del rc-del-btn';
+        delBtn.textContent = '🗑️';
+        delBtn.style.cssText = 'opacity:0;transition:.15s;line-height:1.5';
+        delBtn.onclick = () => {
+          if (!confirm('이 카드 전체를 삭제할까요?')) return;
+          icard.style.display = 'none';
+          const d = JSON.parse(localStorage.getItem(SG_SNACK_KEY) || '{}');
+          d[cardId] = { _deleted: true };
+          localStorage.setItem(SG_SNACK_KEY, JSON.stringify(d));
+        };
+        icard.addEventListener('mouseenter', () => { delBtn.style.opacity = '1'; });
+        icard.addEventListener('mouseleave', () => { delBtn.style.opacity = '0'; });
+        head.appendChild(delBtn);
+      }
+      if (saved[cardId]?._deleted) { icard.style.display = 'none'; return; }
+
+      // 각 irow
+      const body = icard.querySelector('.icard-body');
+      body?.querySelectorAll('.irow').forEach((irow, ri) => {
+        const rowId = cardId + '-r' + ri;
+        irow.dataset.snackRowId = rowId;
+        if (!irow.querySelector('.snack-row-btns')) {
+          const btns = document.createElement('div');
+          btns.className = 'snack-row-btns';
+          btns.style.cssText = 'display:flex;gap:3px;opacity:0;transition:.15s;flex-shrink:0';
+          btns.innerHTML = `<button class="rr-edit-btn" onclick="openSnackModal('${rowId}','${cardId}')">✏️</button><button class="rr-del-btn" onclick="deleteSnackRow('${rowId}')">🗑️</button>`;
+          irow.appendChild(btns);
+          irow.addEventListener('mouseenter', () => { btns.style.opacity = '1'; });
+          irow.addEventListener('mouseleave', () => { btns.style.opacity = '0'; });
+        }
+        // 삭제/편집 상태 복원
+        const e = saved[rowId];
+        if (e?._deleted) { irow.style.display = 'none'; return; }
+        if (e) {
+          const n = irow.querySelector('.name'); if (n && e.name) n.textContent = e.name;
+          const d = irow.querySelector('.desc'); if (d && e.desc) d.textContent = e.desc;
+          const p = irow.querySelector('.price'); if (p && e.price) p.textContent = e.price;
+          const ic = irow.querySelector('.icon'); if (ic && e.icon) ic.textContent = e.icon;
+        }
+      });
+
+      // irow 추가 버튼
+      if (body && !body.querySelector('.snack-add-btn')) {
+        const addBtn = document.createElement('button');
+        addBtn.className = 'rest-add-row-btn snack-add-btn';
+        addBtn.style.cssText = 'margin:4px 16px 8px;width:calc(100% - 32px)';
+        addBtn.textContent = '＋ 항목 추가';
+        addBtn.onclick = () => openSnackModal(null, cardId);
+        body.appendChild(addBtn);
+      }
+    });
+
+    // sg-snack 카드 추가 버튼
+    const nextEl = grid.nextElementSibling;
+    if (!nextEl || !nextEl.classList.contains('rest-add-card-wrap')) {
+      const wrap = document.createElement('div');
+      wrap.className = 'rest-add-card-wrap';
+      wrap.style.marginTop = '8px';
+      wrap.innerHTML = `<button class="rest-add-card-btn" onclick="openSnackCardModal()">＋ 카드 추가</button>`;
+      grid.insertAdjacentElement('afterend', wrap);
+    }
+  })();
+
+  // 저장된 편집 정적 섹션에 반영
+  loadDiningEdits();
+  loadDiningCards();
+  renderConfirmed();
+}
+
+// snack irow 수정 모달 (restModalBg 재사용)
+let _snackTarget = null; // rowId or null
+let _snackCardId = null;
+
+function openSnackModal(rowId, cardId) {
+  _snackTarget = rowId;
+  _snackCardId = cardId;
+  _rmTarget = '__snack__'; // 기존 openRestModal 분기 방지용 dummy
+  _rmCardId = null;
+  const modal = document.getElementById('restModalBg');
+  document.getElementById('rmTitle').textContent = rowId ? '✏️ 항목 수정' : '➕ 항목 추가';
+  document.getElementById('rmDeleteBtn').style.display = rowId ? 'inline-flex' : 'none';
+  if (rowId) {
+    const irow = document.querySelector(`[data-snack-row-id="${rowId}"]`);
+    const saved = JSON.parse(localStorage.getItem(SG_SNACK_KEY) || '{}')[rowId] || {};
+    document.getElementById('rmStars').value = saved.icon || irow?.querySelector('.icon')?.textContent || '';
+    document.getElementById('rmName').value  = saved.name || irow?.querySelector('.name')?.textContent || '';
+    document.getElementById('rmDesc').value  = saved.desc || irow?.querySelector('.desc')?.textContent || '';
+    document.getElementById('rmPrice').value = saved.price || irow?.querySelector('.price')?.textContent || '';
+  } else {
+    document.getElementById('rmStars').value = '';
+    document.getElementById('rmName').value  = '';
+    document.getElementById('rmDesc').value  = '';
+    document.getElementById('rmPrice').value = '';
+  }
+  document.getElementById('rmStars').placeholder = '아이콘 이모지 (예: 🍖)';
+  modal.classList.add('open');
+  document.getElementById('rmName').focus();
+}
+
+function saveSnackRow() {
+  const icon  = document.getElementById('rmStars').value.trim();
+  const name  = document.getElementById('rmName').value.trim();
+  const desc  = document.getElementById('rmDesc').value.trim();
+  const price = document.getElementById('rmPrice').value.trim();
+  if (!name) { alert('이름을 입력해주세요.'); return; }
+
+  const d = JSON.parse(localStorage.getItem(SG_SNACK_KEY) || '{}');
+
+  if (_snackTarget) {
+    // 수정
+    d[_snackTarget] = { icon, name, desc, price };
+    localStorage.setItem(SG_SNACK_KEY, JSON.stringify(d));
+    const irow = document.querySelector(`[data-snack-row-id="${_snackTarget}"]`);
+    if (irow) {
+      const n = irow.querySelector('.name'); if (n) n.textContent = name;
+      const de = irow.querySelector('.desc'); if (de) de.textContent = desc;
+      const p = irow.querySelector('.price'); if (p) p.textContent = price;
+      const ic = irow.querySelector('.icon'); if (ic) ic.textContent = icon;
+    }
+  } else {
+    // 추가
+    const newId = _snackCardId + '-r-' + Date.now();
+    d[newId] = { icon, name, desc, price };
+    localStorage.setItem(SG_SNACK_KEY, JSON.stringify(d));
+    const icard = document.querySelector(`[data-card-id="${_snackCardId}"]`);
+    const body = icard?.querySelector('.icard-body');
+    const addBtn = body?.querySelector('.snack-add-btn');
+    if (body) {
+      const irow = document.createElement('div');
+      irow.className = 'irow';
+      irow.dataset.snackRowId = newId;
+      irow.innerHTML = `<div class="icon">${icon||'🍴'}</div><div class="content"><div class="name">${name}</div><div class="desc">${desc}</div></div><div class="price">${price}</div>`;
+      const btns = document.createElement('div');
+      btns.className = 'snack-row-btns';
+      btns.style.cssText = 'display:flex;gap:3px;opacity:0;transition:.15s;flex-shrink:0';
+      btns.innerHTML = `<button class="rr-edit-btn" onclick="openSnackModal('${newId}','${_snackCardId}')">✏️</button><button class="rr-del-btn" onclick="deleteSnackRow('${newId}')">🗑️</button>`;
+      irow.appendChild(btns);
+      irow.addEventListener('mouseenter', () => { btns.style.opacity = '1'; });
+      irow.addEventListener('mouseleave', () => { btns.style.opacity = '0'; });
+      body.insertBefore(irow, addBtn || null);
+    }
+  }
+  closeRestModal();
+  showToast('💾 저장되었습니다');
+}
+
+function deleteSnackRow(rowId) {
+  const irow = document.querySelector(`[data-snack-row-id="${rowId}"]`);
+  if (irow) irow.style.display = 'none';
+  const d = JSON.parse(localStorage.getItem(SG_SNACK_KEY) || '{}');
+  d[rowId] = { _deleted: true };
+  localStorage.setItem(SG_SNACK_KEY, JSON.stringify(d));
+  showToast('🗑️ 삭제되었습니다');
+}
+
+function openSnackCardModal() {
+  // snack 새 카드 추가: 제목 입력 후 icard 생성
+  const title = prompt('카드 제목을 입력하세요 (예: 🇵🇹 리스본)');
+  if (!title) return;
+  const grid = document.getElementById('sg-snack');
+  if (!grid) return;
+  const cardId = 'sg-snack-c-' + Date.now();
+  const icard = document.createElement('div');
+  icard.className = 'icard';
+  icard.dataset.cardId = cardId;
+  icard.innerHTML = `<div class="icard-head" style="display:flex;align-items:center;justify-content:space-between">${title}<button class="rc-del-btn sg-snack-head-del" onclick="(function(){if(!confirm('삭제?'))return;this.closest('.icard').style.display='none';var d=JSON.parse(localStorage.getItem('pt-sg-snack')||'{}');d['${cardId}']={_deleted:true};localStorage.setItem('pt-sg-snack',JSON.stringify(d));}).call(this)" style="opacity:.7">🗑️</button></div><div class="icard-body"><button class="rest-add-row-btn snack-add-btn" style="margin:4px 16px 8px;width:calc(100% - 32px)" onclick="openSnackModal(null,'${cardId}')">＋ 항목 추가</button></div>`;
+  const addWrap = grid.nextElementSibling?.classList.contains('rest-add-card-wrap') ? grid.nextElementSibling : null;
+  grid.insertBefore(icard, addWrap);
+  showToast('💾 카드가 추가되었습니다');
+}
 
 // ===== 전체 접기/펼치기 =====
 let _allCollapsed = false;
@@ -4137,9 +4396,15 @@ function openRestModal(restId, cardId) {
 
 function closeRestModal() {
   document.getElementById('restModalBg').classList.remove('open');
+  const lbl = document.getElementById('rmStarsLabel');
+  if (lbl) lbl.textContent = '평점·등급';
+  _rmTarget = null;
+  _snackTarget = undefined;
 }
 
 function saveRest() {
+  // snack 모달 분기
+  if (_snackTarget !== undefined && _rmTarget === '__snack__') { saveSnackRow(); return; }
   const stars = document.getElementById('rmStars').value.trim();
   const name  = document.getElementById('rmName').value.trim();
   const desc  = document.getElementById('rmDesc').value.trim();
