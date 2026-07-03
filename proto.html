@@ -265,6 +265,22 @@ body.readonly .rest-card-btns,body.readonly .rest-add-card-btn,body.readonly .re
 .res-badge{font-size:10px;font-weight:700;background:rgba(102,187,106,.2);color:#a5d6a7;border-radius:8px;padding:2px 8px;margin-left:8px;vertical-align:middle}
 #sg-reservation .rest-row{cursor:pointer}
 #sg-reservation .rest-row:hover .res-check-icon{border-color:#66bb6a}
+/* ── 확정 식당 요약 카드 ── */
+#confirmed-summary{background:linear-gradient(135deg,rgba(102,187,106,.08),rgba(105,240,174,.03));border:1px solid rgba(102,187,106,.2);border-radius:14px;padding:14px 18px;margin-bottom:16px}
+.cs-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cs-title{font-size:12px;font-weight:800;color:#69f0ae;letter-spacing:.05em}
+.cs-count{font-size:10px;font-weight:600;opacity:.65;margin-left:5px}
+.cs-grid{display:flex;flex-direction:column;gap:6px}
+.cs-row{display:flex;align-items:center;gap:8px}
+.cs-date{font-size:10px;font-weight:800;color:#a5d6a7;width:42px;flex-shrink:0}
+.cs-meals{display:flex;flex-wrap:wrap;gap:5px}
+.cs-slot{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.05);border:1px solid rgba(102,187,106,.12);border-radius:8px;padding:2px 8px}
+.cs-slot-type{font-size:9px;color:var(--sub);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.cs-slot-name{font-size:11px;color:var(--text);font-weight:600}
+/* ── 읽기전용 맛집 뷰 ── */
+body.readonly #restaurants .rest-row:not(.is-confirmed){display:none!important}
+body.readonly #restaurants .cand-toggle-btn{display:none!important}
+body.readonly #restaurants .rest-section-header .rs-toggle-btn{display:none!important}
 body.readonly .confirm-btn,.cand-toggle-btn{}
 /* 카드 모달 */
 .card-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:910;align-items:center;justify-content:center;padding:20px}
@@ -1163,6 +1179,9 @@ body.readonly .add-day-btn{display:none!important}
   <div class="sec-eyebrow">DINING</div>
   <div class="sec-title">🍽️ 추천 맛집</div>
   <div class="sec-sub">Google Maps 평점 4.0↑ · 가성비 기준 · 2인 저녁 추정가 포함</div>
+
+  <!-- 확정 식당 요약 -->
+  <div id="confirmed-summary" style="display:none"></div>
 
   <!-- 전체 접기/펼치기 -->
   <div style="display:flex;justify-content:flex-end;margin:8px 0 0">
@@ -3776,6 +3795,46 @@ function toggleCandidates(btn, cardId) {
 
 // ===== 확정 지정 =====
 const CONFIRMED_KEY = 'pt-confirmed';
+const _CS_DATE_LABELS = {'0801':'8/1 토','0802':'8/2 일','0803':'8/3 월','0804':'8/4 화','0805':'8/5 수','0806':'8/6 목'};
+const _CS_DATES = ['0801','0802','0803','0804','0805','0806'];
+
+function renderConfirmedSummary() {
+  const el = document.getElementById('confirmed-summary');
+  if (!el) return;
+  const data = JSON.parse(localStorage.getItem(CONFIRMED_KEY) || '{}');
+  const entries = Object.entries(data);
+  if (entries.length === 0) { el.style.display = 'none'; return; }
+  el.style.display = '';
+  // date → {lunch, dinner} map
+  const map = {};
+  entries.forEach(([cardId, restId]) => {
+    const m = cardId.match(/(\d{4})$/);
+    if (!m) return;
+    const date = m[1];
+    if (!map[date]) map[date] = {};
+    const isLunch = cardId.includes('lunch');
+    const nameEl = document.querySelector(`[data-rest-id="${restId}"] .rest-name`);
+    map[date][isLunch ? 'lunch' : 'dinner'] = nameEl?.textContent || '—';
+  });
+  const rows = _CS_DATES.filter(d => map[d]).map(d => {
+    const slots = [];
+    if (map[d].lunch) slots.push(`<div class="cs-slot"><span class="cs-slot-type">점심</span><span class="cs-slot-name">${map[d].lunch}</span></div>`);
+    if (map[d].dinner) slots.push(`<div class="cs-slot"><span class="cs-slot-type">저녁</span><span class="cs-slot-name">${map[d].dinner}</span></div>`);
+    return `<div class="cs-row"><div class="cs-date">${_CS_DATE_LABELS[d]}</div><div class="cs-meals">${slots.join('')}</div></div>`;
+  }).join('');
+  el.innerHTML = `<div class="cs-header"><div class="cs-title">✅ 확정된 식당<span class="cs-count">${entries.length}개</span></div></div><div class="cs-grid">${rows}</div>`;
+}
+
+function applyReadonlyRestFilter() {
+  if (!document.body.classList.contains('readonly')) return;
+  document.querySelectorAll('#restaurants .rest-day-card').forEach(card => {
+    card.style.display = card.querySelector('.rest-row.is-confirmed') ? '' : 'none';
+  });
+  document.querySelectorAll('#restaurants .rest-section-wrap').forEach(wrap => {
+    const hasVisible = [...wrap.querySelectorAll('.rest-day-card')].some(c => c.style.display !== 'none');
+    wrap.style.display = hasVisible ? '' : 'none';
+  });
+}
 
 function setConfirmed(restId, cardId) {
   const data = JSON.parse(localStorage.getItem(CONFIRMED_KEY) || '{}');
@@ -3821,6 +3880,8 @@ function renderConfirmed() {
       header.insertAdjacentElement('afterend', banner);
     }
   });
+  renderConfirmedSummary();
+  applyReadonlyRestFilter();
 }
 
 // ===== 예약 체크리스트 =====
