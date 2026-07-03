@@ -46,8 +46,32 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.92
 /* ── SECTIONS ── */
 .section{padding:72px 24px;max-width:1100px;margin:0 auto}
 .sec-eyebrow{font-size:12px;font-weight:700;letter-spacing:3px;color:#7986cb;text-transform:uppercase;margin-bottom:10px}
-.sec-title{font-size:clamp(22px,4vw,36px);font-weight:800;margin-bottom:8px}
+.sec-title{font-size:clamp(22px,4vw,36px);font-weight:800;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
 .sec-sub{color:var(--sub);font-size:14px;margin-bottom:36px}
+/* ── 탭 섹션 접기 ── */
+.sec-body{overflow:hidden;transition:max-height .4s cubic-bezier(.4,0,.2,1);max-height:6000px}
+.sec-body.collapsed{max-height:0!important}
+/* 꿀팁 static 박스 카드화 */
+.tip-box-card{border-radius:16px;margin-bottom:24px;overflow:hidden}
+.tip-box-header{display:flex;align-items:center;gap:8px;padding:14px 22px;cursor:pointer;user-select:none;justify-content:space-between}
+.tip-box-body{overflow:hidden;transition:max-height .35s cubic-bezier(.4,0,.2,1);max-height:2000px}
+.tip-box-body.collapsed{max-height:0!important}
+/* 리스보아 카드 개별 카드 */
+.lc-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.lc-card-head{display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer;user-select:none}
+.lc-card-head-btns{opacity:0;transition:.15s;display:flex;gap:4px;margin-left:auto;flex-shrink:0}
+.lc-card:hover .lc-card-head-btns{opacity:1}
+.lc-card-body{padding:12px 16px 16px;overflow:hidden;transition:max-height .35s cubic-bezier(.4,0,.2,1);max-height:600px}
+.lc-card-body.collapsed{max-height:0!important;padding:0}
+/* pdoc-card 편집 */
+.pdoc-card{position:relative}
+.pdoc-del-btn{position:absolute;top:10px;right:10px;background:rgba(239,83,80,.15);border:1px solid rgba(239,83,80,.2);border-radius:6px;color:#ef9a9a;font-size:11px;cursor:pointer;padding:4px 8px;opacity:0;transition:.15s;font-family:inherit}
+.pdoc-card:hover .pdoc-del-btn{opacity:1}
+.pdoc-add-wrap{margin-top:12px}
+.pdoc-add-btn{background:transparent;border:2px dashed rgba(255,255,255,.15);border-radius:16px;padding:24px;color:var(--sub);font-size:14px;cursor:pointer;font-family:inherit;transition:.2s;width:100%;text-align:center;display:block}
+.pdoc-add-btn:hover{border-color:#9fa8da;color:#9fa8da}
+/* 여행경비 탭 접기 버튼 */
+.ledger-report-title{font-size:20px;font-weight:800;color:#fff;letter-spacing:-.3px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;gap:8px}
 
 /* ── CONCEPT CARDS ── */
 .concept-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
@@ -3839,13 +3863,337 @@ document.addEventListener('DOMContentLoaded', () => {
   // 숙소·교통 편집 기능
   initInfoSection('hotels', 'pt-info-hotels');
   initInfoSection('transport', 'pt-info-transport');
+  // 나머지 탭 섹션 접기 + 편집
+  initTabSections();
   // 진행 상태 초기 렌더
   updateHeroProgress();
 });
 
+// ===== 탭 섹션 접기/펼치기 + 편집 =====
+
+function wrapSectionBody(sectionId) {
+  const section = document.getElementById(sectionId);
+  if (!section || section.querySelector('.sec-body')) return;
+  const title = section.querySelector('.sec-title');
+  if (!title || title.querySelector('.info-collapse-btn')) return;
+
+  // 접기 버튼 추가
+  const btn = document.createElement('button');
+  btn.className = 'info-collapse-btn';
+  btn.textContent = '접기 ▲';
+  btn.onclick = () => {
+    const body = section.querySelector('.sec-body');
+    if (!body) return;
+    const collapsed = body.classList.toggle('collapsed');
+    btn.textContent = collapsed ? '펼치기 ▼' : '접기 ▲';
+  };
+  title.appendChild(btn);
+
+  // sec-sub 이후 모든 자식을 sec-body로 감싸기
+  const secSub = section.querySelector('.sec-sub');
+  const startEl = secSub || title;
+  const children = [...section.children];
+  const startIdx = children.indexOf(startEl) + 1;
+  if (startIdx >= children.length) return;
+
+  const body = document.createElement('div');
+  body.className = 'sec-body';
+  children.slice(startIdx).forEach(child => body.appendChild(child));
+  section.appendChild(body);
+}
+
+// 여행경비 탭은 sec-title 없이 ledger-report-header 사용
+function wrapBudgetSection() {
+  const section = document.getElementById('budget');
+  if (!section || section.querySelector('.sec-body')) return;
+  const titleEl = section.querySelector('.ledger-report-title');
+  if (!titleEl || titleEl.querySelector('.info-collapse-btn')) return;
+
+  const btn = document.createElement('button');
+  btn.className = 'info-collapse-btn';
+  btn.style.cssText = 'font-size:11px;padding:5px 12px;background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#fff';
+  btn.textContent = '접기 ▲';
+  btn.onclick = () => {
+    const body = section.querySelector('.sec-body');
+    if (!body) return;
+    const collapsed = body.classList.toggle('collapsed');
+    btn.textContent = collapsed ? '펼치기 ▼' : '접기 ▲';
+  };
+  titleEl.appendChild(btn);
+
+  const header = section.querySelector('.ledger-report-header');
+  if (!header) return;
+  const innerSection = section.querySelector('.section');
+  if (!innerSection) return;
+  const children = [...innerSection.children];
+  const startIdx = children.indexOf(header) + 1;
+  if (startIdx >= children.length) return;
+
+  const body = document.createElement('div');
+  body.className = 'sec-body';
+  children.slice(startIdx).forEach(child => body.appendChild(child));
+  innerSection.appendChild(body);
+}
+
+// ── 꿀팁 static 박스를 접을 수 있는 카드로 변환 ──
+function initTipBoxCards() {
+  const tips = document.getElementById('tips');
+  if (!tips) return;
+  const tipsList = tips.querySelector('.tips-list');
+
+  [...tips.querySelectorAll(':scope > div')].forEach(div => {
+    if (div === tipsList || div.classList.contains('sec-body')) return;
+    const titleDiv = div.querySelector('[style*="font-weight:800"]');
+    if (!titleDiv) return;
+
+    const bgStyle = div.getAttribute('style') || '';
+    div.classList.add('tip-box-card');
+    div.setAttribute('style', bgStyle.replace(/padding:[^;]+;?/g, '').replace(/margin-bottom:[^;]+;?/g, ''));
+
+    const titleText = titleDiv.innerHTML;
+    const titleColor = titleDiv.style.color || '#9fa8da';
+
+    // 헤더 생성
+    const header = document.createElement('div');
+    header.className = 'tip-box-header';
+    header.style.background = 'rgba(0,0,0,.15)';
+    header.innerHTML = `<div style="font-size:13px;font-weight:800;color:${titleColor};line-height:1.4">${titleText}</div>`;
+
+    const tglBtn = document.createElement('button');
+    tglBtn.className = 'icard-toggle';
+    tglBtn.textContent = '▼';
+    header.appendChild(tglBtn);
+
+    // 본문 생성 (titleDiv 제외한 나머지)
+    const bodyWrap = document.createElement('div');
+    bodyWrap.className = 'tip-box-body';
+    bodyWrap.style.padding = '0 22px 20px';
+    [...div.children].forEach(child => { if (child !== titleDiv) bodyWrap.appendChild(child); });
+    titleDiv.remove();
+
+    div.innerHTML = '';
+    div.appendChild(header);
+    div.appendChild(bodyWrap);
+
+    header.onclick = () => {
+      const collapsed = bodyWrap.classList.toggle('collapsed');
+      tglBtn.textContent = collapsed ? '▶' : '▼';
+    };
+  });
+}
+
+// ── 리스보아 카드 개별 카드 접기 + 추가/삭제 ──
+function initLisboaCardSection() {
+  const section = document.getElementById('lisboacard');
+  if (!section) return;
+  const saved = JSON.parse(localStorage.getItem('pt-lc-cards') || '{}');
+
+  const grid = section.querySelector('[style*="grid-template-columns"]');
+  if (!grid) return;
+
+  [...grid.children].forEach((card, i) => {
+    const cardId = 'lc-c' + i;
+    card.dataset.cardId = cardId;
+    if (saved[cardId]?._deleted) { card.style.display = 'none'; return; }
+
+    // 기존 내용 추출 (icon, title, desc)
+    const icon  = card.children[0]?.textContent?.trim() || '📌';
+    const title = card.children[1]?.textContent?.trim() || '';
+    const desc  = card.children[2]?.innerHTML || '';
+
+    // 카드 재구성
+    card.innerHTML = '';
+    card.className = 'lc-card';
+    card.style.padding = '0';
+
+    const head = document.createElement('div');
+    head.className = 'lc-card-head';
+    head.innerHTML = `<div style="font-size:20px;flex-shrink:0">${icon}</div><div style="flex:1"><div style="font-weight:700;font-size:14px;color:#c5cae9">${title}</div></div>`;
+
+    const headBtns = document.createElement('div');
+    headBtns.className = 'lc-card-head-btns';
+    headBtns.innerHTML = `<button class="rr-del-btn" onclick="deleteLcCard('${cardId}');event.stopPropagation()">🗑️</button>`;
+
+    const tgl = document.createElement('button');
+    tgl.className = 'icard-toggle';
+    tgl.textContent = '▼';
+    tgl.onclick = e => { e.stopPropagation(); toggleInfoCard(card, tgl); };
+
+    head.appendChild(headBtns);
+    head.appendChild(tgl);
+    head.onclick = () => toggleInfoCard(card, tgl);
+
+    const body = document.createElement('div');
+    body.className = 'lc-card-body';
+    body.innerHTML = `<div style="font-size:13px;color:var(--sub);line-height:1.6">${desc}</div>`;
+
+    card.appendChild(head);
+    card.appendChild(body);
+
+    card.addEventListener('mouseenter', () => { headBtns.style.opacity='1'; });
+    card.addEventListener('mouseleave', () => { headBtns.style.opacity='0'; });
+  });
+
+  // ＋ 카드 추가 버튼
+  if (!grid.nextElementSibling?.classList.contains('rest-add-card-wrap')) {
+    const wrap = document.createElement('div');
+    wrap.className = 'rest-add-card-wrap';
+    wrap.style.marginTop = '12px';
+    wrap.innerHTML = `<button class="rest-add-card-btn" onclick="addLcCard()">＋ 카드 추가</button>`;
+    grid.insertAdjacentElement('afterend', wrap);
+  }
+
+  // 섹션에 전체 접기 버튼 추가 (initInfoSection 방식)
+  const secTitle = section.querySelector('.sec-title');
+  if (secTitle && !section.querySelector('.info-collapse-btn')) {
+    const colBtn = document.createElement('button');
+    colBtn.className = 'info-collapse-btn';
+    colBtn.textContent = '전체 접기 ▲';
+    colBtn.onclick = () => toggleAllInfoCards('lisboacard-grid', colBtn);
+    grid.dataset.sectionContainer = 'lisboacard-grid';
+    secTitle.insertAdjacentElement('afterend', colBtn);
+  }
+}
+
+function deleteLcCard(cardId) {
+  if (!confirm('이 카드를 삭제할까요?')) return;
+  const card = document.querySelector(`[data-card-id="${cardId}"]`);
+  if (card) card.style.display = 'none';
+  const d = JSON.parse(localStorage.getItem('pt-lc-cards') || '{}');
+  d[cardId] = { _deleted: true };
+  localStorage.setItem('pt-lc-cards', JSON.stringify(d));
+  showToast('🗑️ 삭제되었습니다');
+}
+
+function addLcCard() {
+  const icon  = prompt('아이콘 이모지 (예: 🏛️):') || '📌';
+  const title = prompt('카드 제목:');
+  if (!title) return;
+  const desc  = prompt('내용 설명:') || '';
+  const cardId = 'lc-c-' + Date.now();
+  const section = document.getElementById('lisboacard');
+  const grid = section?.querySelector('[style*="grid-template-columns"]');
+  if (!grid) return;
+
+  const card = document.createElement('div');
+  card.className = 'lc-card';
+  card.dataset.cardId = cardId;
+  card.innerHTML = `
+    <div class="lc-card-head">
+      <div style="font-size:20px;flex-shrink:0">${icon}</div>
+      <div style="flex:1"><div style="font-weight:700;font-size:14px;color:#c5cae9">${title}</div></div>
+      <div class="lc-card-head-btns" style="opacity:.8"><button class="rr-del-btn" onclick="deleteLcCard('${cardId}');event.stopPropagation()">🗑️</button></div>
+      <button class="icard-toggle" onclick="toggleInfoCard(this.closest('.lc-card'),this);event.stopPropagation()">▼</button>
+    </div>
+    <div class="lc-card-body"><div style="font-size:13px;color:var(--sub);line-height:1.6">${desc}</div></div>`;
+
+  const addWrap = grid.nextElementSibling?.classList.contains('rest-add-card-wrap') ? grid.nextElementSibling : null;
+  grid.insertBefore(card, addWrap);
+  const head = card.querySelector('.lc-card-head');
+  const body = card.querySelector('.lc-card-body');
+  const tgl  = card.querySelector('.icard-toggle');
+  head.onclick = () => toggleInfoCard(card, tgl);
+  card.addEventListener('mouseenter', () => { card.querySelector('.lc-card-head-btns').style.opacity='1'; });
+  card.addEventListener('mouseleave', () => { card.querySelector('.lc-card-head-btns').style.opacity='0'; });
+  showToast('💾 카드가 추가되었습니다');
+}
+
+// ── 여행자료 pdoc-card 삭제/추가 ──
+function initTravelDocsSection() {
+  const saved = JSON.parse(localStorage.getItem('pt-travel-docs') || '{}');
+
+  document.querySelectorAll('.pdoc-card').forEach((card, i) => {
+    const cardId = 'pd-c' + i;
+    card.dataset.pdocId = cardId;
+    if (saved[cardId]?._deleted) { card.style.display = 'none'; return; }
+    if (!card.querySelector('.pdoc-del-btn')) {
+      const btn = document.createElement('button');
+      btn.className = 'pdoc-del-btn';
+      btn.textContent = '🗑️ 삭제';
+      btn.onclick = e => { e.stopPropagation(); deletePdocCard(cardId); };
+      card.appendChild(btn);
+    }
+  });
+
+  const grid = document.querySelector('#travel-docs .pdoc-grid');
+  if (grid && !grid.querySelector('.pdoc-add-wrap')) {
+    const wrap = document.createElement('div');
+    wrap.className = 'pdoc-add-wrap';
+    wrap.innerHTML = `<button class="pdoc-add-btn" onclick="addPdocCard()">＋ 자료 추가</button>`;
+    grid.appendChild(wrap);
+  }
+
+  // 저장된 추가 카드 복원
+  const grid2 = document.querySelector('#travel-docs .pdoc-grid');
+  Object.entries(saved).forEach(([key, val]) => {
+    if (val._added && grid2 && !document.querySelector(`[data-pdoc-id="${key}"]`)) {
+      appendPdocCard(key, val, grid2);
+    }
+  });
+}
+
+function deletePdocCard(cardId) {
+  if (!confirm('이 자료를 삭제할까요?')) return;
+  const card = document.querySelector(`[data-pdoc-id="${cardId}"]`);
+  if (card) card.style.display = 'none';
+  const d = JSON.parse(localStorage.getItem('pt-travel-docs') || '{}');
+  d[cardId] = { _deleted: true };
+  localStorage.setItem('pt-travel-docs', JSON.stringify(d));
+  showToast('🗑️ 삭제되었습니다');
+}
+
+function addPdocCard() {
+  const icon = prompt('아이콘 이모지 (예: 📄):') || '📄';
+  const name = prompt('자료 이름:');
+  if (!name) return;
+  const desc = prompt('설명:') || '';
+  const url  = prompt('파일 URL 또는 경로 (없으면 빈칸):') || '';
+
+  const cardId = 'pd-c-' + Date.now();
+  const data = { _added: true, icon, name, desc, url };
+  const d = JSON.parse(localStorage.getItem('pt-travel-docs') || '{}');
+  d[cardId] = data;
+  localStorage.setItem('pt-travel-docs', JSON.stringify(d));
+
+  const grid = document.querySelector('#travel-docs .pdoc-grid');
+  appendPdocCard(cardId, data, grid);
+  showToast('💾 자료가 추가되었습니다');
+}
+
+function appendPdocCard(cardId, data, grid) {
+  const card = document.createElement('div');
+  card.className = 'pdoc-card';
+  card.dataset.pdocId = cardId;
+  card.innerHTML = `
+    <div class="pdoc-icon">${data.icon||'📄'}</div>
+    <div class="pdoc-info">
+      <div class="pdoc-name">${data.name}</div>
+      <div class="pdoc-desc">${data.desc}</div>
+    </div>
+    <div class="pdoc-btns">
+      ${data.url ? `<a class="pdoc-dl-btn" href="${data.url}" target="_blank">⬇ 열기</a>` : ''}
+    </div>
+    <button class="pdoc-del-btn" onclick="deletePdocCard('${cardId}')">🗑️ 삭제</button>`;
+  const addWrap = grid?.querySelector('.pdoc-add-wrap');
+  grid?.insertBefore(card, addWrap || null);
+}
+
+// ── 전체 조율 ──
+function initTabSections() {
+  // 꿀팁 static 박스 카드화 (wrapSectionBody 보다 먼저!)
+  initTipBoxCards();
+  // 각 탭 섹션 접기 버튼
+  ['tips','gifts','checklist','lisboacard','travel-docs'].forEach(wrapSectionBody);
+  wrapBudgetSection();
+  // 리스보아 카드 개별 접기 + 편집
+  initLisboaCardSection();
+  // 여행자료 편집
+  initTravelDocsSection();
+}
+
 // ===== icard 카드별 접기/펼치기 =====
 function toggleInfoCard(icard, btn) {
-  const body = icard.querySelector('.icard-body');
+  const body = icard.querySelector('.icard-body,.lc-card-body,.tip-box-body');
   if (!body) return;
   const collapsed = body.classList.toggle('collapsed');
   if (!collapsed) body.style.maxHeight = body.scrollHeight + 'px';
