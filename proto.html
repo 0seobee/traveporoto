@@ -98,7 +98,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.92
 .fc-tag{background:rgba(92,107,192,.15);color:#9fa8da;border-radius:10px;padding:3px 10px;font-size:11px}
 
 /* ── TIMELINE ── */
-.day-tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:24px}
+.day-tabs-wrap{position:relative;display:flex;align-items:center;gap:6px;margin-bottom:24px}
+.day-tabs-scroll-btn{flex-shrink:0;width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--sub);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;z-index:1}
+.day-tabs-scroll-btn:hover{background:rgba(92,107,192,.2);color:#9fa8da}
+.day-tabs-scroll-btn:disabled{opacity:.25;cursor:default}
+.day-tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;flex:1;scroll-behavior:smooth}
 .day-tabs::-webkit-scrollbar{display:none}
 .dt-btn{border:none;border-radius:12px;padding:10px 20px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;background:var(--card);color:var(--sub);border:1px solid var(--border);transition:.2s}
 .dt-btn.on{color:#fff;border-color:transparent}
@@ -169,10 +173,31 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.92
 .cl-tag{font-size:11px;color:var(--sub);background:rgba(255,255,255,.06);border-radius:6px;padding:2px 8px;white-space:nowrap}
 .cl-del{background:none;border:none;color:var(--sub);cursor:pointer;font-size:16px;padding:4px;border-radius:6px;opacity:0;transition:.2s;line-height:1}
 .cl-item:hover .cl-del{opacity:1}
-.tl-actions{padding:12px 14px;display:flex;align-items:flex-start;justify-content:flex-end}
+.tl-actions{padding:12px 14px;display:flex;align-items:flex-start;justify-content:flex-end;gap:6px;flex-direction:column}
 .gmap-btn{background:rgba(66,133,244,.15);color:#90caf9;border:1px solid rgba(66,133,244,.3);border-radius:10px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;gap:4px;transition:.2s}
 .gmap-btn:hover{background:rgba(66,133,244,.3)}
 .cost-badge{background:rgba(165,214,167,.1);color:#a5d6a7;border-radius:8px;padding:2px 8px;font-size:11px;margin-top:6px;display:inline-block}
+.edit-btn{background:rgba(92,107,192,.12);color:#9fa8da;border:1px solid rgba(92,107,192,.25);border-radius:10px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:3px;transition:.2s;font-family:inherit}
+.edit-btn:hover{background:rgba(92,107,192,.3);color:#c5cae9}
+.tl-item.edited .tl-place::after{content:'✏️';font-size:10px;margin-left:6px;opacity:.6}
+
+/* ── EDIT MODAL ── */
+.edit-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:900;align-items:center;justify-content:center;padding:20px}
+.edit-modal-bg.open{display:flex}
+.edit-modal{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.edit-modal h3{font-size:16px;font-weight:700;margin-bottom:18px;color:#c5cae9}
+.edit-field{margin-bottom:14px}
+.edit-field label{display:block;font-size:11px;color:var(--sub);font-weight:700;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.edit-field input,.edit-field textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:.2s}
+.edit-field input:focus,.edit-field textarea:focus{border-color:var(--accent);background:rgba(92,107,192,.08)}
+.edit-field textarea{resize:vertical;min-height:70px;line-height:1.5}
+.edit-modal-btns{display:flex;gap:8px;margin-top:18px}
+.edit-save-btn{flex:1;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
+.edit-save-btn:hover{background:#7986cb}
+.edit-cancel-btn{background:rgba(255,255,255,.06);color:var(--sub);border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
+.edit-cancel-btn:hover{background:rgba(255,255,255,.1)}
+.edit-reset-btn{background:rgba(239,83,80,.1);color:#ef9a9a;border:1px solid rgba(239,83,80,.25);border-radius:10px;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
+.edit-reset-btn:hover{background:rgba(239,83,80,.2)}
 
 .day-total{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 18px;margin-top:12px;font-size:13px;color:#a5d6a7;display:flex;align-items:center;gap:8px}
 .day-total strong{color:#c5cae9}
@@ -416,15 +441,19 @@ html{scroll-behavior:smooth;scroll-padding-top:60px}
   <div class="sec-title">📅 날짜별 타임라인</div>
   <div class="sec-sub">각 항목 우측 버튼으로 구글맵 바로 열기</div>
 
-  <div class="day-tabs">
-    <button class="dt-btn dt-d0 on" onclick="showDay(0,this)">✈️ D-1 · 7/31 출발</button>
-    <button class="dt-btn dt-d1" onclick="showDay(1,this)">🏙️ D1 · 8/1 리스본</button>
-    <button class="dt-btn dt-d2" onclick="showDay(2,this)">🏰 D2 · 8/2 알파마</button>
-    <button class="dt-btn dt-d3" onclick="showDay(3,this)">🌊 D3 · 8/3 신트라</button>
-    <button class="dt-btn dt-d4" onclick="showDay(4,this)">🍷 D4 · 8/4 포르투</button>
-    <button class="dt-btn dt-d5" onclick="showDay(5,this)">🌉 D5 · 8/5 포르투</button>
-    <button class="dt-btn dt-d6" onclick="showDay(6,this)">🛶 D6 · 8/6 아베이루</button>
-    <button class="dt-btn dt-d7" onclick="showDay(7,this)">🚆 D7 · 8/7 귀국</button>
+  <div class="day-tabs-wrap">
+    <button class="day-tabs-scroll-btn" id="dtScrollL" onclick="dayTabsScroll(-1)" disabled>‹</button>
+    <div class="day-tabs" id="dayTabsBar" onscroll="updateDayTabsArrows()">
+      <button class="dt-btn dt-d0 on" onclick="showDay(0,this)">✈️ D-1 · 7/31 출발</button>
+      <button class="dt-btn dt-d1" onclick="showDay(1,this)">🏙️ D1 · 8/1 리스본</button>
+      <button class="dt-btn dt-d2" onclick="showDay(2,this)">🏰 D2 · 8/2 알파마</button>
+      <button class="dt-btn dt-d3" onclick="showDay(3,this)">🌊 D3 · 8/3 신트라</button>
+      <button class="dt-btn dt-d4" onclick="showDay(4,this)">🍷 D4 · 8/4 포르투</button>
+      <button class="dt-btn dt-d5" onclick="showDay(5,this)">🌉 D5 · 8/5 포르투</button>
+      <button class="dt-btn dt-d6" onclick="showDay(6,this)">🛶 D6 · 8/6 아베이루</button>
+      <button class="dt-btn dt-d7" onclick="showDay(7,this)">🚆 D7 · 8/7 귀국</button>
+    </div>
+    <button class="day-tabs-scroll-btn" id="dtScrollR" onclick="dayTabsScroll(1)">›</button>
   </div>
 
   <!-- D-1 -->
@@ -2590,6 +2619,121 @@ function showCard(lang) {
     btnKo.style.border = '1px solid var(--border)';
   }
 }
+
+// ── 날짜 탭 좌우 스크롤 ──
+function dayTabsScroll(dir) {
+  const bar = document.getElementById('dayTabsBar');
+  bar.scrollBy({ left: dir * 200, behavior: 'smooth' });
+}
+function updateDayTabsArrows() {
+  const bar = document.getElementById('dayTabsBar');
+  document.getElementById('dtScrollL').disabled = bar.scrollLeft <= 0;
+  document.getElementById('dtScrollR').disabled = bar.scrollLeft >= bar.scrollWidth - bar.clientWidth - 2;
+}
+
+// ── 일정 편집 ──
+const EDIT_KEY = 'pt-tl-edits';
+let editTarget = null;
+
+function loadEdits() {
+  const saved = JSON.parse(localStorage.getItem(EDIT_KEY) || '{}');
+  document.querySelectorAll('.tl-item[data-eid]').forEach(item => {
+    const eid = item.dataset.eid;
+    if (saved[eid]) applyEdit(item, saved[eid]);
+  });
+}
+
+function applyEdit(item, data) {
+  if (data.time) { const t = item.querySelector('.tl-time .t'); if (t) t.textContent = data.time; }
+  if (data.place !== undefined) { const p = item.querySelector('.tl-place'); if (p) p.childNodes[0].textContent = data.place; }
+  if (data.desc !== undefined) { const d = item.querySelector('.tl-desc'); if (d) { const first = d.firstChild; if (first && first.nodeType === 3) first.textContent = data.desc; else if (first) d.insertBefore(document.createTextNode(data.desc), first); } }
+  if (data.cost !== undefined) { const c = item.querySelector('.cost-badge'); if (c) c.textContent = data.cost; }
+  item.classList.add('edited');
+}
+
+function openEditModal(eid) {
+  const item = document.querySelector(`.tl-item[data-eid="${eid}"]`);
+  if (!item) return;
+  editTarget = eid;
+  const saved = JSON.parse(localStorage.getItem(EDIT_KEY) || '{}')[eid] || {};
+  document.getElementById('emTime').value  = saved.time  ?? item.querySelector('.tl-time .t')?.textContent ?? '';
+  const placeEl = item.querySelector('.tl-place');
+  document.getElementById('emPlace').value = saved.place ?? (placeEl?.childNodes[0]?.nodeType === 3 ? placeEl.childNodes[0].textContent : placeEl?.textContent ?? '');
+  const descEl = item.querySelector('.tl-desc');
+  document.getElementById('emDesc').value  = saved.desc  ?? (descEl?.firstChild?.nodeType === 3 ? descEl.firstChild.textContent.trim() : descEl?.textContent?.trim() ?? '');
+  const costEl = item.querySelector('.cost-badge');
+  document.getElementById('emCost').value  = saved.cost  ?? costEl?.textContent ?? '';
+  document.getElementById('editModalBg').classList.add('open');
+}
+
+function saveEdit() {
+  const eid = editTarget;
+  const item = document.querySelector(`.tl-item[data-eid="${eid}"]`);
+  const data = {
+    time:  document.getElementById('emTime').value.trim(),
+    place: document.getElementById('emPlace').value.trim(),
+    desc:  document.getElementById('emDesc').value.trim(),
+    cost:  document.getElementById('emCost').value.trim(),
+  };
+  const all = JSON.parse(localStorage.getItem(EDIT_KEY) || '{}');
+  all[eid] = data;
+  localStorage.setItem(EDIT_KEY, JSON.stringify(all));
+  applyEdit(item, data);
+  closeEditModal();
+}
+
+function resetEdit() {
+  if (!editTarget) return;
+  const all = JSON.parse(localStorage.getItem(EDIT_KEY) || '{}');
+  delete all[editTarget];
+  localStorage.setItem(EDIT_KEY, JSON.stringify(all));
+  closeEditModal();
+  location.reload();
+}
+
+function closeEditModal() {
+  document.getElementById('editModalBg').classList.remove('open');
+  editTarget = null;
+}
+
+// ── 초기화 ──
+document.addEventListener('DOMContentLoaded', () => {
+  // 날짜 탭 화살표 초기 상태
+  updateDayTabsArrows();
+
+  // 모든 tl-item에 고유 ID + 편집 버튼 부여
+  document.querySelectorAll('.tl-item').forEach((item, i) => {
+    const eid = 'e' + i;
+    item.dataset.eid = eid;
+    const actions = item.querySelector('.tl-actions');
+    if (actions) {
+      const btn = document.createElement('button');
+      btn.className = 'edit-btn';
+      btn.innerHTML = '✏️ 수정';
+      btn.onclick = () => openEditModal(eid);
+      actions.appendChild(btn);
+    }
+  });
+
+  // 저장된 편집 내용 반영
+  loadEdits();
+});
 </script>
+
+<!-- 편집 모달 -->
+<div class="edit-modal-bg" id="editModalBg" onclick="if(event.target===this)closeEditModal()">
+  <div class="edit-modal">
+    <h3>✏️ 일정 수정</h3>
+    <div class="edit-field"><label>시간</label><input id="emTime" placeholder="예: 09:00" /></div>
+    <div class="edit-field"><label>장소 / 제목</label><input id="emPlace" placeholder="장소 이름" /></div>
+    <div class="edit-field"><label>설명</label><textarea id="emDesc" placeholder="상세 내용"></textarea></div>
+    <div class="edit-field"><label>비용</label><input id="emCost" placeholder="예: €15/인" /></div>
+    <div class="edit-modal-btns">
+      <button class="edit-reset-btn" onclick="resetEdit()">초기화</button>
+      <button class="edit-cancel-btn" onclick="closeEditModal()">취소</button>
+      <button class="edit-save-btn" onclick="saveEdit()">저장</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
