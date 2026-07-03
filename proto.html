@@ -281,6 +281,21 @@ body.readonly .rest-card-btns,body.readonly .rest-add-card-btn,body.readonly .re
 body.readonly #restaurants .rest-row:not(.is-confirmed){display:none!important}
 body.readonly #restaurants .cand-toggle-btn{display:none!important}
 body.readonly #restaurants .rest-section-header .rs-toggle-btn{display:none!important}
+/* ── 진행 상태 바 ── */
+.hero-progress{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin-bottom:28px}
+.hp-item{text-align:center;min-width:80px}
+.hp-label{font-size:10px;color:rgba(255,255,255,.5);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:7px}
+.hp-bar-wrap{height:3px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;margin-bottom:5px}
+.hp-bar{height:100%;background:linear-gradient(90deg,#66bb6a,#69f0ae);border-radius:2px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.hp-text{font-size:12px;color:#a5d6a7;font-weight:700}
+/* ── QR 공유 모달 ── */
+.qr-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:950;align-items:center;justify-content:center;padding:20px}
+.qr-modal-bg.open{display:flex}
+.qr-modal{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px 20px;width:100%;max-width:320px;text-align:center}
+.qr-modal h3{font-size:15px;font-weight:700;margin-bottom:16px;color:#c5cae9}
+.qr-img-wrap{background:#fff;border-radius:12px;padding:10px;display:inline-flex;margin-bottom:14px}
+.qr-url{font-size:11px;color:var(--sub);word-break:break-all;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-bottom:14px;line-height:1.55;text-align:left}
+.qr-btns{display:flex;gap:8px}
 body.readonly .confirm-btn,.cand-toggle-btn{}
 /* 카드 모달 */
 .card-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:910;align-items:center;justify-content:center;padding:20px}
@@ -511,10 +526,29 @@ body.readonly .add-day-btn{display:none!important}
       <div class="stat-box"><div class="num">2</div><div class="lbl">도시</div></div>
       <div class="stat-box"><div class="num">1</div><div class="lbl">직항</div></div>
     </div>
+    <!-- 진행 상태 -->
+    <div class="hero-progress" id="heroProgress">
+      <div class="hp-item">
+        <div class="hp-label">확정 식당</div>
+        <div class="hp-bar-wrap"><div class="hp-bar" id="hp-rest" style="width:0%"></div></div>
+        <div class="hp-text" id="hp-rest-txt">0/12</div>
+      </div>
+      <div class="hp-item">
+        <div class="hp-label">예약 완료</div>
+        <div class="hp-bar-wrap"><div class="hp-bar" id="hp-res" style="width:0%"></div></div>
+        <div class="hp-text" id="hp-res-txt">0/9</div>
+      </div>
+      <div class="hp-item">
+        <div class="hp-label">준비물</div>
+        <div class="hp-bar-wrap"><div class="hp-bar" id="hp-cl" style="width:0%"></div></div>
+        <div class="hp-text" id="hp-cl-txt">0%</div>
+      </div>
+    </div>
     <div class="hero-btns">
       <button class="btn-primary" onclick="document.getElementById('schedule').scrollIntoView({behavior:'smooth'})">📅 일정 보기</button>
       <button class="btn-secondary" onclick="document.getElementById('map').scrollIntoView({behavior:'smooth'})">🗺️ 지도 보기</button>
       <button class="btn-share" onclick="shareReadonly()">🔗 공유하기</button>
+      <button class="btn-secondary" onclick="exportBackup()" style="font-size:13px;padding:12px 20px">💾 백업</button>
     </div>
   </div>
 </div>
@@ -3654,11 +3688,61 @@ function closeEditModal() {
   _editMode = 'edit';
 }
 
+// ── QR 공유 ──
 function shareReadonly() {
   const url = location.origin + location.pathname + '?readonly=1';
+  document.getElementById('qrUrl').textContent = url;
+  document.getElementById('qrImg').src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(url);
+  document.getElementById('qrModalBg').classList.add('open');
+}
+function closeQrModal() { document.getElementById('qrModalBg').classList.remove('open'); }
+function copyQrUrl() {
+  const url = document.getElementById('qrUrl').textContent;
   navigator.clipboard.writeText(url)
-    .then(() => showToast('🔗 읽기전용 링크가 복사되었습니다!'))
+    .then(() => showToast('🔗 링크가 복사되었습니다!'))
     .catch(() => { prompt('아래 링크를 복사하세요:', url); });
+}
+
+// ── 데이터 백업 ──
+function exportBackup() {
+  const keys = ['pt-tl-edits','pt-tl-adds','pt-confirmed','pt-res-checks','pt-checklist','pt-gifts','pt-dining-adds','pt-dining-card-adds','pt-dining-card-edits','pt-tips-edits','pt-tips-adds','pt-map-adds'];
+  const out = {};
+  keys.forEach(k => { const v = localStorage.getItem(k); if (v) try { out[k] = JSON.parse(v); } catch(e) { out[k] = v; } });
+  const blob = new Blob([JSON.stringify(out, null, 2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'portugal-planner-backup.json'; a.click();
+  showToast('💾 백업 파일이 다운로드되었습니다');
+}
+
+// ── 진행 상태 업데이트 ──
+function updateHeroProgress() {
+  // 확정 식당
+  const confirmed = Object.keys(JSON.parse(localStorage.getItem(CONFIRMED_KEY) || '{}')).length;
+  const restMax = 12;
+  const restPct = Math.min(confirmed / restMax * 100, 100);
+  const hpRest = document.getElementById('hp-rest');
+  if (hpRest) hpRest.style.width = restPct + '%';
+  const hpRestTxt = document.getElementById('hp-rest-txt');
+  if (hpRestTxt) hpRestTxt.textContent = confirmed + '/' + restMax;
+  // 예약 완료
+  const resData = JSON.parse(localStorage.getItem(RES_CHECK_KEY) || '{}');
+  const resDone = Object.values(resData).filter(Boolean).length;
+  const resMax = document.querySelectorAll('#sg-reservation .rest-row').length || 9;
+  const resPct = resMax ? Math.min(resDone / resMax * 100, 100) : 0;
+  const hpRes = document.getElementById('hp-res');
+  if (hpRes) hpRes.style.width = resPct + '%';
+  const hpResTxt = document.getElementById('hp-res-txt');
+  if (hpResTxt) hpResTxt.textContent = resDone + '/' + resMax;
+  // 준비물
+  const cl = JSON.parse(localStorage.getItem('pt-checklist') || 'null');
+  if (cl && cl.length) {
+    const done = cl.filter(i => i.done).length;
+    const pct = Math.round(done / cl.length * 100);
+    const hpCl = document.getElementById('hp-cl');
+    if (hpCl) hpCl.style.width = pct + '%';
+    const hpClTxt = document.getElementById('hp-cl-txt');
+    if (hpClTxt) hpClTxt.textContent = pct + '%';
+  }
 }
 
 function showToast(msg) {
@@ -3730,6 +3814,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initRestSection();
   // 예약 체크리스트 초기화
   initResChecklist();
+  // 진행 상태 초기 렌더
+  updateHeroProgress();
 });
 
 // ===== 전체 접기/펼치기 =====
@@ -3882,6 +3968,7 @@ function renderConfirmed() {
   });
   renderConfirmedSummary();
   applyReadonlyRestFilter();
+  updateHeroProgress();
 }
 
 // ===== 예약 체크리스트 =====
@@ -3928,6 +4015,7 @@ function renderResChecks() {
     }
   }
   if (badge) badge.textContent = checked + '/' + rows.length + ' 완료';
+  updateHeroProgress();
 }
 
 // ===== 맛집 섹션 초기화 (DOMContentLoaded 내 호출) =====
@@ -4832,6 +4920,21 @@ function saveMapPin() {
 </div>
 
 <!-- 편집 모달 -->
+<!-- QR 공유 모달 -->
+<div class="qr-modal-bg" id="qrModalBg" onclick="if(event.target===this)closeQrModal()">
+  <div class="qr-modal">
+    <h3>📱 공유하기</h3>
+    <div class="qr-img-wrap">
+      <img id="qrImg" src="" alt="QR" width="180" height="180" style="display:block">
+    </div>
+    <div class="qr-url" id="qrUrl"></div>
+    <div class="qr-btns">
+      <button onclick="copyQrUrl()" style="flex:1;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s">📋 링크 복사</button>
+      <button onclick="closeQrModal()" style="background:rgba(255,255,255,.07);color:var(--sub);border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s">닫기</button>
+    </div>
+  </div>
+</div>
+
 <div class="edit-modal-bg" id="editModalBg" onclick="if(event.target===this)closeEditModal()">
   <div class="edit-modal">
     <h3 id="emTitle">✏️ 일정 수정</h3>
