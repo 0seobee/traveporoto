@@ -326,8 +326,25 @@ body.readonly .edit-btn,body.readonly .delete-btn,body.readonly .add-tl-btn{disp
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media(max-width:680px){.info-grid{grid-template-columns:1fr}}
 .icard{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
-.icard-head{padding:14px 18px;border-bottom:1px solid var(--border);font-size:14px;font-weight:700;background:rgba(0,0,0,.2)}
-.icard-body{padding:4px 0}
+.icard-head{padding:14px 18px;border-bottom:1px solid var(--border);font-size:14px;font-weight:700;background:rgba(0,0,0,.2);display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;user-select:none}
+.icard-head-title{flex:1;min-width:0}
+.icard-head-btns{display:flex;align-items:center;gap:4px;opacity:0;transition:.15s;flex-shrink:0}
+.icard:hover .icard-head-btns{opacity:1}
+.icard-toggle{background:transparent;border:none;color:var(--sub);font-size:12px;cursor:pointer;padding:2px 5px;transition:.2s;line-height:1;flex-shrink:0}
+.icard-toggle:hover{color:#c5cae9}
+.icard-body{padding:4px 0;overflow:hidden;transition:max-height .35s cubic-bezier(.4,0,.2,1)}
+.icard-body.collapsed{max-height:0!important;padding:0}
+/* ── rest-day-card 카드별 접기 ── */
+.rdc-collapsed .rest-row,.rdc-collapsed .cand-toggle-btn,.rdc-collapsed .rest-add-row-btn{display:none!important}
+.rdc-toggle{background:transparent;border:none;color:var(--sub);font-size:12px;cursor:pointer;padding:2px 5px;transition:.2s;line-height:1;margin-left:auto;flex-shrink:0}
+.rdc-toggle:hover{color:#c5cae9}
+/* ── 섹션 전체 접기 버튼 ── */
+.info-sec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:8px}
+.info-collapse-btn{background:transparent;border:1px solid var(--border);border-radius:20px;color:var(--sub);font-size:11px;font-weight:700;padding:5px 14px;cursor:pointer;font-family:inherit;transition:.2s}
+.info-collapse-btn:hover{border-color:#9fa8da;color:#9fa8da}
+/* ── info 섹션 편집 버튼 ── */
+.info-sec-add-btn{background:transparent;border:1px dashed rgba(255,255,255,.2);border-radius:10px;color:var(--sub);font-size:12px;font-weight:700;padding:8px 18px;cursor:pointer;font-family:inherit;transition:.2s;margin-top:12px;display:block;width:100%}
+.info-sec-add-btn:hover{border-color:#9fa8da;color:#9fa8da}
 .irow{display:flex;align-items:flex-start;gap:10px;padding:11px 18px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px}
 .irow:last-child{border-bottom:none}
 .irow .icon{font-size:16px;flex-shrink:0;margin-top:1px}
@@ -3816,9 +3833,269 @@ document.addEventListener('DOMContentLoaded', () => {
   initResChecklist();
   // 정적 섹션 편집 초기화 (sg-meat, sg-dessert, sg-reservation, sg-snack)
   initStaticSections();
+  // 카드별 접기 토글 추가
+  addRestDayCardToggles();
+  addSnackCardToggles();
+  // 숙소·교통 편집 기능
+  initInfoSection('hotels', 'pt-info-hotels');
+  initInfoSection('transport', 'pt-info-transport');
   // 진행 상태 초기 렌더
   updateHeroProgress();
 });
+
+// ===== icard 카드별 접기/펼치기 =====
+function toggleInfoCard(icard, btn) {
+  const body = icard.querySelector('.icard-body');
+  if (!body) return;
+  const collapsed = body.classList.toggle('collapsed');
+  if (!collapsed) body.style.maxHeight = body.scrollHeight + 'px';
+  if (btn) btn.textContent = collapsed ? '▶' : '▼';
+}
+
+function toggleAllInfoCards(sectionId, btn) {
+  const el = document.getElementById(sectionId);
+  const container = el?.querySelector('.info-grid') || el;
+  if (!container) return;
+  const cards = container.querySelectorAll('.icard');
+  const allCollapsed = [...cards].every(c => c.querySelector('.icard-body')?.classList.contains('collapsed'));
+  cards.forEach(card => {
+    const body = card.querySelector('.icard-body');
+    const tgl  = card.querySelector('.icard-toggle');
+    if (!body) return;
+    if (allCollapsed) {
+      body.classList.remove('collapsed');
+      body.style.maxHeight = body.scrollHeight + 'px';
+      if (tgl) tgl.textContent = '▼';
+    } else {
+      body.classList.add('collapsed');
+      if (tgl) tgl.textContent = '▶';
+    }
+  });
+  if (btn) btn.textContent = allCollapsed ? '전체 접기 ▲' : '전체 펼치기 ▼';
+}
+
+// ===== rest-day-card 카드별 접기 =====
+function toggleRestDayCard(card, btn) {
+  const collapsed = card.classList.toggle('rdc-collapsed');
+  if (btn) btn.textContent = collapsed ? '▶' : '▼';
+}
+
+function addRestDayCardToggles() {
+  document.querySelectorAll('#sg-meat .rest-day-card, #sg-dessert .rest-day-card, #sg-reservation .rest-day-card').forEach(card => {
+    const header = card.querySelector('.rest-card-header');
+    if (!header || header.querySelector('.rdc-toggle')) return;
+    const btn = document.createElement('button');
+    btn.className = 'rdc-toggle';
+    btn.title = '카드 접기/펼치기';
+    btn.textContent = '▼';
+    btn.onclick = e => { e.stopPropagation(); toggleRestDayCard(card, btn); };
+    header.appendChild(btn);
+  });
+}
+
+// ===== sg-snack 아이카드 토글 추가 =====
+function addSnackCardToggles() {
+  document.querySelectorAll('#sg-snack .icard').forEach(card => {
+    const head = card.querySelector('.icard-head');
+    if (!head || head.querySelector('.icard-toggle')) return;
+    const body = card.querySelector('.icard-body');
+    if (body && !body.style.maxHeight) body.style.maxHeight = body.scrollHeight + 'px';
+    const btn = document.createElement('button');
+    btn.className = 'icard-toggle';
+    btn.textContent = '▼';
+    btn.onclick = e => { e.stopPropagation(); toggleInfoCard(card, btn); };
+    head.onclick = () => toggleInfoCard(card, btn);
+    head.appendChild(btn);
+  });
+}
+
+// ===== 숙소/교통 섹션 초기화 (편집 + 접기) =====
+const _infoSectionKeys = {};
+
+function initInfoSection(sectionId, storageKey) {
+  const section = document.getElementById(sectionId);
+  if (!section) return;
+  _infoSectionKeys[sectionId] = storageKey;
+  const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
+
+  const grid = section.querySelector('.info-grid');
+  if (!grid) return;
+
+  // 섹션 헤더에 전체 접기 버튼 추가
+  const secTitle = section.querySelector('.sec-title');
+  if (secTitle && !section.querySelector('.info-collapse-btn')) {
+    const colBtn = document.createElement('button');
+    colBtn.className = 'info-collapse-btn';
+    colBtn.textContent = '전체 접기 ▲';
+    colBtn.onclick = () => toggleAllInfoCards(sectionId, colBtn);
+    secTitle.insertAdjacentElement('afterend', colBtn);
+    secTitle.style.marginBottom = '8px';
+  }
+
+  grid.querySelectorAll('.icard').forEach((icard, ci) => {
+    const cardId = sectionId + '-c' + ci;
+    if (!icard.dataset.cardId) icard.dataset.cardId = cardId;
+
+    if (saved[cardId]?._deleted) { icard.style.display = 'none'; return; }
+
+    const head = icard.querySelector('.icard-head');
+    if (head && !head.querySelector('.icard-head-title')) {
+      // 제목 저장된 편집본 복원
+      const titleText = saved[cardId]?._title || head.textContent;
+      head.innerHTML = '';
+      const titleEl = document.createElement('div');
+      titleEl.className = 'icard-head-title';
+      titleEl.textContent = titleText;
+      const btns = document.createElement('div');
+      btns.className = 'icard-head-btns';
+      btns.innerHTML = `<button class="rr-edit-btn" onclick="openInfoCardModal('${cardId}','${sectionId}');event.stopPropagation()">✏️ 카드</button><button class="rr-del-btn" onclick="deleteInfoCard('${cardId}','${sectionId}');event.stopPropagation()">🗑️</button>`;
+      const tgl = document.createElement('button');
+      tgl.className = 'icard-toggle';
+      tgl.textContent = '▼';
+      tgl.onclick = e => { e.stopPropagation(); toggleInfoCard(icard, tgl); };
+      head.appendChild(titleEl);
+      head.appendChild(btns);
+      head.appendChild(tgl);
+      head.onclick = () => toggleInfoCard(icard, tgl);
+    }
+
+    const body = icard.querySelector('.icard-body');
+    if (body && !body.style.maxHeight) body.style.maxHeight = body.scrollHeight + 'px';
+
+    body?.querySelectorAll('.irow').forEach((irow, ri) => {
+      const rowId = cardId + '-r' + ri;
+      if (!irow.dataset.snackRowId) irow.dataset.snackRowId = rowId;
+      if (!irow.querySelector('.snack-row-btns')) {
+        const rb = document.createElement('div');
+        rb.className = 'snack-row-btns';
+        rb.style.cssText = 'display:flex;gap:3px;opacity:0;transition:.15s;flex-shrink:0';
+        rb.innerHTML = `<button class="rr-edit-btn" onclick="openInfoRowModal('${rowId}','${cardId}','${sectionId}')">✏️</button><button class="rr-del-btn" onclick="deleteInfoRowById('${rowId}','${sectionId}')">🗑️</button>`;
+        irow.appendChild(rb);
+        irow.addEventListener('mouseenter', () => { rb.style.opacity='1'; });
+        irow.addEventListener('mouseleave', () => { rb.style.opacity='0'; });
+      }
+      const e = saved[rowId];
+      if (e?._deleted) { irow.style.display = 'none'; return; }
+      if (e) {
+        const n = irow.querySelector('.name'); if (n && e.name) n.textContent = e.name;
+        const d = irow.querySelector('.desc'); if (d && e.desc) d.innerHTML = e.desc;
+        const p = irow.querySelector('.price'); if (p && e.price !== undefined) p.textContent = e.price;
+        const ic = irow.querySelector('.icon'); if (ic && e.icon) ic.textContent = e.icon;
+      }
+    });
+
+    if (body && !body.querySelector('.info-add-row-btn')) {
+      const addBtn = document.createElement('button');
+      addBtn.className = 'rest-add-row-btn info-add-row-btn';
+      addBtn.style.cssText = 'margin:4px 16px 8px;width:calc(100% - 32px)';
+      addBtn.textContent = '＋ 항목 추가';
+      addBtn.onclick = () => openInfoRowModal(null, cardId, sectionId);
+      body.appendChild(addBtn);
+      // max-height 재계산
+      body.style.maxHeight = body.scrollHeight + 'px';
+    }
+  });
+
+  // 카드 추가 버튼
+  if (!grid.nextElementSibling?.classList.contains('rest-add-card-wrap')) {
+    const wrap = document.createElement('div');
+    wrap.className = 'rest-add-card-wrap';
+    wrap.style.marginTop = '8px';
+    wrap.innerHTML = `<button class="rest-add-card-btn" onclick="openInfoCardModal(null,'${sectionId}')">＋ 카드 추가</button>`;
+    grid.insertAdjacentElement('afterend', wrap);
+  }
+}
+
+function openInfoRowModal(rowId, cardId, sectionId) {
+  const key = _infoSectionKeys[sectionId] || ('pt-info-' + sectionId);
+  _snackTarget = rowId || null;
+  _snackCardId = cardId;
+  _snackStorageKey = key;
+  _rmTarget = '__snack__';
+  const modal = document.getElementById('restModalBg');
+  document.getElementById('rmTitle').textContent = rowId ? '✏️ 항목 수정' : '➕ 항목 추가';
+  document.getElementById('rmDeleteBtn').style.display = rowId ? 'inline-flex' : 'none';
+  if (rowId) {
+    const irow = document.querySelector(`[data-snack-row-id="${rowId}"]`);
+    const sv = JSON.parse(localStorage.getItem(key) || '{}')[rowId] || {};
+    document.getElementById('rmStars').value = sv.icon || irow?.querySelector('.icon')?.textContent || '';
+    document.getElementById('rmName').value  = sv.name || irow?.querySelector('.name')?.textContent || '';
+    document.getElementById('rmDesc').value  = sv.desc || irow?.querySelector('.desc')?.textContent || '';
+    document.getElementById('rmPrice').value = sv.price ?? irow?.querySelector('.price')?.textContent ?? '';
+  } else {
+    ['rmStars','rmName','rmDesc','rmPrice'].forEach(id => { document.getElementById(id).value = ''; });
+  }
+  document.getElementById('rmStars').placeholder = '아이콘 이모지 (예: 🏠)';
+  modal.classList.add('open');
+  document.getElementById('rmName').focus();
+}
+
+function deleteInfoRowById(rowId, sectionId) {
+  const key = _infoSectionKeys[sectionId] || ('pt-info-' + sectionId);
+  const irow = document.querySelector(`[data-snack-row-id="${rowId}"]`);
+  if (irow) irow.style.display = 'none';
+  const d = JSON.parse(localStorage.getItem(key) || '{}');
+  d[rowId] = { _deleted: true };
+  localStorage.setItem(key, JSON.stringify(d));
+  showToast('🗑️ 삭제되었습니다');
+}
+
+function openInfoCardModal(cardId, sectionId) {
+  const isNew = !cardId;
+  const title = prompt(isNew ? '카드 제목을 입력하세요 (예: 🏠 새 숙소)' : '카드 제목 수정:', isNew ? '' : (document.querySelector(`[data-card-id="${cardId}"] .icard-head-title`)?.textContent || ''));
+  if (title === null) return;
+  const key = _infoSectionKeys[sectionId] || ('pt-info-' + sectionId);
+
+  if (isNew) {
+    const newCardId = sectionId + '-c-' + Date.now();
+    const section = document.getElementById(sectionId);
+    const grid = section?.querySelector('.info-grid');
+    if (!grid) return;
+    const icard = document.createElement('div');
+    icard.className = 'icard';
+    icard.dataset.cardId = newCardId;
+    const tgl = `let _c=this.closest('.icard'),_b=_c.querySelector('.icard-body');_b.classList.toggle('collapsed');if(!_b.classList.contains('collapsed'))_b.style.maxHeight=_b.scrollHeight+'px';this.textContent=_b.classList.contains('collapsed')?'▶':'▼'`;
+    icard.innerHTML = `<div class="icard-head" style="display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer">
+      <div class="icard-head-title">${title}</div>
+      <div class="icard-head-btns" style="display:flex;gap:4px;flex-shrink:0;opacity:0;transition:.15s">
+        <button class="rr-edit-btn" onclick="openInfoCardModal('${newCardId}','${sectionId}');event.stopPropagation()">✏️ 카드</button>
+        <button class="rr-del-btn" onclick="deleteInfoCard('${newCardId}','${sectionId}');event.stopPropagation()">🗑️</button>
+      </div>
+      <button class="icard-toggle" onclick="${tgl};event.stopPropagation()">▼</button>
+    </div>
+    <div class="icard-body" style="padding:4px 0;overflow:hidden">
+      <button class="rest-add-row-btn info-add-row-btn" style="margin:4px 16px 8px;width:calc(100% - 32px)" onclick="openInfoRowModal(null,'${newCardId}','${sectionId}')">＋ 항목 추가</button>
+    </div>`;
+    const addWrap = grid.nextElementSibling?.classList.contains('rest-add-card-wrap') ? grid.nextElementSibling : null;
+    grid.insertBefore(icard, addWrap);
+    // hover 처리
+    const headBtns = icard.querySelector('.icard-head-btns');
+    icard.addEventListener('mouseenter', () => { headBtns.style.opacity='1'; });
+    icard.addEventListener('mouseout',   () => { headBtns.style.opacity='0'; });
+    const body = icard.querySelector('.icard-body');
+    body.style.maxHeight = body.scrollHeight + 'px';
+    showToast('💾 카드가 추가되었습니다');
+  } else {
+    // 제목 수정
+    const titleEl = document.querySelector(`[data-card-id="${cardId}"] .icard-head-title`);
+    if (titleEl) titleEl.textContent = title;
+    const d = JSON.parse(localStorage.getItem(key) || '{}');
+    d[cardId] = { ...(d[cardId] || {}), _title: title };
+    localStorage.setItem(key, JSON.stringify(d));
+    showToast('💾 저장되었습니다');
+  }
+}
+
+function deleteInfoCard(cardId, sectionId) {
+  if (!confirm('이 카드를 삭제할까요?')) return;
+  const icard = document.querySelector(`[data-card-id="${cardId}"]`);
+  if (icard) icard.style.display = 'none';
+  const key = _infoSectionKeys[sectionId] || ('pt-info-' + sectionId);
+  const d = JSON.parse(localStorage.getItem(key) || '{}');
+  d[cardId] = { _deleted: true };
+  localStorage.setItem(key, JSON.stringify(d));
+  showToast('🗑️ 삭제되었습니다');
+}
 
 // ===== 정적 섹션 편집 초기화 =====
 const SG_SNACK_KEY = 'pt-sg-snack';
@@ -3976,8 +4253,9 @@ function initStaticSections() {
 }
 
 // snack irow 수정 모달 (restModalBg 재사용)
-let _snackTarget = null; // rowId or null
+let _snackTarget = null;    // rowId or null (undefined = not in snack mode)
 let _snackCardId = null;
+let _snackStorageKey = null; // null → SG_SNACK_KEY
 
 function openSnackModal(rowId, cardId) {
   _snackTarget = rowId;
@@ -4006,18 +4284,18 @@ function openSnackModal(rowId, cardId) {
 }
 
 function saveSnackRow() {
+  const skey = _snackStorageKey || SG_SNACK_KEY;
   const icon  = document.getElementById('rmStars').value.trim();
   const name  = document.getElementById('rmName').value.trim();
   const desc  = document.getElementById('rmDesc').value.trim();
   const price = document.getElementById('rmPrice').value.trim();
   if (!name) { alert('이름을 입력해주세요.'); return; }
 
-  const d = JSON.parse(localStorage.getItem(SG_SNACK_KEY) || '{}');
+  const d = JSON.parse(localStorage.getItem(skey) || '{}');
 
   if (_snackTarget) {
-    // 수정
     d[_snackTarget] = { icon, name, desc, price };
-    localStorage.setItem(SG_SNACK_KEY, JSON.stringify(d));
+    localStorage.setItem(skey, JSON.stringify(d));
     const irow = document.querySelector(`[data-snack-row-id="${_snackTarget}"]`);
     if (irow) {
       const n = irow.querySelector('.name'); if (n) n.textContent = name;
@@ -4026,13 +4304,12 @@ function saveSnackRow() {
       const ic = irow.querySelector('.icon'); if (ic) ic.textContent = icon;
     }
   } else {
-    // 추가
     const newId = _snackCardId + '-r-' + Date.now();
     d[newId] = { icon, name, desc, price };
-    localStorage.setItem(SG_SNACK_KEY, JSON.stringify(d));
+    localStorage.setItem(skey, JSON.stringify(d));
     const icard = document.querySelector(`[data-card-id="${_snackCardId}"]`);
     const body = icard?.querySelector('.icard-body');
-    const addBtn = body?.querySelector('.snack-add-btn');
+    const addBtn = body?.querySelector('.snack-add-btn,.info-add-row-btn');
     if (body) {
       const irow = document.createElement('div');
       irow.className = 'irow';
@@ -4041,11 +4318,23 @@ function saveSnackRow() {
       const btns = document.createElement('div');
       btns.className = 'snack-row-btns';
       btns.style.cssText = 'display:flex;gap:3px;opacity:0;transition:.15s;flex-shrink:0';
-      btns.innerHTML = `<button class="rr-edit-btn" onclick="openSnackModal('${newId}','${_snackCardId}')">✏️</button><button class="rr-del-btn" onclick="deleteSnackRow('${newId}')">🗑️</button>`;
+      const editFn = skey === SG_SNACK_KEY
+        ? `openSnackModal('${newId}','${_snackCardId}')`
+        : `openInfoRowModal('${newId}','${_snackCardId}','${_snackCardId.split('-c')[0]}')`;
+      btns.innerHTML = `<button class="rr-edit-btn" onclick="${editFn}">✏️</button><button class="rr-del-btn" onclick="deleteSnackRow('${newId}')">🗑️</button>`;
       irow.appendChild(btns);
       irow.addEventListener('mouseenter', () => { btns.style.opacity = '1'; });
       irow.addEventListener('mouseleave', () => { btns.style.opacity = '0'; });
       body.insertBefore(irow, addBtn || null);
+      // 접기 해제 (카드가 닫혀있으면 열기)
+      if (body.classList.contains('collapsed')) {
+        body.classList.remove('collapsed');
+        body.style.maxHeight = body.scrollHeight + 'px';
+        const toggle = icard?.querySelector('.icard-toggle');
+        if (toggle) toggle.textContent = '▼';
+      } else {
+        body.style.maxHeight = body.scrollHeight + 'px';
+      }
     }
   }
   closeRestModal();
@@ -4053,11 +4342,12 @@ function saveSnackRow() {
 }
 
 function deleteSnackRow(rowId) {
+  const skey = _snackStorageKey || SG_SNACK_KEY;
   const irow = document.querySelector(`[data-snack-row-id="${rowId}"]`);
   if (irow) irow.style.display = 'none';
-  const d = JSON.parse(localStorage.getItem(SG_SNACK_KEY) || '{}');
+  const d = JSON.parse(localStorage.getItem(skey) || '{}');
   d[rowId] = { _deleted: true };
-  localStorage.setItem(SG_SNACK_KEY, JSON.stringify(d));
+  localStorage.setItem(skey, JSON.stringify(d));
   showToast('🗑️ 삭제되었습니다');
 }
 
@@ -4400,6 +4690,7 @@ function closeRestModal() {
   if (lbl) lbl.textContent = '평점·등급';
   _rmTarget = null;
   _snackTarget = undefined;
+  _snackStorageKey = null;
 }
 
 function saveRest() {
