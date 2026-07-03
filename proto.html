@@ -1155,6 +1155,11 @@ body.readonly .add-day-btn{display:none!important}
   <div class="sec-title">🍽️ 추천 맛집</div>
   <div class="sec-sub">Google Maps 평점 4.0↑ · 가성비 기준 · 2인 저녁 추정가 포함</div>
 
+  <!-- 전체 접기/펼치기 -->
+  <div style="display:flex;justify-content:flex-end;margin:8px 0 0">
+    <button id="collapseAllBtn" onclick="toggleAllSections()" style="background:transparent;border:1px solid var(--border);border-radius:20px;color:var(--sub);font-size:11px;font-weight:700;padding:5px 14px;cursor:pointer;font-family:inherit;transition:.2s" onmouseover="this.style.borderColor='#9fa8da';this.style.color='#9fa8da'" onmouseout="this.style.borderColor='';this.style.color=''">전체 접기 ▲</button>
+  </div>
+
   <!-- 날짜 필터 탭 -->
   <div class="rest-date-filter" id="restDateFilter">
     <button class="rdf-btn on" onclick="filterRestByDate('all',this)">전체</button>
@@ -3815,6 +3820,30 @@ document.addEventListener('DOMContentLoaded', () => {
   // 맛집 날짜필터·accordion·후보접기·확정지정 초기화
   initRestSection();
 });
+
+// ===== 전체 접기/펼치기 =====
+let _allCollapsed = false;
+function toggleAllSections() {
+  _allCollapsed = !_allCollapsed;
+  document.querySelectorAll('.rest-grid, .info-grid').forEach(el => {
+    if (_allCollapsed) {
+      el.classList.add('collapsed');
+    } else {
+      el.classList.remove('collapsed');
+      el.style.maxHeight = el.scrollHeight + 'px';
+    }
+  });
+  // 모든 토글 버튼 텍스트 동기화
+  document.querySelectorAll('.rs-toggle-btn').forEach(btn => {
+    btn.textContent = _allCollapsed ? '▶' : '▼';
+  });
+  // add-card-wrap 표시/숨김
+  document.querySelectorAll('.rest-add-card-wrap').forEach(w => {
+    w.style.display = _allCollapsed ? 'none' : '';
+  });
+  const btn = document.getElementById('collapseAllBtn');
+  if (btn) btn.textContent = _allCollapsed ? '전체 펼치기 ▼' : '전체 접기 ▲';
+}
 
 // ===== 맛집 날짜 필터 =====
 function filterRestByDate(date, btn) {
