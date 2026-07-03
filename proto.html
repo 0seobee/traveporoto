@@ -387,6 +387,43 @@ html{scroll-behavior:smooth;scroll-padding-top:60px}
   .tl-actions{display:none}
   .section{padding:48px 16px}
 }
+/* 꿀팁 편집 */
+.tip-item{position:relative}
+.tip-item-btns{position:absolute;top:6px;right:6px;display:flex;gap:4px;opacity:0;transition:.15s}
+.tip-item:hover .tip-item-btns{opacity:1}
+.ti-edit-btn,.ti-del-btn{border:none;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1.7}
+.ti-edit-btn{background:rgba(92,107,192,.2);color:#9fa8da}
+.ti-del-btn{background:rgba(229,57,53,.15);color:#ef9a9a}
+.tip-add-btn{display:block;width:100%;border:1.5px dashed rgba(255,255,255,.12);background:transparent;color:var(--sub);padding:8px;cursor:pointer;border-radius:10px;font-size:12px;font-family:inherit;transition:.2s;text-align:center;margin-top:4px}
+.tip-add-btn:hover{border-color:var(--accent);color:#9fa8da;background:rgba(92,107,192,.07)}
+/* 히어로 편집 */
+.hero-edit-btn{position:absolute;top:12px;right:12px;background:rgba(92,107,192,.25);border:1px solid rgba(92,107,192,.4);color:#c5cae9;border-radius:10px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
+.hero-edit-btn:hover{background:rgba(92,107,192,.45)}
+/* 데이터 관리 FAB */
+.data-fab{position:fixed;bottom:20px;left:20px;z-index:400;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.data-fab-main{background:#2a2d42;border:1px solid #3a3f5e;border-radius:14px;padding:8px 16px;font-size:13px;font-weight:700;color:#c5cae9;cursor:pointer;font-family:inherit;transition:.2s;display:flex;align-items:center;gap:6px}
+.data-fab-main:hover{background:#353a56}
+.data-fab-menu{display:none;flex-direction:column;gap:6px;background:#1a1d2e;border:1px solid #2a2d42;border-radius:12px;padding:10px;min-width:180px}
+.data-fab-menu.open{display:flex}
+.data-fab-item{background:transparent;border:none;color:#9fa8da;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;padding:6px 10px;border-radius:8px;text-align:left;transition:.15s}
+.data-fab-item:hover{background:rgba(92,107,192,.15);color:#c5cae9}
+.data-fab-item.danger{color:#ef9a9a}
+.data-fab-item.danger:hover{background:rgba(229,57,53,.15)}
+body.readonly .hero-edit-btn,body.readonly .tip-item-btns,body.readonly .tip-add-btn,body.readonly .data-fab{display:none!important}
+/* 탭 편집 */
+.nav-tab-wrap{position:relative;display:inline-flex;align-items:center}
+.nav-tab-edit-btn{display:none;background:rgba(92,107,192,.2);border:none;border-radius:5px;padding:1px 5px;font-size:9px;color:#9fa8da;cursor:pointer;font-family:inherit;margin-left:2px}
+.nav-tab-wrap:hover .nav-tab-edit-btn{display:inline-block}
+body.readonly .nav-tab-edit-btn{display:none!important}
+/* Day카드 추가 버튼 */
+.add-day-btn{display:block;width:100%;border:none;border-top:1.5px dashed rgba(255,255,255,.1);background:rgba(255,255,255,.01);color:var(--sub);padding:18px;cursor:pointer;font-size:13px;font-family:inherit;transition:.2s;text-align:center}
+.add-day-btn:hover{border-top-color:var(--accent);color:#9fa8da;background:rgba(92,107,192,.05)}
+body.readonly .add-day-btn{display:none!important}
+/* 공통 모달 추가 */
+.common-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:920;align-items:center;justify-content:center;padding:20px}
+.common-modal-bg.open{display:flex}
+.common-modal{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.common-modal h3{font-size:16px;font-weight:700;margin-bottom:18px;color:#c5cae9}
 </style>
 </head>
 <body>
@@ -415,7 +452,8 @@ html{scroll-behavior:smooth;scroll-padding-top:60px}
 <div class="hero">
   <div class="hero-bg"></div>
   <div class="hero-overlay"></div>
-  <div class="hero-content">
+  <div class="hero-content" style="position:relative">
+    <button class="hero-edit-btn" onclick="openHeroModal()">✏️ 여행 정보 수정</button>
     <div class="hero-emojis">🏰🍷🌊</div>
     <div class="hero-title">포르투갈 <span>7박 8일</span></div>
     <p class="hero-sub">2026년 7월 31일 ~ 8월 7일 · 부부 2인 · 대한항공 직항</p>
@@ -470,6 +508,7 @@ html{scroll-behavior:smooth;scroll-padding-top:60px}
       <button class="mf-btn mf-d6 on" data-layer="hotel" onclick="toggleLayer(this)">🩷 숙소</button>
       <button class="mf-btn mf-dk on" data-layer="transit" onclick="toggleLayer(this)">🚉 기차역·공항</button>
     </div>
+    <button class="rest-add-card-btn" style="margin:12px 0;max-width:240px" onclick="openMapPinModal()">📍 지도 핀 추가</button>
     <div class="map-places-wrap">
       <div class="map-wrap">
         <div id="leaflet-map" style="width:100%;height:100%;border-radius:16px;z-index:1"></div>
@@ -1019,6 +1058,8 @@ html{scroll-behavior:smooth;scroll-padding-top:60px}
     </div>
     <div class="day-total">💰 <strong>1인 예상:</strong> €40~80 · 기차+공항 이동 포함 · 인천 8/8(토) 19:15 도착 🇰🇷</div>
   </div>
+  <!-- Day 추가 버튼 -->
+  <button class="add-day-btn" id="addDayBtn" onclick="openDayModal()">＋ 새 여행일 추가</button>
 </div>
 
 <!-- FLIGHTS -->
@@ -1727,24 +1768,25 @@ html{scroll-behavior:smooth;scroll-padding-top:60px}
     </div>
   </div>
 
-  <div class="tips-list">
-    <div class="tip-item"><span class="tip-tag">리스보아 카드</span><strong>수령 시간부터 카운트</strong> 시작. 공항 1층 관광안내소에서 교환. 제로니무스 €10 + 벨렝탑 €6 + 상 조르즈 성 €15 등 절약.</div>
-    <div class="tip-item"><span class="tip-tag">에그타르트</span>Pastéis de Belém은 <strong>08:00 오픈 직후</strong> 방문. 10시 이후 웨이팅 30분↑. 계피+슈가파우더 뿌려서 따뜻하게!</div>
-    <div class="tip-item"><span class="tip-tag">신트라 예약</span>페나 궁전(€14) + 레갈레이라(€12) + 무어인 성(€10) 모두 <strong>사전 예매 필수</strong>. parquesdesintra.pt / quintadaregaleira.pt. 리스보아 카드 불포함!</div>
-    <div class="tip-item"><span class="tip-tag">쿠베르토 거절</span>레스토랑 착석 시 자동으로 나오는 빵·버터(€3~5 유료). <strong>"Não quero couvert"</strong> (낭 케루 쿠베르투) 라고 말하면 거절 가능.</div>
-    <div class="tip-item"><span class="tip-tag">ATM·카드</span>공항 수수료 없는 ATM 이용. <strong>트래블월렛 또는 트래블로그</strong> 카드 준비. 환전은 현지 ATM이 유리.</div>
-    <div class="tip-item"><span class="tip-tag">볼트 vs 우버</span>볼트가 저렴하나 취소多. <strong>공항에서는 우버 추천</strong>. P2 카파크, 입국장 나와서 좌측. 4인승 이상 차량 잡기(캐리어 때문).</div>
-    <div class="tip-item"><span class="tip-tag">렐루 서점</span><strong>온라인 예약 필수</strong> (€5, 구매 시 환급). 성수기 줄 매우 긺. 아침 오픈 직후 방문 추천.</div>
-    <div class="tip-item"><span class="tip-tag">포트와인 셀러</span>빌라노바 가이아 지역 테일러스·그라함스. <strong>무료 or 시음 포함 €10~20</strong>. 동 루이스 다리 건너서 이동.</div>
-    <div class="tip-item"><span class="tip-tag">소매치기</span><strong>28번 트램 특히 주의</strong>. 크로스백 앞으로 메기, 스마트폰·지갑 외주머니 금지. 알파마 좁은 골목 주의.</div>
-    <div class="tip-item"><span class="tip-tag">VAT 환급</span>귀국 전 공항에서 <strong>세금 환급</strong> 가능. Diva 앱 사전 설치 or 공항 환급 창구 이용.</div>
+  <div class="tips-list" data-tip-cat="main">
+    <div class="tip-item" data-tip-id="tip-0"><span class="tip-tag">리스보아 카드</span><strong>수령 시간부터 카운트</strong> 시작. 공항 1층 관광안내소에서 교환. 제로니무스 €10 + 벨렝탑 €6 + 상 조르즈 성 €15 등 절약.<div class="tip-item-btns"><button class="ti-edit-btn" onclick="openTipModal('tip-0')">✏️</button><button class="ti-del-btn" onclick="deleteTip('tip-0')">🗑️</button></div></div>
+    <div class="tip-item" data-tip-id="tip-1"><span class="tip-tag">에그타르트</span>Pastéis de Belém은 <strong>08:00 오픈 직후</strong> 방문. 10시 이후 웨이팅 30분↑. 계피+슈가파우더 뿌려서 따뜻하게!<div class="tip-item-btns"><button class="ti-edit-btn" onclick="openTipModal('tip-1')">✏️</button><button class="ti-del-btn" onclick="deleteTip('tip-1')">🗑️</button></div></div>
+    <div class="tip-item" data-tip-id="tip-2"><span class="tip-tag">신트라 예약</span>페나 궁전(€14) + 레갈레이라(€12) + 무어인 성(€10) 모두 <strong>사전 예매 필수</strong>. parquesdesintra.pt / quintadaregaleira.pt. 리스보아 카드 불포함!<div class="tip-item-btns"><button class="ti-edit-btn" onclick="openTipModal('tip-2')">✏️</button><button class="ti-del-btn" onclick="deleteTip('tip-2')">🗑️</button></div></div>
+    <div class="tip-item" data-tip-id="tip-3"><span class="tip-tag">쿠베르토 거절</span>레스토랑 착석 시 자동으로 나오는 빵·버터(€3~5 유료). <strong>"Não quero couvert"</strong> (낭 케루 쿠베르투) 라고 말하면 거절 가능.<div class="tip-item-btns"><button class="ti-edit-btn" onclick="openTipModal('tip-3')">✏️</button><button class="ti-del-btn" onclick="deleteTip('tip-3')">🗑️</button></div></div>
+    <div class="tip-item" data-tip-id="tip-4"><span class="tip-tag">ATM·카드</span>공항 수수료 없는 ATM 이용. <strong>트래블월렛 또는 트래블로그</strong> 카드 준비. 환전은 현지 ATM이 유리.<div class="tip-item-btns"><button class="ti-edit-btn" onclick="openTipModal('tip-4')">✏️</button><button class="ti-del-btn" onclick="deleteTip('tip-4')">🗑️</button></div></div>
+    <div class="tip-item" data-tip-id="tip-5"><span class="tip-tag">볼트 vs 우버</span>볼트가 저렴하나 취소多. <strong>공항에서는 우버 추천</strong>. P2 카파크, 입국장 나와서 좌측. 4인승 이상 차량 잡기(캐리어 때문).<div class="tip-item-btns"><button class="ti-edit-btn" onclick="openTipModal('tip-5')">✏️</button><button class="ti-del-btn" onclick="deleteTip('tip-5')">🗑️</button></div></div>
+    <div class="tip-item" data-tip-id="tip-6"><span class="tip-tag">렐루 서점</span><strong>온라인 예약 필수</strong> (€5, 구매 시 환급). 성수기 줄 매우 긺. 아침 오픈 직후 방문 추천.<div class="tip-item-btns"><button class="ti-edit-btn" onclick="openTipModal('tip-6')">✏️</button><button class="ti-del-btn" onclick="deleteTip('tip-6')">🗑️</button></div></div>
+    <div class="tip-item" data-tip-id="tip-7"><span class="tip-tag">포트와인 셀러</span>빌라노바 가이아 지역 테일러스·그라함스. <strong>무료 or 시음 포함 €10~20</strong>. 동 루이스 다리 건너서 이동.<div class="tip-item-btns"><button class="ti-edit-btn" onclick="openTipModal('tip-7')">✏️</button><button class="ti-del-btn" onclick="deleteTip('tip-7')">🗑️</button></div></div>
+    <div class="tip-item" data-tip-id="tip-8"><span class="tip-tag">소매치기</span><strong>28번 트램 특히 주의</strong>. 크로스백 앞으로 메기, 스마트폰·지갑 외주머니 금지. 알파마 좁은 골목 주의.<div class="tip-item-btns"><button class="ti-edit-btn" onclick="openTipModal('tip-8')">✏️</button><button class="ti-del-btn" onclick="deleteTip('tip-8')">🗑️</button></div></div>
+    <div class="tip-item" data-tip-id="tip-9"><span class="tip-tag">VAT 환급</span>귀국 전 공항에서 <strong>세금 환급</strong> 가능. Diva 앱 사전 설치 or 공항 환급 창구 이용.<div class="tip-item-btns"><button class="ti-edit-btn" onclick="openTipModal('tip-9')">✏️</button><button class="ti-del-btn" onclick="deleteTip('tip-9')">🗑️</button></div></div>
 
     <div style="margin:24px 0 12px;font-size:11px;font-weight:800;color:#7986cb;letter-spacing:.08em;text-transform:uppercase">☀️ 리스본 여름 가이드 (gtgabroad)</div>
-    <div class="tip-item"><span class="tip-tag">신발 필수</span>알파마·바이루알투 언덕은 <strong>자갈 돌길 2만 보</strong> 이상. 삼바(Samba) / 가젤(Gazelles) / 뉴발란스 / 완전히 길들여진 운동화만 OK. 예쁜 신발은 발이 고생.</div>
-    <div class="tip-item"><span class="tip-tag">나이트라이프</span>리스본 밤은 늦게 시작됩니다. 저녁식사 <strong>8:30~10시</strong> · 바 11시~새벽 1시 · 클럽 새벽 1시 이후. 자정 전에는 대부분 한산. 소지품 주의 필수.</div>
-    <div class="tip-item"><span class="tip-tag">여름 의류</span>끊임없는 도보와 더위 — <strong>린넨 팬츠·탱크탑·오버사이즈 셔츠</strong> 추천. 단, 카스카이스·코스타 카파리카 해변은 밤에 바람이 강하고 쌀쌀 → 얇은 재킷/후디 필수.</div>
-    <div class="tip-item"><span class="tip-tag">사전 예약</span>선셋 디너, 루프탑 바, 비치 클럽, 트렌디 브런치는 여름 주말에 <strong>빠르게 마감</strong>. 최소 2~3일 전 예약 필수.</div>
-    <div class="tip-item"><span class="tip-tag">타일 주의</span>리스본 자갈·타일 길바닥은 <strong>비 오면 매우 미끄럽습니다</strong>. 작은 가게는 현금 필요한 경우 있음. 이곳의 석양은 정말 환상적 — 뷰포인트(미라도루) 꼭 방문!</div>
+    <div class="tip-item" data-tip-id="tip-10"><span class="tip-tag">신발 필수</span>알파마·바이루알투 언덕은 <strong>자갈 돌길 2만 보</strong> 이상. 삼바(Samba) / 가젤(Gazelles) / 뉴발란스 / 완전히 길들여진 운동화만 OK. 예쁜 신발은 발이 고생.<div class="tip-item-btns"><button class="ti-edit-btn" onclick="openTipModal('tip-10')">✏️</button><button class="ti-del-btn" onclick="deleteTip('tip-10')">🗑️</button></div></div>
+    <div class="tip-item" data-tip-id="tip-11"><span class="tip-tag">나이트라이프</span>리스본 밤은 늦게 시작됩니다. 저녁식사 <strong>8:30~10시</strong> · 바 11시~새벽 1시 · 클럽 새벽 1시 이후. 자정 전에는 대부분 한산. 소지품 주의 필수.<div class="tip-item-btns"><button class="ti-edit-btn" onclick="openTipModal('tip-11')">✏️</button><button class="ti-del-btn" onclick="deleteTip('tip-11')">🗑️</button></div></div>
+    <div class="tip-item" data-tip-id="tip-12"><span class="tip-tag">여름 의류</span>끊임없는 도보와 더위 — <strong>린넨 팬츠·탱크탑·오버사이즈 셔츠</strong> 추천. 단, 카스카이스·코스타 카파리카 해변은 밤에 바람이 강하고 쌀쌀 → 얇은 재킷/후디 필수.<div class="tip-item-btns"><button class="ti-edit-btn" onclick="openTipModal('tip-12')">✏️</button><button class="ti-del-btn" onclick="deleteTip('tip-12')">🗑️</button></div></div>
+    <div class="tip-item" data-tip-id="tip-13"><span class="tip-tag">사전 예약</span>선셋 디너, 루프탑 바, 비치 클럽, 트렌디 브런치는 여름 주말에 <strong>빠르게 마감</strong>. 최소 2~3일 전 예약 필수.<div class="tip-item-btns"><button class="ti-edit-btn" onclick="openTipModal('tip-13')">✏️</button><button class="ti-del-btn" onclick="deleteTip('tip-13')">🗑️</button></div></div>
+    <div class="tip-item" data-tip-id="tip-14"><span class="tip-tag">타일 주의</span>리스본 자갈·타일 길바닥은 <strong>비 오면 매우 미끄럽습니다</strong>. 작은 가게는 현금 필요한 경우 있음. 이곳의 석양은 정말 환상적 — 뷰포인트(미라도루) 꼭 방문!<div class="tip-item-btns"><button class="ti-edit-btn" onclick="openTipModal('tip-14')">✏️</button><button class="ti-del-btn" onclick="deleteTip('tip-14')">🗑️</button></div></div>
+    <button class="tip-add-btn" onclick="openTipModal(null,'main')">＋ 꿀팁 추가</button>
   </div>
 </div>
 
@@ -3071,6 +3113,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // 맛집 섹션 저장 내용 반영
   loadDiningEdits();
   loadDiningCards();
+  loadTipEdits();
+  loadHero();
+  loadDayCards();
+  loadMapPins();
 });
 
 // ===== 맛집 섹션 CRUD =====
@@ -3435,7 +3481,459 @@ function deleteSection(sectionId) {
     showToast('🗑️ 섹션이 삭제되었습니다');
   });
 }
+
+// ===== 꿀팁 CRUD =====
+const TIP_EDIT_KEY = 'pt-tips-edits';
+const TIP_ADD_KEY  = 'pt-tips-adds';
+let _tmTarget = null;
+let _tmCat    = null;
+
+function loadTipEdits() {
+  const edits = JSON.parse(localStorage.getItem(TIP_EDIT_KEY) || '{}');
+  const adds  = JSON.parse(localStorage.getItem(TIP_ADD_KEY)  || '{}');
+  Object.entries(edits).forEach(([tid, data]) => {
+    const item = document.querySelector(`[data-tip-id="${tid}"]`);
+    if (!item) return;
+    if (data._deleted) { item.style.display = 'none'; return; }
+    const tagEl = item.querySelector('.tip-tag');
+    const txtEl = item.querySelector('span:not(.tip-tag)') || item.querySelector('.tip-text');
+    if (tagEl && data.tag) tagEl.textContent = data.tag;
+    if (txtEl && data.content) txtEl.textContent = data.content;
+  });
+  Object.entries(adds).forEach(([cat, items]) => {
+    const catEl = document.querySelector(`[data-tip-cat="${cat}"]`);
+    if (!catEl) return;
+    const addBtn = catEl.querySelector('.tip-add-btn');
+    items.forEach(item => {
+      if (catEl.querySelector(`[data-tip-id="${item.id}"]`)) return;
+      const div = document.createElement('div');
+      div.className = 'tip-item';
+      div.dataset.tipId = item.id;
+      div.innerHTML = `<span class="tip-tag">${item.tag}</span>${item.content}<div class="tip-item-btns"><button class="ti-edit-btn" onclick="openTipModal('${item.id}')">✏️</button><button class="ti-del-btn" onclick="deleteTip('${item.id}')">🗑️</button></div>`;
+      catEl.insertBefore(div, addBtn || null);
+    });
+  });
+}
+
+function openTipModal(tipId, cat) {
+  _tmTarget = tipId || null;
+  _tmCat    = cat   || null;
+  const isEdit = !!tipId;
+  document.getElementById('tmTitle').textContent = isEdit ? '✏️ 꿀팁 수정' : '➕ 꿀팁 추가';
+  document.getElementById('tmDeleteBtn').style.display = isEdit ? 'inline-flex' : 'none';
+  if (isEdit) {
+    const saved = JSON.parse(localStorage.getItem(TIP_EDIT_KEY) || '{}')[tipId] || {};
+    const item = document.querySelector(`[data-tip-id="${tipId}"]`);
+    const tagEl = item && item.querySelector('.tip-tag');
+    document.getElementById('tmTag').value     = saved.tag     || (tagEl ? tagEl.textContent : '');
+    document.getElementById('tmContent').value = saved.content || '';
+  } else {
+    document.getElementById('tmTag').value = '';
+    document.getElementById('tmContent').value = '';
+  }
+  document.getElementById('tipModalBg').classList.add('open');
+}
+
+function closeTipModal() { document.getElementById('tipModalBg').classList.remove('open'); }
+
+function saveTip() {
+  const tag     = document.getElementById('tmTag').value.trim();
+  const content = document.getElementById('tmContent').value.trim();
+  if (!content) { alert('꿀팁 내용을 입력해주세요.'); return; }
+  if (_tmTarget) {
+    const edits = JSON.parse(localStorage.getItem(TIP_EDIT_KEY) || '{}');
+    edits[_tmTarget] = { tag, content };
+    localStorage.setItem(TIP_EDIT_KEY, JSON.stringify(edits));
+    const item = document.querySelector(`[data-tip-id="${_tmTarget}"]`);
+    if (item) {
+      const tagEl = item.querySelector('.tip-tag');
+      const txtEl = item.querySelector('span:not(.tip-tag)') || item.querySelector('.tip-text');
+      if (tagEl) tagEl.textContent = tag;
+      if (txtEl) txtEl.innerHTML = content;
+    }
+  } else {
+    const adds = JSON.parse(localStorage.getItem(TIP_ADD_KEY) || '{}');
+    if (!adds[_tmCat]) adds[_tmCat] = [];
+    const newId = 'tip-add-' + Date.now();
+    adds[_tmCat].push({ id: newId, tag, content });
+    localStorage.setItem(TIP_ADD_KEY, JSON.stringify(adds));
+    const catEl = document.querySelector(`[data-tip-cat="${_tmCat}"]`);
+    if (catEl) {
+      const addBtn = catEl.querySelector('.tip-add-btn');
+      const div = document.createElement('div');
+      div.className = 'tip-item';
+      div.dataset.tipId = newId;
+      div.innerHTML = `<span class="tip-tag">${tag}</span>${content}<div class="tip-item-btns"><button class="ti-edit-btn" onclick="openTipModal('${newId}')">✏️</button><button class="ti-del-btn" onclick="deleteTip('${newId}')">🗑️</button></div>`;
+      catEl.insertBefore(div, addBtn || null);
+    }
+  }
+  closeTipModal();
+  showToast('💾 저장되었습니다');
+}
+
+function deleteTipConfirm() { closeTipModal(); showConfirm('이 꿀팁을 삭제할까요?', () => deleteTip(_tmTarget)); }
+
+function deleteTip(tipId) {
+  const adds = JSON.parse(localStorage.getItem(TIP_ADD_KEY) || '{}');
+  let removed = false;
+  Object.keys(adds).forEach(cat => {
+    const idx = adds[cat].findIndex(i => i.id === tipId);
+    if (idx !== -1) { adds[cat].splice(idx, 1); removed = true; }
+  });
+  if (removed) {
+    localStorage.setItem(TIP_ADD_KEY, JSON.stringify(adds));
+  } else {
+    const edits = JSON.parse(localStorage.getItem(TIP_EDIT_KEY) || '{}');
+    edits[tipId] = { _deleted: true };
+    localStorage.setItem(TIP_EDIT_KEY, JSON.stringify(edits));
+  }
+  const item = document.querySelector(`[data-tip-id="${tipId}"]`);
+  if (item) item.style.display = 'none';
+  showToast('🗑️ 삭제되었습니다');
+}
+
+// ===== 히어로 편집 =====
+const HERO_KEY = 'pt-hero';
+
+function loadHero() {
+  const h = JSON.parse(localStorage.getItem(HERO_KEY) || '{}');
+  if (!Object.keys(h).length) return;
+  const titleEl  = document.querySelector('.hero-title');
+  const dateEl   = document.querySelector('.hero-sub');
+  const citiesEl = document.querySelector('.hero-route');
+  if (titleEl && h.title)   titleEl.innerHTML = h.title;
+  if (dateEl  && h.date)    dateEl.textContent = h.date;
+  if (citiesEl && h.cities) citiesEl.textContent = h.cities;
+  const statNums = document.querySelectorAll('.stat-box .num');
+  if (statNums.length >= 4) {
+    if (h.days)        statNums[0].textContent = h.days;
+    if (h.sights)      statNums[1].textContent = h.sights + '+';
+    if (h.restaurants) statNums[2].textContent = h.restaurants + '+';
+    if (h.cityCount)   statNums[3].textContent = h.cityCount;
+  }
+}
+
+function openHeroModal() {
+  const h = JSON.parse(localStorage.getItem(HERO_KEY) || '{}');
+  const titleEl  = document.querySelector('.hero-title');
+  const dateEl   = document.querySelector('.hero-sub');
+  const citiesEl = document.querySelector('.hero-route');
+  document.getElementById('hmTitle').value       = h.title      || (titleEl  ? titleEl.textContent  : '');
+  document.getElementById('hmDate').value        = h.date       || (dateEl   ? dateEl.textContent   : '');
+  document.getElementById('hmCities').value      = h.cities     || (citiesEl ? citiesEl.textContent : '');
+  document.getElementById('hmPeople').value      = h.people     || '';
+  document.getElementById('hmDays').value        = h.days       || '';
+  document.getElementById('hmSights').value      = h.sights     || '';
+  document.getElementById('hmRestaurants').value = h.restaurants|| '';
+  document.getElementById('hmCityCount').value   = h.cityCount  || '';
+  document.getElementById('heroModalBg').classList.add('open');
+}
+
+function closeHeroModal() { document.getElementById('heroModalBg').classList.remove('open'); }
+
+function saveHero() {
+  const h = {
+    title:       document.getElementById('hmTitle').value.trim(),
+    date:        document.getElementById('hmDate').value.trim(),
+    cities:      document.getElementById('hmCities').value.trim(),
+    people:      document.getElementById('hmPeople').value.trim(),
+    days:        document.getElementById('hmDays').value,
+    sights:      document.getElementById('hmSights').value,
+    restaurants: document.getElementById('hmRestaurants').value,
+    cityCount:   document.getElementById('hmCityCount').value,
+  };
+  localStorage.setItem(HERO_KEY, JSON.stringify(h));
+  closeHeroModal();
+  loadHero();
+  showToast('✈️ 여행 정보가 저장되었습니다');
+}
+
+// ===== 데이터 관리 =====
+const ALL_KEYS = [
+  'pt-tl-edits','pt-tl-adds',
+  'pt-dining-edits','pt-dining-adds',
+  'pt-dining-card-adds','pt-dining-card-edits','pt-dining-card-dels',
+  'pt-dining-sections',
+  'pt-tips-edits','pt-tips-adds',
+  'pt-hero',
+  'pt-tabs','pt-day-cards','pt-map-adds','pt-map-dels','pt-free-blocks',
+];
+
+function toggleDataFab() {
+  document.getElementById('dataFabMenu').classList.toggle('open');
+}
+
+function exportData() {
+  const data = {};
+  ALL_KEYS.forEach(k => {
+    const v = localStorage.getItem(k);
+    if (v) data[k] = JSON.parse(v);
+  });
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'portugal-travel-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  showToast('📥 데이터 내보내기 완료');
+  document.getElementById('dataFabMenu').classList.remove('open');
+}
+
+function importData(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      ALL_KEYS.forEach(k => {
+        if (data[k] !== undefined) localStorage.setItem(k, JSON.stringify(data[k]));
+      });
+      showToast('📤 데이터 복원 완료 — 새로고침합니다');
+      setTimeout(() => location.reload(), 1500);
+    } catch(err) {
+      alert('파일 형식이 올바르지 않습니다.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function resetSection() {
+  const sections = [
+    { key: ['pt-tl-edits','pt-tl-adds'], label: '타임라인' },
+    { key: ['pt-dining-edits','pt-dining-adds','pt-dining-card-adds','pt-dining-card-edits','pt-dining-card-dels','pt-dining-sections'], label: '맛집' },
+    { key: ['pt-tips-edits','pt-tips-adds'], label: '꿀팁' },
+    { key: ['pt-hero'], label: '히어로' },
+  ];
+  const names = sections.map((s,i) => `${i+1}. ${s.label}`).join('\n');
+  const choice = prompt(`초기화할 섹션 번호를 입력하세요:\n${names}`);
+  const idx = parseInt(choice) - 1;
+  if (isNaN(idx) || idx < 0 || idx >= sections.length) return;
+  sections[idx].key.forEach(k => localStorage.removeItem(k));
+  showToast(`🔄 ${sections[idx].label} 초기화 완료 — 새로고침합니다`);
+  setTimeout(() => location.reload(), 1500);
+}
+
+function resetAll() {
+  showConfirm('모든 편집 데이터를 초기화할까요? 이 작업은 되돌릴 수 없습니다.', () => {
+    ALL_KEYS.forEach(k => localStorage.removeItem(k));
+    showToast('⚠️ 전체 초기화 완료 — 새로고침합니다');
+    setTimeout(() => location.reload(), 1500);
+  });
+}
+
+// ===== Day 카드 CRUD =====
+const DAY_KEY = 'pt-day-cards';
+let _dmTarget = null;
+
+function loadDayCards() {
+  const days = JSON.parse(localStorage.getItem(DAY_KEY) || '[]');
+  const dels = JSON.parse(localStorage.getItem('pt-day-dels') || '{}');
+  Object.keys(dels).forEach(did => {
+    const el = document.querySelector(`[data-day-id="${did}"]`);
+    if (el) el.style.display = 'none';
+  });
+  const container = document.getElementById('addDayBtn');
+  if (!container) return;
+  days.forEach(d => {
+    if (document.querySelector(`[data-day-id="${d.id}"]`)) return;
+    const panel = _buildDayPanel(d);
+    container.parentNode.insertBefore(panel, container);
+  });
+}
+
+function _buildDayPanel(d) {
+  const div = document.createElement('div');
+  div.className = 'day-panel';
+  div.dataset.dayId = d.id;
+  div.innerHTML = `
+    <div class="day-hero" style="background:linear-gradient(135deg,#1a1d2e,#2a2d42);padding:24px;border-radius:16px;margin-bottom:16px;position:relative">
+      <h3 style="font-size:16px;font-weight:700;color:#c5cae9;margin-bottom:6px">${d.title}</h3>
+      <p style="font-size:13px;color:#7986cb">${d.desc || ''}</p>
+      <div style="position:absolute;top:10px;right:10px;display:flex;gap:6px">
+        <button class="rc-edit-btn" onclick="openDayModal('${d.id}')">✏️ 수정</button>
+        <button class="rc-del-btn" onclick="deleteDay('${d.id}')">🗑️</button>
+      </div>
+    </div>
+    <div class="timeline" id="tl-day-${d.id}">
+      <button class="add-tl-btn" onclick="openAddModal('day-${d.id}')">＋ 일정 추가</button>
+    </div>`;
+  return div;
+}
+
+function openDayModal(dayId) {
+  _dmTarget = dayId || null;
+  const isEdit = !!dayId;
+  document.getElementById('dayModalTitle').textContent = isEdit ? '📅 여행일 수정' : '📅 새 여행일 추가';
+  document.getElementById('dmDeleteBtn').style.display = isEdit ? 'inline-flex' : 'none';
+  if (isEdit) {
+    const days = JSON.parse(localStorage.getItem(DAY_KEY) || '[]');
+    const d = days.find(x => x.id === dayId) || {};
+    document.getElementById('dmTag').value   = d.tag   || '';
+    document.getElementById('dmTitle').value = d.title || '';
+    document.getElementById('dmDesc').value  = d.desc  || '';
+  } else {
+    document.getElementById('dmTag').value = '';
+    document.getElementById('dmTitle').value = '';
+    document.getElementById('dmDesc').value = '';
+  }
+  document.getElementById('dayModalBg').classList.add('open');
+}
+
+function closeDayModal() { document.getElementById('dayModalBg').classList.remove('open'); }
+
+function saveDay() {
+  const tag   = document.getElementById('dmTag').value.trim();
+  const title = document.getElementById('dmTitle').value.trim();
+  const desc  = document.getElementById('dmDesc').value.trim();
+  if (!title) { alert('제목을 입력해주세요.'); return; }
+  const days = JSON.parse(localStorage.getItem(DAY_KEY) || '[]');
+  if (_dmTarget) {
+    const idx = days.findIndex(d => d.id === _dmTarget);
+    if (idx !== -1) {
+      days[idx] = { ...days[idx], tag, title, desc };
+      localStorage.setItem(DAY_KEY, JSON.stringify(days));
+      const panel = document.querySelector(`[data-day-id="${_dmTarget}"]`);
+      if (panel) {
+        const h3 = panel.querySelector('h3');
+        const p  = panel.querySelector('p');
+        if (h3) h3.textContent = title;
+        if (p)  p.textContent  = desc;
+      }
+    }
+  } else {
+    const newId = 'day-' + Date.now();
+    days.push({ id: newId, tag, title, desc });
+    localStorage.setItem(DAY_KEY, JSON.stringify(days));
+    const btn = document.getElementById('addDayBtn');
+    const panel = _buildDayPanel({ id: newId, tag, title, desc });
+    btn.parentNode.insertBefore(panel, btn);
+  }
+  closeDayModal();
+  showToast('💾 저장되었습니다');
+}
+
+function deleteDayConfirm() {
+  closeDayModal();
+  showConfirm('이 여행일을 삭제할까요? 내부 일정도 함께 삭제됩니다.', () => deleteDay(_dmTarget));
+}
+
+function deleteDay(dayId) {
+  const days = JSON.parse(localStorage.getItem(DAY_KEY) || '[]');
+  const newDays = days.filter(d => d.id !== dayId);
+  localStorage.setItem(DAY_KEY, JSON.stringify(newDays));
+  const panel = document.querySelector(`[data-day-id="${dayId}"]`);
+  if (panel) panel.remove();
+  showToast('🗑️ 삭제되었습니다');
+}
+
+// ===== 지도 POI =====
+const MAP_ADD_KEY = 'pt-map-adds';
+const MAP_DEL_KEY = 'pt-map-dels';
+
+function loadMapPins() {
+  const adds = JSON.parse(localStorage.getItem(MAP_ADD_KEY) || '[]');
+  adds.forEach(pin => {
+    if (typeof addMarker === 'function') {
+      addMarker(pin.lat, pin.lng, pin.name, pin.desc, pin.cat);
+    }
+  });
+}
+
+function openMapPinModal() {
+  document.getElementById('mpTitle').textContent = '📍 지도 핀 추가';
+  ['mpName','mpDesc','mpLat','mpLng'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('mapPinModalBg').classList.add('open');
+}
+
+function closeMapPinModal() { document.getElementById('mapPinModalBg').classList.remove('open'); }
+
+function saveMapPin() {
+  const name = document.getElementById('mpName').value.trim();
+  const desc = document.getElementById('mpDesc').value.trim();
+  const lat  = parseFloat(document.getElementById('mpLat').value);
+  const lng  = parseFloat(document.getElementById('mpLng').value);
+  const cat  = document.getElementById('mpCat').value;
+  if (!name || isNaN(lat) || isNaN(lng)) { alert('이름과 좌표를 입력해주세요.'); return; }
+  const adds = JSON.parse(localStorage.getItem(MAP_ADD_KEY) || '[]');
+  const pin = { id: 'pin-' + Date.now(), name, desc, lat, lng, cat };
+  adds.push(pin);
+  localStorage.setItem(MAP_ADD_KEY, JSON.stringify(adds));
+  if (typeof addMarker === 'function') addMarker(lat, lng, name, desc, cat);
+  closeMapPinModal();
+  showToast('📍 핀이 추가되었습니다');
+}
 </script>
+
+<!-- 지도 POI 모달 -->
+<div class="common-modal-bg" id="mapPinModalBg" onclick="if(event.target===this)closeMapPinModal()">
+  <div class="common-modal">
+    <h3 id="mpTitle">📍 지도 핀 추가</h3>
+    <div class="edit-field"><label>이름</label><input id="mpName" placeholder="장소 이름" /></div>
+    <div class="edit-field"><label>설명</label><input id="mpDesc" placeholder="간단한 설명" /></div>
+    <div class="edit-field"><label>위도</label><input id="mpLat" placeholder="예: 38.7169" type="number" step="0.0001" /></div>
+    <div class="edit-field"><label>경도</label><input id="mpLng" placeholder="예: -9.1399" type="number" step="0.0001" /></div>
+    <div class="edit-field"><label>카테고리</label>
+      <select id="mpCat" style="width:100%;padding:10px;border-radius:10px;background:#1a1d2e;border:1px solid var(--border);color:#c5cae9;font-family:inherit;font-size:14px">
+        <option value="spot">관광지</option>
+        <option value="food">맛집</option>
+        <option value="move">이동</option>
+        <option value="sleep">숙소</option>
+      </select>
+    </div>
+    <div class="edit-modal-btns">
+      <button class="edit-cancel-btn" onclick="closeMapPinModal()">취소</button>
+      <button class="edit-save-btn" onclick="saveMapPin()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- Day 추가 모달 -->
+<div class="common-modal-bg" id="dayModalBg" onclick="if(event.target===this)closeDayModal()">
+  <div class="common-modal">
+    <h3 id="dayModalTitle">📅 새 여행일 추가</h3>
+    <div class="edit-field"><label>날짜 태그</label><input id="dmTag" placeholder="예: D8 · 2026년 8월 8일 (토)" /></div>
+    <div class="edit-field"><label>제목</label><input id="dmTitle" placeholder="예: 🏖️ 세투발 당일치기" /></div>
+    <div class="edit-field"><label>부제 (설명)</label><textarea id="dmDesc" placeholder="간단한 일정 설명"></textarea></div>
+    <div class="edit-modal-btns">
+      <button id="dmDeleteBtn" class="delete-btn" style="display:none;padding:10px 14px;font-size:12px" onclick="deleteDayConfirm()">🗑️ 삭제</button>
+      <button class="edit-cancel-btn" onclick="closeDayModal()">취소</button>
+      <button class="edit-save-btn" onclick="saveDay()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 히어로 편집 모달 -->
+<div class="common-modal-bg" id="heroModalBg" onclick="if(event.target===this)closeHeroModal()">
+  <div class="common-modal">
+    <h3>✈️ 여행 정보 수정</h3>
+    <div class="edit-field"><label>여행 제목</label><input id="hmTitle" placeholder="예: 포르투갈 7박 8일" /></div>
+    <div class="edit-field"><label>여행 기간</label><input id="hmDate" placeholder="예: 2026년 7월 31일 ~ 8월 7일" /></div>
+    <div class="edit-field"><label>도시 경로</label><input id="hmCities" placeholder="예: 리스본(3박) → 포르투(3박) → 리스본(1박)" /></div>
+    <div class="edit-field"><label>인원</label><input id="hmPeople" placeholder="예: 부부 2인" /></div>
+    <div class="edit-field"><label>총 일수</label><input id="hmDays" placeholder="8" type="number" /></div>
+    <div class="edit-field"><label>관광지 수</label><input id="hmSights" placeholder="20" type="number" /></div>
+    <div class="edit-field"><label>맛집 수</label><input id="hmRestaurants" placeholder="10" type="number" /></div>
+    <div class="edit-field"><label>도시 수</label><input id="hmCityCount" placeholder="2" type="number" /></div>
+    <div class="edit-modal-btns">
+      <button class="edit-cancel-btn" onclick="closeHeroModal()">취소</button>
+      <button class="edit-save-btn" onclick="saveHero()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 꿀팁 모달 -->
+<div class="common-modal-bg" id="tipModalBg" onclick="if(event.target===this)closeTipModal()">
+  <div class="common-modal">
+    <h3 id="tmTitle">✏️ 꿀팁 수정</h3>
+    <div class="edit-field"><label>태그</label><input id="tmTag" placeholder="예: 교통·음식·안전" /></div>
+    <div class="edit-field"><label>내용</label><textarea id="tmContent" placeholder="꿀팁 내용" style="min-height:80px"></textarea></div>
+    <div class="edit-modal-btns">
+      <button id="tmDeleteBtn" class="delete-btn" style="display:none;padding:10px 14px;font-size:12px" onclick="deleteTipConfirm()">🗑️ 삭제</button>
+      <button class="edit-cancel-btn" onclick="closeTipModal()">취소</button>
+      <button class="edit-save-btn" onclick="saveTip()">저장</button>
+    </div>
+  </div>
+</div>
 
 <!-- 카드 모달 -->
 <div class="card-modal-bg" id="cardModalBg" onclick="if(event.target===this)closeCardModal()">
@@ -3493,6 +3991,19 @@ function deleteSection(sectionId) {
       <button class="edit-save-btn" onclick="saveEdit()">저장</button>
     </div>
   </div>
+</div>
+
+<!-- 데이터 관리 FAB -->
+<div class="data-fab" id="dataFab">
+  <div class="data-fab-menu" id="dataFabMenu">
+    <button class="data-fab-item" onclick="exportData()">📥 전체 데이터 내보내기 (JSON)</button>
+    <button class="data-fab-item" onclick="document.getElementById('importFileInput').click()">📤 데이터 불러오기</button>
+    <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importData(this)" />
+    <hr style="border:none;border-top:.5px solid rgba(255,255,255,.08);margin:4px 0">
+    <button class="data-fab-item" onclick="resetSection()">🔄 섹션별 초기화</button>
+    <button class="data-fab-item danger" onclick="resetAll()">⚠️ 전체 초기화</button>
+  </div>
+  <button class="data-fab-main" onclick="toggleDataFab()">⚙️ 데이터 관리</button>
 </div>
 </body>
 </html>
