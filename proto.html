@@ -256,6 +256,15 @@ body.readonly .rest-card-btns,body.readonly .rest-add-card-btn,body.readonly .re
 .rest-row.is-confirmed{border-left:2px solid #66bb6a;padding-left:8px;background:rgba(102,187,106,.06);border-radius:10px}
 .rest-row.is-confirmed .confirm-btn{background:rgba(102,187,106,.28);color:#69f0ae;cursor:default}
 .confirmed-banner{font-size:11px;font-weight:800;color:#69f0ae;padding:3px 2px 5px;display:flex;align-items:center;gap:4px}
+/* ── 예약 체크리스트 ── */
+.res-check-icon{width:18px;height:18px;border-radius:50%;border:1.5px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;transition:.2s;color:transparent}
+.res-row-checked .res-check-icon{background:#66bb6a;border-color:#66bb6a;color:#fff}
+.res-row-checked .rest-name{text-decoration:line-through;opacity:.5}
+.res-row-checked .rest-desc{opacity:.4}
+.res-row-checked .rest-price{opacity:.4}
+.res-badge{font-size:10px;font-weight:700;background:rgba(102,187,106,.2);color:#a5d6a7;border-radius:8px;padding:2px 8px;margin-left:8px;vertical-align:middle}
+#sg-reservation .rest-row{cursor:pointer}
+#sg-reservation .rest-row:hover .res-check-icon{border-color:#66bb6a}
 body.readonly .confirm-btn,.cand-toggle-btn{}
 /* 카드 모달 */
 .card-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:910;align-items:center;justify-content:center;padding:20px}
@@ -1456,35 +1465,6 @@ body.readonly .add-day-btn{display:none!important}
       </div>
       <button class="rest-add-row-btn" onclick="openRestModal(null,'rc-ls-dinner-0802')">＋ 식당 추가</button>
     </div>
-    <!-- 8/3 저녁 — 포르투 첫날 -->
-    <div class="rest-day-card" data-card-id="rc-ls-dinner-0803">
-      <div class="rest-card-header">
-        <div class="rest-day-label" data-label-for="rc-ls-dinner-0803">8/3 (월) · 포르투 첫날 저녁</div>
-        <div class="rest-card-btns">
-          <button class="rc-edit-btn" onclick="openCardModal('rc-ls-dinner-0803','rg-lisbon-dinner')">✏️ 수정</button>
-          <button class="rc-del-btn" onclick="deleteCard('rc-ls-dinner-0803')">🗑️</button>
-        </div>
-      </div>
-      <div class="rest-row best" data-rest-id="rr-ls-d5">
-        <div class="rest-stars">⭐4.4</div>
-        <div class="rest-info">
-          <div class="rest-name">Conga (포르투 첫날)</div>
-          <div class="rest-desc">비파나 샌드위치+슈퍼복 · 볼량 시장 근처 · 포르투 서민식 첫 경험 · 워크인</div>
-        </div>
-        <div class="rest-price">€7~10/인</div>
-        <div class="rest-row-btns"><button class="rr-edit-btn" onclick="openRestModal('rr-ls-d5','rc-ls-dinner-0803')">✏️</button><button class="rr-del-btn" onclick="deleteRest('rr-ls-d5')">🗑️</button></div>
-      </div>
-      <div class="rest-row alt" data-rest-id="rr-ls-d6">
-        <div class="rest-stars">⭐4.7</div>
-        <div class="rest-info">
-          <div class="rest-name">Ribeira Square</div>
-          <div class="rest-desc">강변뷰 해산물밥 · 히베이라 강변 · 도착 첫날 포르투 야경과 함께 · 워크인</div>
-        </div>
-        <div class="rest-price">€20~27/인</div>
-        <div class="rest-row-btns"><button class="rr-edit-btn" onclick="openRestModal('rr-ls-d6','rc-ls-dinner-0803')">✏️</button><button class="rr-del-btn" onclick="deleteRest('rr-ls-d6')">🗑️</button></div>
-      </div>
-      <button class="rest-add-row-btn" onclick="openRestModal(null,'rc-ls-dinner-0803')">＋ 식당 추가</button>
-    </div>
   </div>
   <div class="rest-add-card-wrap"><button class="rest-add-card-btn" onclick="openCardModal(null,'rg-lisbon-dinner')">＋ 날짜 카드 추가</button></div>
   </div><!-- section-wrap 닫기 -->
@@ -1854,103 +1834,13 @@ body.readonly .add-day-btn{display:none!important}
   <div class="rest-add-card-wrap"><button class="rest-add-card-btn" onclick="openCardModal(null,'rg-porto-dinner')">＋ 날짜 카드 추가</button></div>
   </div><!-- section-wrap 닫기 -->
 
-  <!-- 블로그 추천 추가 맛집 -->
-  <div class="rest-section-header" style="margin:28px 0 10px">
-    <div style="font-size:13px;font-weight:800;color:#9fa8da;letter-spacing:.06em">📝 블로그 추천 — 포르투 추가 맛집</div>
-    <button class="rs-toggle-btn" onclick="toggleSection(this,'sg-blog')">▼</button>
-  </div>
-  <div class="rest-grid" id="sg-blog">
-    <div class="rest-day-card">
-      <div class="rest-day-label">🦞 해물밥 · 가이아 강변</div>
-      <div class="rest-row best">
-        <div class="rest-stars">⭐강추</div>
-        <div class="rest-info">
-          <div class="rest-name">Tempêro D'Maria</div>
-          <div class="rest-desc">포르투갈 여행 통틀어 최고 해물밥 · 한국인 입맛 딱 맞음 · 가이아 강변 · Av. de Diogo Leite 278</div>
-        </div>
-        <div class="rest-price">€€ · €20~30/인</div>
-      </div>
-    </div>
-    <div class="rest-day-card">
-      <div class="rest-day-label">🐟 대구 전문 · 히베이라 강변</div>
-      <div class="rest-row best">
-        <div class="rest-stars">⭐추천</div>
-        <div class="rest-info">
-          <div class="rest-name">Muro do Bacalhau</div>
-          <div class="rest-desc">바칼라우(대구) 요리 전문 · 히베이라 강변 테라스 · Cais da Estiva 122</div>
-        </div>
-        <div class="rest-price">€€</div>
-      </div>
-    </div>
-    <div class="rest-day-card">
-      <div class="rest-day-label">🌭 현지인 단골 · 포르투 시내</div>
-      <div class="rest-row best">
-        <div class="rest-stars">⭐추천</div>
-        <div class="rest-info">
-          <div class="rest-name">Gazela</div>
-          <div class="rest-desc">포르투 명물 코지도 · 현지인 줄서는 맛집 · Tv. do Cimo de Vila 4</div>
-        </div>
-        <div class="rest-price">€</div>
-      </div>
-    </div>
-    <div class="rest-day-card">
-      <div class="rest-day-label">☕ 브런치·카페 · 루아 다스 플로레스</div>
-      <div class="rest-row best">
-        <div class="rest-stars">⭐추천</div>
-        <div class="rest-info">
-          <div class="rest-name">Floresta Cafe by Hungry Biker</div>
-          <div class="rest-desc">분위기 좋은 카페 · 브런치 · R. das Flores 146</div>
-        </div>
-        <div class="rest-price">€</div>
-      </div>
-    </div>
-  </div>
-
   <!-- 낮/간식 스팟 -->
-  <!-- 해산물 Ramiro 대안 -->
-  <div class="rest-section-header" style="margin:28px 0 10px">
-    <div style="font-size:13px;font-weight:800;color:#9fa8da;letter-spacing:.06em">🦞 해산물 — Cervejaria Ramiro 대안</div>
-    <button class="rs-toggle-btn" onclick="toggleSection(this,'sg-seafood')">▼</button>
-  </div>
-  <div class="rest-grid" id="sg-seafood">
-    <div class="rest-day-card">
-      <div class="rest-day-label">리스본 · Av. da Liberdade 155</div>
-      <div class="rest-row best">
-        <div class="rest-stars">⭐4.4</div>
-        <div class="rest-info">
-          <div class="rest-name">Cervejaria Ribadouro</div>
-          <div class="rest-desc">1947년 개업 · 타이거 새우(하루 20kg)·게·거위 따개비(percebes)·랍스터 · Mariscada à Ribadouro 5종 모둠 플레이터 · Ramiro보다 줄 짧음</div>
-        </div>
-        <div class="rest-price">새벽 1:30까지</div>
-      </div>
-    </div>
-  </div>
-
   <!-- 포르투갈 전통 육류 -->
   <div class="rest-section-header" style="margin:28px 0 10px">
     <div style="font-size:13px;font-weight:800;color:#9fa8da;letter-spacing:.06em">🥩 포르투갈 전통 육류 — 리스본</div>
     <button class="rs-toggle-btn" onclick="toggleSection(this,'sg-meat')">▼</button>
   </div>
   <div class="rest-grid" id="sg-meat">
-    <div class="rest-day-card">
-      <div class="rest-day-label">🐂 소고기 전문</div>
-      <div class="rest-row best">
-        <div class="rest-stars">⭐세계 34위</div>
-        <div class="rest-info">
-          <div class="rest-name">Sala de Corte</div>
-          <div class="rest-desc">카이스 두 소드레 · 이베리아 반도 숙성 소고기 · 호스퍼 오븐 숯불구이 · 2023년 세계 스테이크하우스 34위 (포르투갈 유일)</div>
-        </div>
-        <div class="rest-price">프리미엄</div>
-      </div>
-      <div class="rest-row alt">
-        <div class="rest-stars">⭐클래식</div>
-        <div class="rest-info">
-          <div class="rest-name">Carvoaria Jacto</div>
-          <div class="rest-desc">1953년 개업 · 아로이우스 · 미란데사 재래종·와규·숙성육 · 에스페타다(꼬치구이) · 부위·중량별 주문</div>
-        </div>
-        <div class="rest-price">중간</div>
-      </div>
-    </div>
     <div class="rest-day-card">
       <div class="rest-day-label">🍳 전통 타스카 (비토케·피카파우)</div>
       <div class="rest-row best">
@@ -3819,6 +3709,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 맛집 날짜필터·accordion·후보접기·확정지정 초기화
   initRestSection();
+  // 예약 체크리스트 초기화
+  initResChecklist();
 });
 
 // ===== 전체 접기/펼치기 =====
@@ -3929,6 +3821,52 @@ function renderConfirmed() {
       header.insertAdjacentElement('afterend', banner);
     }
   });
+}
+
+// ===== 예약 체크리스트 =====
+const RES_CHECK_KEY = 'pt-res-checks';
+function initResChecklist() {
+  const grid = document.getElementById('sg-reservation');
+  if (!grid) return;
+  grid.querySelectorAll('.rest-row').forEach((row, i) => {
+    row.dataset.resCheckId = 'rck-' + i;
+    const icon = document.createElement('div');
+    icon.className = 'res-check-icon';
+    icon.textContent = '✓';
+    row.insertBefore(icon, row.firstChild);
+    row.addEventListener('click', () => toggleResCheck(row.dataset.resCheckId));
+  });
+  renderResChecks();
+}
+function toggleResCheck(id) {
+  const data = JSON.parse(localStorage.getItem(RES_CHECK_KEY) || '{}');
+  data[id] = !data[id];
+  if (!data[id]) delete data[id];
+  localStorage.setItem(RES_CHECK_KEY, JSON.stringify(data));
+  renderResChecks();
+}
+function renderResChecks() {
+  const grid = document.getElementById('sg-reservation');
+  if (!grid) return;
+  const data = JSON.parse(localStorage.getItem(RES_CHECK_KEY) || '{}');
+  const rows = [...grid.querySelectorAll('.rest-row')];
+  let checked = 0;
+  rows.forEach(row => {
+    const isChecked = !!data[row.dataset.resCheckId];
+    row.classList.toggle('res-row-checked', isChecked);
+    if (isChecked) checked++;
+  });
+  let badge = document.getElementById('res-check-badge');
+  if (!badge) {
+    const hdr = document.querySelector('[onclick*="sg-reservation"]')?.closest('.rest-section-header')?.querySelector('div');
+    if (hdr) {
+      badge = document.createElement('span');
+      badge.id = 'res-check-badge';
+      badge.className = 'res-badge';
+      hdr.appendChild(badge);
+    }
+  }
+  if (badge) badge.textContent = checked + '/' + rows.length + ' 완료';
 }
 
 // ===== 맛집 섹션 초기화 (DOMContentLoaded 내 호출) =====
