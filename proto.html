@@ -199,6 +199,22 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.92
 .edit-reset-btn{background:rgba(239,83,80,.1);color:#ef9a9a;border:1px solid rgba(239,83,80,.25);border-radius:10px;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
 .edit-reset-btn:hover{background:rgba(239,83,80,.2)}
 
+/* 삭제 버튼 */
+.delete-btn{background:rgba(229,57,53,.12);color:#ef9a9a;border:1px solid rgba(229,57,53,.25);border-radius:10px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:3px;transition:.2s;font-family:inherit}
+.delete-btn:hover{background:rgba(229,57,53,.28);color:#ef5350}
+/* 일정 추가 버튼 */
+.add-tl-btn{display:block;width:100%;border:none;border-top:1.5px dashed rgba(255,255,255,.12);background:rgba(255,255,255,.02);color:var(--sub);padding:14px;cursor:pointer;font-size:13px;font-family:inherit;transition:.2s;text-align:center;border-radius:0 0 14px 14px}
+.add-tl-btn:hover{border-top-color:var(--accent);color:#9fa8da;background:rgba(92,107,192,.07)}
+/* 읽기전용 모드 */
+body.readonly .edit-btn,body.readonly .delete-btn,body.readonly .add-tl-btn{display:none!important}
+.readonly-banner{position:fixed;bottom:16px;right:16px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:9px 16px;font-size:12px;color:var(--sub);z-index:300;display:flex;align-items:center;gap:6px;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+/* 공유 버튼 */
+.btn-share{background:rgba(121,134,203,.18);color:#c5cae9;border:1px solid rgba(121,134,203,.35);border-radius:28px;padding:14px 28px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;transition:.2s}
+.btn-share:hover{background:rgba(121,134,203,.32);color:#fff}
+/* 토스트 알림 */
+.toast{position:fixed;bottom:64px;left:50%;transform:translateX(-50%);background:#323648;border:1px solid #454d6e;border-radius:10px;padding:10px 22px;font-size:13px;color:#c5cae9;z-index:1000;pointer-events:none;opacity:0;transition:opacity .3s;white-space:nowrap}
+.toast.show{opacity:1}
+
 .day-total{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 18px;margin-top:12px;font-size:13px;color:#a5d6a7;display:flex;align-items:center;gap:8px}
 .day-total strong{color:#c5cae9}
 
@@ -371,6 +387,7 @@ html{scroll-behavior:smooth;scroll-padding-top:60px}
     <div class="hero-btns">
       <button class="btn-primary" onclick="document.getElementById('schedule').scrollIntoView({behavior:'smooth'})">📅 일정 보기</button>
       <button class="btn-secondary" onclick="document.getElementById('map').scrollIntoView({behavior:'smooth'})">🗺️ 지도 보기</button>
+      <button class="btn-share" onclick="shareReadonly()">🔗 공유하기</button>
     </div>
   </div>
 </div>
@@ -1976,13 +1993,16 @@ function parseCSV(text) {
 }
 
 function renderGsTimeline(el, rows, dayN) {
+  const deleted = JSON.parse(localStorage.getItem(EDIT_KEY) || '{}');
   const dataRows = rows.filter(r => /^\d{1,2}:\d{2}/.test((r[0]||'').trim()));
   if (!dataRows.length) {
     el.innerHTML = '<div style="padding:32px;text-align:center;color:var(--sub)">📭 시트에 일정 데이터가 없습니다</div>';
+    el.innerHTML += `<button class="add-tl-btn" onclick="openAddModal(${dayN})">＋ 일정 추가</button>`;
     return;
   }
   el.innerHTML = dataRows.map((row, i) => {
     const eid = `gs-${dayN}-${i}`;
+    if (deleted[eid] && deleted[eid]._deleted) return '';
     const rawTime = (row[0]||'').trim();
     const time = rawTime.includes('~') ? rawTime.split('~')[0].trim() : rawTime;
     const place = (row[2]||'').trim();
@@ -2000,10 +2020,15 @@ function renderGsTimeline(el, rows, dayN) {
         ${place ? `<div class="tl-place">${place}</div>` : ''}
         <div class="tl-desc">${content}${costBadge}${notes}</div>
       </div>
-      <div class="tl-actions"><button class="edit-btn" onclick="openEditModal('${eid}')">✏️ 수정</button></div>
+      <div class="tl-actions">
+        <button class="edit-btn" onclick="openEditModal('${eid}')">✏️ 수정</button>
+        <button class="delete-btn" onclick="deleteItem('${eid}')">🗑️</button>
+      </div>
     </div>`;
   }).join('');
+  el.innerHTML += `<button class="add-tl-btn" onclick="openAddModal(${dayN})">＋ 일정 추가</button>`;
   loadEdits();
+  renderAdds(dayN, el);
 }
 
 async function loadGsDay(n) {
@@ -2633,30 +2658,62 @@ function updateDayTabsArrows() {
   document.getElementById('dtScrollR').disabled = bar.scrollLeft >= bar.scrollWidth - bar.clientWidth - 2;
 }
 
-// ── 일정 편집 ──
+// ── 일정 편집 / 추가 / 삭제 ──
 const EDIT_KEY = 'pt-tl-edits';
+const ADD_KEY  = 'pt-tl-adds';
 let editTarget = null;
+let _editMode  = 'edit'; // 'edit' | 'add'
+let _addDayN   = 0;
 
 function loadEdits() {
   const saved = JSON.parse(localStorage.getItem(EDIT_KEY) || '{}');
   document.querySelectorAll('.tl-item[data-eid]').forEach(item => {
     const eid = item.dataset.eid;
-    if (saved[eid]) applyEdit(item, saved[eid]);
+    if (!saved[eid]) return;
+    if (saved[eid]._deleted) { item.style.display = 'none'; return; }
+    applyEdit(item, saved[eid]);
   });
 }
 
 function applyEdit(item, data) {
   if (data.time) { const t = item.querySelector('.tl-time .t'); if (t) t.textContent = data.time; }
-  if (data.place !== undefined) { const p = item.querySelector('.tl-place'); if (p) p.childNodes[0].textContent = data.place; }
+  if (data.place !== undefined) { const p = item.querySelector('.tl-place'); if (p) p.childNodes[0] && (p.childNodes[0].textContent = data.place); }
   if (data.desc !== undefined) { const d = item.querySelector('.tl-desc'); if (d) { const first = d.firstChild; if (first && first.nodeType === 3) first.textContent = data.desc; else if (first) d.insertBefore(document.createTextNode(data.desc), first); } }
   if (data.cost !== undefined) { const c = item.querySelector('.cost-badge'); if (c) c.textContent = data.cost; }
   item.classList.add('edited');
 }
 
+function renderAdds(dayN, container) {
+  container.querySelectorAll('.tl-item[data-added]').forEach(el => el.remove());
+  const adds = (JSON.parse(localStorage.getItem(ADD_KEY) || '{}')[dayN] || []);
+  const addBtn = container.querySelector('.add-tl-btn');
+  adds.forEach(a => {
+    const div = document.createElement('div');
+    div.className = 'tl-item';
+    div.dataset.eid = a.id;
+    div.dataset.added = '1';
+    div.innerHTML = `<div class="tl-time"><div class="t">${a.time||'--'}</div></div>
+      <div class="tl-body">
+        <div class="tl-place">${a.place||'새 일정'}</div>
+        <div class="tl-desc">${a.desc||''}${a.cost?`<span class="cost-badge">${a.cost}</span>`:''}</div>
+      </div>
+      <div class="tl-actions">
+        <button class="edit-btn" onclick="openEditModal('${a.id}')">✏️ 수정</button>
+        <button class="delete-btn" onclick="deleteAddItem('${a.id}',${dayN})">🗑️</button>
+      </div>`;
+    if (addBtn) container.insertBefore(div, addBtn);
+    else container.appendChild(div);
+  });
+}
+
 function openEditModal(eid) {
   const item = document.querySelector(`.tl-item[data-eid="${eid}"]`);
   if (!item) return;
+  _editMode = 'edit';
   editTarget = eid;
+  document.getElementById('emTitle').textContent = '✏️ 일정 수정';
+  document.getElementById('emDeleteBtn').style.display = 'flex';
+  document.getElementById('emResetBtn').style.display = 'flex';
   const saved = JSON.parse(localStorage.getItem(EDIT_KEY) || '{}')[eid] || {};
   document.getElementById('emTime').value  = saved.time  ?? item.querySelector('.tl-time .t')?.textContent ?? '';
   const placeEl = item.querySelector('.tl-place');
@@ -2668,8 +2725,23 @@ function openEditModal(eid) {
   document.getElementById('editModalBg').classList.add('open');
 }
 
+function openAddModal(dayN) {
+  _editMode = 'add';
+  _addDayN  = dayN;
+  editTarget = null;
+  document.getElementById('emTitle').textContent = '➕ 일정 추가';
+  document.getElementById('emDeleteBtn').style.display = 'none';
+  document.getElementById('emResetBtn').style.display = 'none';
+  document.getElementById('emTime').value = '';
+  document.getElementById('emPlace').value = '';
+  document.getElementById('emDesc').value = '';
+  document.getElementById('emCost').value = '';
+  document.getElementById('editModalBg').classList.add('open');
+}
+
 function saveEdit() {
-  const eid = editTarget;
+  if (_editMode === 'add') { saveAdd(); return; }
+  const eid  = editTarget;
   const item = document.querySelector(`.tl-item[data-eid="${eid}"]`);
   const data = {
     time:  document.getElementById('emTime').value.trim(),
@@ -2680,8 +2752,69 @@ function saveEdit() {
   const all = JSON.parse(localStorage.getItem(EDIT_KEY) || '{}');
   all[eid] = data;
   localStorage.setItem(EDIT_KEY, JSON.stringify(all));
-  applyEdit(item, data);
+  if (item) applyEdit(item, data);
   closeEditModal();
+}
+
+function saveAdd() {
+  const dayN = _addDayN;
+  const id = `add-${dayN}-${Date.now()}`;
+  const item = {
+    id,
+    time:  document.getElementById('emTime').value.trim(),
+    place: document.getElementById('emPlace').value.trim(),
+    desc:  document.getElementById('emDesc').value.trim(),
+    cost:  document.getElementById('emCost').value.trim(),
+  };
+  const all = JSON.parse(localStorage.getItem(ADD_KEY) || '{}');
+  if (!all[dayN]) all[dayN] = [];
+  all[dayN].push(item);
+  localStorage.setItem(ADD_KEY, JSON.stringify(all));
+  closeEditModal();
+  const panel = document.getElementById('dp-' + dayN);
+  if (panel) { const tl = panel.querySelector('.timeline'); if (tl) renderAdds(dayN, tl); }
+}
+
+function deleteItem(eid) {
+  showConfirm('이 일정을 삭제할까요?<br><small style="color:var(--sub)">✏️ 수정 > 초기화로 복원 가능</small>', () => {
+    const all = JSON.parse(localStorage.getItem(EDIT_KEY) || '{}');
+    all[eid] = { _deleted: true };
+    localStorage.setItem(EDIT_KEY, JSON.stringify(all));
+    const item = document.querySelector(`.tl-item[data-eid="${eid}"]`);
+    if (item) item.style.display = 'none';
+    closeEditModal();
+  });
+}
+
+function deleteAddItem(id, dayN) {
+  showConfirm('추가한 일정을 삭제할까요?', () => {
+    const all = JSON.parse(localStorage.getItem(ADD_KEY) || '{}');
+    if (all[dayN]) { all[dayN] = all[dayN].filter(a => a.id !== id); localStorage.setItem(ADD_KEY, JSON.stringify(all)); }
+    const el = document.querySelector(`.tl-item[data-eid="${id}"]`);
+    if (el) el.remove();
+  });
+}
+
+function showConfirm(msg, onOk) {
+  let bg = document.getElementById('_confirmBg');
+  if (!bg) {
+    bg = document.createElement('div');
+    bg.id = '_confirmBg';
+    bg.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:1100;align-items:center;justify-content:center;padding:20px';
+    bg.innerHTML = `<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;max-width:320px;width:100%;text-align:center">
+      <p id="_confirmMsg" style="font-size:14px;line-height:1.6;color:var(--text);margin-bottom:20px"></p>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button id="_confirmCancel" style="background:rgba(255,255,255,.07);color:var(--sub);border:1px solid var(--border);border-radius:10px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">취소</button>
+        <button id="_confirmOk" style="background:#e53935;color:#fff;border:none;border-radius:10px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">삭제</button>
+      </div>
+    </div>`;
+    document.body.appendChild(bg);
+    document.getElementById('_confirmCancel').onclick = () => { bg.style.display = 'none'; };
+  }
+  document.getElementById('_confirmMsg').innerHTML = msg;
+  bg.style.display = 'flex';
+  const okBtn = document.getElementById('_confirmOk');
+  okBtn.onclick = () => { bg.style.display = 'none'; onOk(); };
 }
 
 function resetEdit() {
@@ -2696,28 +2829,70 @@ function resetEdit() {
 function closeEditModal() {
   document.getElementById('editModalBg').classList.remove('open');
   editTarget = null;
+  _editMode = 'edit';
+}
+
+function shareReadonly() {
+  const url = location.origin + location.pathname + '?readonly=1';
+  navigator.clipboard.writeText(url)
+    .then(() => showToast('🔗 읽기전용 링크가 복사되었습니다!'))
+    .catch(() => { prompt('아래 링크를 복사하세요:', url); });
+}
+
+function showToast(msg) {
+  let t = document.getElementById('_toast');
+  if (!t) { t = document.createElement('div'); t.id = '_toast'; t.className = 'toast'; document.body.appendChild(t); }
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
 }
 
 // ── 초기화 ──
 document.addEventListener('DOMContentLoaded', () => {
+  // 읽기전용 모드 확인
+  if (new URLSearchParams(location.search).get('readonly')) {
+    document.body.classList.add('readonly');
+    const banner = document.createElement('div');
+    banner.className = 'readonly-banner';
+    banner.innerHTML = '👀 보기 전용 모드';
+    document.body.appendChild(banner);
+  }
+
   // 날짜 탭 화살표 초기 상태
   updateDayTabsArrows();
 
-  // 모든 tl-item에 고유 ID + 편집 버튼 부여
+  // D-0(정적) tl-item에 고유 ID + 편집/삭제 버튼 부여
   document.querySelectorAll('.tl-item').forEach((item, i) => {
     const eid = 'e' + i;
     item.dataset.eid = eid;
     const actions = item.querySelector('.tl-actions');
     if (actions) {
-      const btn = document.createElement('button');
-      btn.className = 'edit-btn';
-      btn.innerHTML = '✏️ 수정';
-      btn.onclick = () => openEditModal(eid);
-      actions.appendChild(btn);
+      const editBtn = document.createElement('button');
+      editBtn.className = 'edit-btn';
+      editBtn.innerHTML = '✏️ 수정';
+      editBtn.onclick = () => openEditModal(eid);
+      actions.appendChild(editBtn);
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'delete-btn';
+      delBtn.innerHTML = '🗑️';
+      delBtn.onclick = () => deleteItem(eid);
+      actions.appendChild(delBtn);
     }
   });
 
-  // 저장된 편집 내용 반영
+  // D-0 타임라인 하단에 "+" 버튼 추가
+  const dp0tl = document.querySelector('#dp-0 .timeline');
+  if (dp0tl) {
+    const addBtn = document.createElement('button');
+    addBtn.className = 'add-tl-btn';
+    addBtn.textContent = '＋ 일정 추가';
+    addBtn.onclick = () => openAddModal(0);
+    dp0tl.appendChild(addBtn);
+    renderAdds(0, dp0tl);
+  }
+
+  // 저장된 편집/삭제 내용 반영
   loadEdits();
 });
 </script>
@@ -2725,13 +2900,14 @@ document.addEventListener('DOMContentLoaded', () => {
 <!-- 편집 모달 -->
 <div class="edit-modal-bg" id="editModalBg" onclick="if(event.target===this)closeEditModal()">
   <div class="edit-modal">
-    <h3>✏️ 일정 수정</h3>
+    <h3 id="emTitle">✏️ 일정 수정</h3>
     <div class="edit-field"><label>시간</label><input id="emTime" placeholder="예: 09:00" /></div>
     <div class="edit-field"><label>장소 / 제목</label><input id="emPlace" placeholder="장소 이름" /></div>
     <div class="edit-field"><label>설명</label><textarea id="emDesc" placeholder="상세 내용"></textarea></div>
     <div class="edit-field"><label>비용</label><input id="emCost" placeholder="예: €15/인" /></div>
     <div class="edit-modal-btns">
-      <button class="edit-reset-btn" onclick="resetEdit()">초기화</button>
+      <button id="emDeleteBtn" class="delete-btn" style="display:none;padding:10px 14px;font-size:12px" onclick="deleteItem(editTarget)">🗑️ 삭제</button>
+      <button class="edit-reset-btn" onclick="resetEdit()" style="display:none" id="emResetBtn">초기화</button>
       <button class="edit-cancel-btn" onclick="closeEditModal()">취소</button>
       <button class="edit-save-btn" onclick="saveEdit()">저장</button>
     </div>
