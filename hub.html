@@ -24,8 +24,18 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.95
 .hero-title span{color:#9fa8da}
 .hero-sub{color:var(--sub);font-size:15px}
 
-.section{padding:0 24px 80px;max-width:1100px;margin:0 auto}
-.sec-label{font-size:11px;font-weight:800;letter-spacing:3px;color:#7986cb;text-transform:uppercase;margin-bottom:16px}
+.section{padding:0 24px 40px;max-width:1100px;margin:0 auto}
+
+/* ── 허브 섹션 (접기 가능) ── */
+.hub-section{margin-bottom:32px}
+.hub-section-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;cursor:pointer;user-select:none;padding:10px 14px;border-radius:12px;transition:.15s}
+.hub-section-header:hover{background:rgba(255,255,255,.04)}
+.hub-sec-label{font-size:11px;font-weight:800;letter-spacing:3px;color:#7986cb;text-transform:uppercase;flex:1}
+.hub-sec-count{font-size:12px;color:var(--sub);font-weight:600}
+.hub-sec-toggle{background:transparent;border:none;color:var(--sub);font-size:14px;cursor:pointer;padding:2px 6px;transition:.2s;line-height:1}
+.hub-sec-toggle:hover{color:#c5cae9}
+.hub-sec-body{overflow:hidden;transition:max-height .4s cubic-bezier(.4,0,.2,1);max-height:3000px}
+.hub-sec-body.collapsed{max-height:0!important}
 
 .project-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
 
@@ -58,6 +68,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.95
 .new-card{border:2px dashed var(--border);background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:200px;color:var(--sub);font-size:14px;font-weight:600;cursor:pointer;border-radius:18px;transition:.2s}
 .new-card:hover{border-color:var(--accent);color:var(--accent2)}
 .new-card .plus{font-size:36px;opacity:.6}
+
+/* 빈 섹션 */
+.hub-empty{color:var(--sub);font-size:13px;padding:16px 14px;font-style:italic}
 
 /* 모달 */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
@@ -97,38 +110,69 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.95
 </div>
 
 <div class="section">
-  <div class="sec-label">📌 진행 중인 여행</div>
-  <div class="project-grid">
 
-    <!-- 포르투갈 고정 카드 -->
-    <a class="pt-card" href="proto.html">
-      <div class="pt-badge">진행중 D-32</div>
-      <div class="pt-card-cover">🇵🇹</div>
-      <div class="pt-card-body">
-        <div class="pt-card-name">포르투갈 7박 8일</div>
-        <div class="pt-card-dest">🌍 리스본 · 신트라 · 포르투 · 가이아</div>
-        <div class="pt-card-meta">
-          <span class="pt-meta-tag">2026.07.31 ~ 08.07</span>
-          <span class="pt-meta-tag">지도 103곳</span>
-          <span class="pt-meta-tag">경비 관리</span>
+  <!-- ① 진행 중인 여행 -->
+  <div class="hub-section" id="hs-active">
+    <div class="hub-section-header" onclick="toggleHubSection('hs-active-body', this)">
+      <div class="hub-sec-label">📌 진행 중인 여행</div>
+      <span class="hub-sec-count" id="cnt-active"></span>
+      <button class="hub-sec-toggle">▼</button>
+    </div>
+    <div class="hub-sec-body" id="hs-active-body">
+      <div class="project-grid" id="grid-active">
+        <!-- 포르투갈 고정 카드 -->
+        <a class="pt-card" href="proto.html">
+          <div class="pt-badge">진행중 D-32</div>
+          <div class="pt-card-cover">🇵🇹</div>
+          <div class="pt-card-body">
+            <div class="pt-card-name">포르투갈 7박 8일</div>
+            <div class="pt-card-dest">🌍 리스본 · 신트라 · 포르투 · 가이아</div>
+            <div class="pt-card-meta">
+              <span class="pt-meta-tag">2026.07.31 ~ 08.07</span>
+              <span class="pt-meta-tag">지도 103곳</span>
+              <span class="pt-meta-tag">경비 관리</span>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ② 계획 중인 여행 -->
+  <div class="hub-section" id="hs-planning">
+    <div class="hub-section-header" onclick="toggleHubSection('hs-planning-body', this)">
+      <div class="hub-sec-label">📋 계획 중인 여행</div>
+      <span class="hub-sec-count" id="cnt-planning"></span>
+      <button class="hub-sec-toggle">▼</button>
+    </div>
+    <div class="hub-sec-body" id="hs-planning-body">
+      <div class="project-grid" id="grid-planning">
+        <div class="new-card" onclick="openModal()">
+          <div class="plus">＋</div>
+          <span>새 여행 추가</span>
         </div>
       </div>
-    </a>
-
-    <!-- 동적 카드들 -->
-    <div id="projectGrid"></div>
-
-    <!-- 새 여행 추가 -->
-    <div class="new-card" onclick="openModal()">
-      <div class="plus">＋</div>
-      <span>새 여행 추가</span>
     </div>
-
   </div>
+
+  <!-- ③ 완료된 여행 -->
+  <div class="hub-section" id="hs-done">
+    <div class="hub-section-header" onclick="toggleHubSection('hs-done-body', this)">
+      <div class="hub-sec-label">✅ 완료된 여행</div>
+      <span class="hub-sec-count" id="cnt-done"></span>
+      <button class="hub-sec-toggle">▼</button>
+    </div>
+    <div class="hub-sec-body" id="hs-done-body">
+      <div class="project-grid" id="grid-done">
+        <div class="hub-empty">완료된 여행이 없습니다</div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- 새 여행 모달 -->
-<div class="modal-bg" id="projectModal">
+<div class="modal-bg" id="projectModal" onclick="if(event.target===this)closeModal()">
   <div class="modal">
     <div class="modal-title">새 여행 만들기</div>
     <label class="modal-label">여행 이름 *</label>
@@ -164,7 +208,33 @@ const COLORS = ['#1a237e','#1b5e20','#4a148c','#b71c1c','#e65100','#006064','#37
 let selectedEmoji = '✈️', selectedColor = '#1a237e';
 let projects = [];
 
-// D-day 계산
+// ── 접기/펼치기 ──
+function toggleHubSection(bodyId, headerEl) {
+  const body = document.getElementById(bodyId);
+  if (!body) return;
+  const btn = headerEl.querySelector('.hub-sec-toggle');
+  const collapsed = body.classList.toggle('collapsed');
+  if (btn) btn.textContent = collapsed ? '▶' : '▼';
+  // 상태 저장
+  const sectionId = bodyId.replace('-body', '');
+  const states = JSON.parse(localStorage.getItem('pt-hub-collapse') || '{}');
+  states[sectionId] = collapsed;
+  localStorage.setItem('pt-hub-collapse', JSON.stringify(states));
+}
+
+function restoreCollapseStates() {
+  const states = JSON.parse(localStorage.getItem('pt-hub-collapse') || '{}');
+  Object.entries(states).forEach(([id, collapsed]) => {
+    const body = document.getElementById(id + '-body');
+    const header = document.querySelector(`[onclick*="${id}-body"]`);
+    if (!body || !collapsed) return;
+    body.classList.add('collapsed');
+    const btn = header?.querySelector('.hub-sec-toggle');
+    if (btn) btn.textContent = '▶';
+  });
+}
+
+// ── D-day 계산 ──
 function dday(start) {
   if (!start) return '';
   const diff = Math.ceil((new Date(start) - new Date()) / 86400000);
@@ -173,35 +243,91 @@ function dday(start) {
   return `D+${Math.abs(diff)}`;
 }
 
+// ── 프로젝트 상태 판별 ──
+function getStatus(p) {
+  const now = new Date(); now.setHours(0,0,0,0);
+  const start = p.start_date ? new Date(p.start_date) : null;
+  const end   = p.end_date   ? new Date(p.end_date)   : null;
+  if (!start) return 'planning';
+  if (end && end < now) return 'done';
+  if (start > now) return 'planning';
+  return 'active';
+}
+
+// ── 카드 HTML ──
+function cardHTML(p) {
+  const dates = p.start_date ? `${p.start_date}${p.end_date ? ' ~ ' + p.end_date : ''}` : '';
+  const dd = dday(p.start_date);
+  return `<a class="project-card" href="planner.html?project=${p.id}">
+    <div class="project-card-cover" style="background:${p.cover_color||'#1a237e'}">${p.cover_emoji||'✈️'}</div>
+    <div class="project-card-actions" onclick="event.preventDefault()">
+      <span class="card-act-btn" title="삭제" onclick="deleteProject('${p.id}',event)">🗑️</span>
+    </div>
+    <div class="project-card-body">
+      <div class="project-card-name">${p.name}</div>
+      <div class="project-card-dest">${p.destination||''}</div>
+      ${dates ? `<div class="project-card-dates">${dates}${dd ? ' · ' + dd : ''}</div>` : ''}
+    </div>
+  </a>`;
+}
+
+// ── 렌더링 ──
 async function loadProjects() {
   const r = await fetch(`${SB_URL}/rest/v1/projects?order=sort_order.asc,created_at.asc`, { headers: SB_H });
   projects = r.ok ? await r.json() : [];
-  // 포르투갈 프로젝트는 허브에서 고정 카드로 표시하므로 제외
-  const others = projects.filter(p => p.name !== '포르투갈 7박 8일');
-  renderProjects(others);
+  renderProjects(projects.filter(p => p.name !== '포르투갈 7박 8일'));
 }
 
 function renderProjects(list) {
-  const grid = document.getElementById('projectGrid');
-  grid.style.display = 'contents';
-  grid.innerHTML = list.map(p => {
-    const dates = p.start_date ? `${p.start_date}${p.end_date ? ' ~ ' + p.end_date : ''}` : '';
-    const dd = dday(p.start_date);
-    return `<a class="project-card" href="planner.html?project=${p.id}">
-      <div class="project-card-cover" style="background:${p.cover_color||'#1a237e'}">${p.cover_emoji||'✈️'}</div>
-      <div class="project-card-actions" onclick="event.preventDefault()">
-        <span class="card-act-btn" title="삭제" onclick="deleteProject('${p.id}',event)">🗑️</span>
-      </div>
-      <div class="project-card-body">
-        <div class="project-card-name">${p.name}</div>
-        <div class="project-card-dest">${p.destination||''}</div>
-        ${dates ? `<div class="project-card-dates">${dates}${dd ? ' · ' + dd : ''}</div>` : ''}
-      </div>
-    </a>`;
-  }).join('');
+  const active   = list.filter(p => getStatus(p) === 'active');
+  const planning = list.filter(p => getStatus(p) === 'planning');
+  const done     = list.filter(p => getStatus(p) === 'done');
+
+  // 진행 중 (포르투갈 고정 카드 + 동적)
+  const activeGrid = document.getElementById('grid-active');
+  if (active.length > 0) {
+    active.forEach(p => {
+      const el = document.createElement('div');
+      el.style.display = 'contents';
+      el.innerHTML = cardHTML(p);
+      activeGrid.appendChild(el.firstElementChild);
+    });
+  }
+  document.getElementById('cnt-active').textContent = (1 + active.length) + '개';
+
+  // 계획 중
+  const planGrid = document.getElementById('grid-planning');
+  const newCard = planGrid.querySelector('.new-card');
+  planning.forEach(p => {
+    const el = document.createElement('div');
+    el.innerHTML = cardHTML(p);
+    planGrid.insertBefore(el.firstElementChild, newCard);
+  });
+  document.getElementById('cnt-planning').textContent = planning.length + '개';
+  // 계획 중이 없으면 안내 텍스트
+  if (planning.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'hub-empty';
+    empty.textContent = '계획 중인 여행이 없습니다';
+    planGrid.insertBefore(empty, newCard);
+  }
+
+  // 완료
+  const doneGrid = document.getElementById('grid-done');
+  doneGrid.innerHTML = '';
+  if (done.length === 0) {
+    doneGrid.innerHTML = '<div class="hub-empty">완료된 여행이 없습니다</div>';
+  } else {
+    done.forEach(p => {
+      const el = document.createElement('div');
+      el.innerHTML = cardHTML(p);
+      doneGrid.appendChild(el.firstElementChild);
+    });
+  }
+  document.getElementById('cnt-done').textContent = done.length + '개';
 }
 
-// 모달
+// ── 모달 ──
 function initEmojiGrid() {
   document.getElementById('emojiGrid').innerHTML = EMOJIS.map(e =>
     `<span class="emoji-opt${e===selectedEmoji?' on':''}" onclick="selEmoji(this,'${e}')">${e}</span>`
@@ -234,19 +360,17 @@ async function saveProject() {
     sort_order: projects.length
   };
   const r = await fetch(`${SB_URL}/rest/v1/projects`, { method:'POST', headers:SB_H, body:JSON.stringify(data) });
-  if (r.ok) {
-    closeModal();
-    await loadProjects();
-  }
+  if (r.ok) { closeModal(); location.reload(); }
 }
 
 async function deleteProject(id, e) {
   e.stopPropagation();
   if (!confirm('이 여행을 삭제하시겠습니까?')) return;
   await fetch(`${SB_URL}/rest/v1/projects?id=eq.${id}`, { method:'DELETE', headers:SB_H });
-  await loadProjects();
+  location.reload();
 }
 
+restoreCollapseStates();
 loadProjects();
 </script>
 </body>

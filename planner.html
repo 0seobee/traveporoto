@@ -137,7 +137,21 @@ textarea.f-inp{resize:vertical;min-height:60px}
 .cl-group-label .cl-group-arrow{margin-left:auto;font-size:11px;color:#7b80a0;transition:transform .2s}
 .cl-group.collapsed .cl-group-arrow{transform:rotate(-90deg)}
 .cl-group-body{padding:6px 8px 8px}
-.cl-group.collapsed .cl-group-body{display:none}
+.cl-group-body{overflow:hidden;transition:max-height .32s cubic-bezier(.4,0,.2,1);max-height:3000px}
+.cl-group.collapsed .cl-group-body{max-height:0!important}
+
+/* ── PANE SECTION COLLAPSE ── */
+.ps{border:1px solid var(--border);border-radius:12px;margin-bottom:12px;overflow:hidden}
+.ps-header{display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;user-select:none;background:rgba(255,255,255,.03);transition:.15s}
+.ps-header:hover{background:rgba(255,255,255,.06)}
+.ps-title{font-size:13px;font-weight:800;color:var(--accent2);flex:1}
+.ps-count{font-size:11px;color:var(--sub)}
+.ps-arrow{font-size:12px;color:var(--sub);transition:transform .25s}
+.ps.collapsed .ps-arrow{transform:rotate(-90deg)}
+.ps-body{overflow:hidden;transition:max-height .35s cubic-bezier(.4,0,.2,1);max-height:4000px}
+.ps.collapsed .ps-body{max-height:0!important}
+.pane-collapse-btn{background:transparent;border:1px solid var(--border);border-radius:20px;color:var(--sub);font-size:12px;font-weight:700;padding:4px 12px;cursor:pointer;font-family:inherit;transition:.2s;white-space:nowrap}
+.pane-collapse-btn:hover{border-color:var(--accent);color:var(--accent2)}
 
 /* ── LIST (TABLE) ── */
 .list-table{width:100%;border-collapse:collapse;margin-top:8px}
@@ -928,12 +942,14 @@ async function renderSchedule(container, tab, items) {
   if (schedDates.length === 0 && items.length > 0) schedDates = ['날짜 없음'];
   currentSchedDate = schedDates[0] || null;
 
-  container.innerHTML = `<div class="pane-wrap">
+  const sfId = `ps-sf-${tab.id}`;
+  container.innerHTML = `<div class="pane-wrap" id="pw-sched-${tab.id}">
     <div class="pane-header">
       <div class="pane-title">📅 ${tab.title}</div>
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="add-btn" style="font-size:12px;background:rgba(92,107,192,.2);border:1px solid var(--accent)" onclick="document.getElementById('schedXlsInput').click()">📊 Excel 가져오기</button>
         <button class="add-btn" style="font-size:12px;background:rgba(92,107,192,.2);border:1px solid var(--accent)" onclick="document.getElementById('schedSheetBox').classList.toggle('open')">🔗 구글시트 연결</button>
+        <button class="pane-collapse-btn" onclick="toggleAllPS('pw-sched-${tab.id}',this)">접기 ▲</button>
       </div>
     </div>
     <input type="file" id="schedXlsInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="importSchedExcel(this,'${tab.id}')">
@@ -945,52 +961,68 @@ async function renderSchedule(container, tab, items) {
       </div>
     </div>
     <div class="sched-dates" id="schedDates"></div>
-    <div class="sched-cost-bar" id="schedCostBar"></div>
-    <div id="schedItems"></div>
-    <div class="form-box" style="margin-top:20px">
-      <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--accent2)">＋ 일정 추가</div>
-      <div class="form-row">
-        <div class="f-inp" style="max-width:120px;display:flex;align-items:center;gap:3px;padding:6px 10px">
-          <input id="sTimeH" maxlength="2" placeholder="HH" inputmode="numeric"
-            style="background:none;border:none;color:var(--text);font-size:13px;width:28px;outline:none;text-align:center;font-family:inherit"
-            oninput="this.value=this.value.replace(/\D/g,'');if(this.value.length===2)document.getElementById('sTimeM').focus()"
-            onblur="if(this.value.length===1)this.value='0'+this.value">
-          <span style="color:var(--accent2);font-weight:700">:</span>
-          <input id="sTimeM" maxlength="2" placeholder="MM" inputmode="numeric"
-            style="background:none;border:none;color:var(--text);font-size:13px;width:28px;outline:none;text-align:center;font-family:inherit"
-            oninput="this.value=this.value.replace(/\D/g,'')"
-            onblur="if(this.value.length===1)this.value='0'+this.value">
-        </div>
-        <div style="position:relative;flex:1">
-          <input class="f-inp" id="sPlace" placeholder="🔍 장소 검색" style="width:100%" autocomplete="off"
-            oninput="searchPlace(this.value)" onblur="setTimeout(()=>document.getElementById('placeDropdown').innerHTML='',200)">
-          <div id="placeDropdown" style="position:absolute;top:100%;left:0;right:0;z-index:500;background:#1e2240;border:1px solid #3a3f6b;border-radius:10px;overflow:hidden;margin-top:4px;box-shadow:0 8px 24px rgba(0,0,0,.5)"></div>
-        </div>
+    <div class="ps" id="ps-si-${tab.id}">
+      <div class="ps-header" onclick="togglePS('ps-si-${tab.id}')">
+        <span class="ps-title">📋 일정 목록</span>
+        <span class="ps-arrow">▼</span>
       </div>
-      <div class="form-row">
-        <input class="f-inp" id="sContent" placeholder="내용">
+      <div class="ps-body">
+        <div class="sched-cost-bar" id="schedCostBar"></div>
+        <div id="schedItems"></div>
       </div>
-      <div class="form-row" style="align-items:center">
-        <select class="f-sel" id="sCurrency" style="width:70px;flex:none">
-          <option value="KRW">₩</option>
-          <option value="EUR">€</option>
-          <option value="USD">$</option>
-          <option value="JPY">¥</option>
-        </select>
-        <input class="f-inp" id="sCost" placeholder="예상비용" style="flex:1" type="number" min="0">
-        <div style="display:flex;gap:4px;flex:none">
-          <button id="sPayCash" class="pay-toggle on" onclick="setPayMethod('cash')">💵 현금</button>
-          <button id="sPayCard" class="pay-toggle" onclick="setPayMethod('card')">💳 카드</button>
+    </div>
+    <div class="ps" id="${sfId}">
+      <div class="ps-header" onclick="togglePS('${sfId}')">
+        <span class="ps-title">＋ 일정 추가</span>
+        <span class="ps-arrow">▼</span>
+      </div>
+      <div class="ps-body">
+        <div class="form-box" style="border:none;border-radius:0;margin:0">
+          <div class="form-row">
+            <div class="f-inp" style="max-width:120px;display:flex;align-items:center;gap:3px;padding:6px 10px">
+              <input id="sTimeH" maxlength="2" placeholder="HH" inputmode="numeric"
+                style="background:none;border:none;color:var(--text);font-size:13px;width:28px;outline:none;text-align:center;font-family:inherit"
+                oninput="this.value=this.value.replace(/\D/g,'');if(this.value.length===2)document.getElementById('sTimeM').focus()"
+                onblur="if(this.value.length===1)this.value='0'+this.value">
+              <span style="color:var(--accent2);font-weight:700">:</span>
+              <input id="sTimeM" maxlength="2" placeholder="MM" inputmode="numeric"
+                style="background:none;border:none;color:var(--text);font-size:13px;width:28px;outline:none;text-align:center;font-family:inherit"
+                oninput="this.value=this.value.replace(/\D/g,'')"
+                onblur="if(this.value.length===1)this.value='0'+this.value">
+            </div>
+            <div style="position:relative;flex:1">
+              <input class="f-inp" id="sPlace" placeholder="🔍 장소 검색" style="width:100%" autocomplete="off"
+                oninput="searchPlace(this.value)" onblur="setTimeout(()=>document.getElementById('placeDropdown').innerHTML='',200)">
+              <div id="placeDropdown" style="position:absolute;top:100%;left:0;right:0;z-index:500;background:#1e2240;border:1px solid #3a3f6b;border-radius:10px;overflow:hidden;margin-top:4px;box-shadow:0 8px 24px rgba(0,0,0,.5)"></div>
+            </div>
+          </div>
+          <div class="form-row">
+            <input class="f-inp" id="sContent" placeholder="내용">
+          </div>
+          <div class="form-row" style="align-items:center">
+            <select class="f-sel" id="sCurrency" style="width:70px;flex:none">
+              <option value="KRW">₩</option>
+              <option value="EUR">€</option>
+              <option value="USD">$</option>
+              <option value="JPY">¥</option>
+            </select>
+            <input class="f-inp" id="sCost" placeholder="예상비용" style="flex:1" type="number" min="0">
+            <div style="display:flex;gap:4px;flex:none">
+              <button id="sPayCash" class="pay-toggle on" onclick="setPayMethod('cash')">💵 현금</button>
+              <button id="sPayCard" class="pay-toggle" onclick="setPayMethod('card')">💳 카드</button>
+            </div>
+          </div>
+          <div class="form-row">
+            <input class="f-inp" id="sNote" placeholder="메모/노트">
+            <button class="f-btn" onclick="addSchedItem('${tab.id}')">추가</button>
+          </div>
         </div>
-      </div>
-      <div class="form-row">
-        <input class="f-inp" id="sNote" placeholder="메모/노트">
-        <button class="f-btn" onclick="addSchedItem('${tab.id}')">추가</button>
       </div>
     </div>
   </div>`;
   renderSchedDates(items);
   renderSchedItems(items, currentSchedDate);
+  initPS([`ps-si-${tab.id}`, `ps-sf-${tab.id}`]);
 }
 
 function renderSchedDates(items) {
@@ -1365,21 +1397,32 @@ function renderChecklist(container, tab, items) {
 
   const catOptions = allCats.map(c=>`<option value="${c}">${c}</option>`).join('');
 
-  container.innerHTML = `<div class="pane-wrap">
+  container.innerHTML = `<div class="pane-wrap" id="pw-cl-${tab.id}">
     <div class="pane-header">
       <div class="pane-title">✅ ${tab.title}</div>
-      <span class="badge">${done}/${items.length} · ${pct}%</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="badge">${done}/${items.length} · ${pct}%</span>
+        <button class="pane-collapse-btn" onclick="toggleAllPS('pw-cl-${tab.id}',this)">접기 ▲</button>
+      </div>
     </div>
-    <div class="progress-bar-wrap" style="margin-bottom:16px"><div class="progress-bar" style="width:${pct}%"></div></div>
-    <div class="form-box" style="margin-bottom:12px">
-      <div class="form-row">
-        <input class="f-inp" id="clText" placeholder="준비물 입력" style="flex:1">
-        <select class="f-inp" id="clCat" style="max-width:160px" onchange="handleCatSelect(this,'${tab.id}')">
-          <option value="">카테고리 선택</option>
-          ${catOptions}
-          <option value="__add__" style="color:#7986cb;font-weight:700">＋ 직접 추가...</option>
-        </select>
-        <button class="f-btn" onclick="addClItem('${tab.id}')">추가</button>
+    <div class="progress-bar-wrap" style="margin-bottom:12px"><div class="progress-bar" style="width:${pct}%"></div></div>
+    <div class="ps" id="ps-clf-${tab.id}">
+      <div class="ps-header" onclick="togglePS('ps-clf-${tab.id}')">
+        <span class="ps-title">＋ 항목 추가</span>
+        <span class="ps-arrow">▼</span>
+      </div>
+      <div class="ps-body">
+        <div class="form-box" style="border:none;border-radius:0;margin:0">
+          <div class="form-row">
+            <input class="f-inp" id="clText" placeholder="준비물 입력" style="flex:1">
+            <select class="f-inp" id="clCat" style="max-width:160px" onchange="handleCatSelect(this,'${tab.id}')">
+              <option value="">카테고리 선택</option>
+              ${catOptions}
+              <option value="__add__" style="color:#7986cb;font-weight:700">＋ 직접 추가...</option>
+            </select>
+            <button class="f-btn" onclick="addClItem('${tab.id}')">추가</button>
+          </div>
+        </div>
       </div>
     </div>
     ${customCats.length ? `<div style="margin-bottom:12px;display:flex;flex-wrap:wrap;gap:6px;align-items:center">
@@ -1390,6 +1433,7 @@ function renderChecklist(container, tab, items) {
       ${!items.length?`<div class="empty-state"><div class="icon">✅</div><p>준비물을 추가해 보세요</p></div>`:''}
     </div>
   </div>`;
+  initPS([`ps-clf-${tab.id}`]);
 }
 
 const CAT_EMOJIS = [
@@ -1472,9 +1516,56 @@ async function removeCat(tabId, cat) {
   renderChecklist(document.getElementById('tabContent'), tab, items);
 }
 
+// ── Pane Section Collapse ──
+function togglePS(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const body = el.querySelector('.ps-body');
+  const collapsed = el.classList.toggle('collapsed');
+  if (!collapsed && body) body.style.maxHeight = body.scrollHeight + 'px';
+  localStorage.setItem(`ps_${currentProject?.id}_${id}`, collapsed ? '1' : '0');
+}
+
+function initPS(ids) {
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const body = el.querySelector('.ps-body');
+    if (!body) return;
+    if (localStorage.getItem(`ps_${currentProject?.id}_${id}`) === '1') {
+      el.classList.add('collapsed');
+    } else {
+      body.style.maxHeight = body.scrollHeight + 'px';
+    }
+  });
+}
+
+function toggleAllPS(containerId, btn) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const sections = container.querySelectorAll('.ps');
+  const allCollapsed = [...sections].every(s => s.classList.contains('collapsed'));
+  sections.forEach(s => {
+    const body = s.querySelector('.ps-body');
+    if (allCollapsed) {
+      s.classList.remove('collapsed');
+      if (body) body.style.maxHeight = body.scrollHeight + 'px';
+      if (s.id) localStorage.setItem(`ps_${currentProject?.id}_${s.id}`, '0');
+    } else {
+      s.classList.add('collapsed');
+      if (body) body.style.maxHeight = '0';
+      if (s.id) localStorage.setItem(`ps_${currentProject?.id}_${s.id}`, '1');
+    }
+  });
+  btn.textContent = allCollapsed ? '접기 ▲' : '펼치기 ▼';
+}
+
 function toggleClGroup(encodedCat) {
   const el = document.getElementById('clg-' + encodedCat);
-  if (el) el.classList.toggle('collapsed');
+  if (!el) return;
+  const body = el.querySelector('.cl-group-body');
+  const collapsed = el.classList.toggle('collapsed');
+  if (!collapsed && body) body.style.maxHeight = body.scrollHeight + 'px';
 }
 
 async function addClItem(tabId) {
@@ -1509,27 +1600,51 @@ function renderList(container, tab, items) {
       <td>${item.data.note||''}</td>
       <td><button class="del-btn" onclick="deleteItem('${item.id}','${tab.id}')">삭제</button></td>
     </tr>`).join('');
-  container.innerHTML = `<div class="pane-wrap">
-    <div class="pane-header"><div class="pane-title">📋 ${tab.title}</div><span class="badge">${items.length}개</span></div>
-    <div class="form-box">
-      <div class="form-row">
-        <input class="f-inp" id="lName" placeholder="이름/항목 *">
-        <input class="f-inp" id="lDetail" placeholder="세부내용">
-        <input class="f-inp" id="lBudget" placeholder="예산" style="max-width:120px">
-      </div>
-      <div class="form-row">
-        <input class="f-inp" id="lNote" placeholder="비고">
-        <button class="f-btn" onclick="addListItem('${tab.id}')">추가</button>
+  container.innerHTML = `<div class="pane-wrap" id="pw-list-${tab.id}">
+    <div class="pane-header">
+      <div class="pane-title">📋 ${tab.title}</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="badge">${items.length}개</span>
+        <button class="pane-collapse-btn" onclick="toggleAllPS('pw-list-${tab.id}',this)">접기 ▲</button>
       </div>
     </div>
-    <div style="overflow-x:auto">
-    <table class="list-table">
-      <thead><tr><th>완료</th><th>이름/항목</th><th>세부내용</th><th>예산</th><th>비고</th><th></th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
+    <div class="ps" id="ps-lf-${tab.id}">
+      <div class="ps-header" onclick="togglePS('ps-lf-${tab.id}')">
+        <span class="ps-title">＋ 항목 추가</span>
+        <span class="ps-arrow">▼</span>
+      </div>
+      <div class="ps-body">
+        <div class="form-box" style="border:none;border-radius:0;margin:0">
+          <div class="form-row">
+            <input class="f-inp" id="lName" placeholder="이름/항목 *">
+            <input class="f-inp" id="lDetail" placeholder="세부내용">
+            <input class="f-inp" id="lBudget" placeholder="예산" style="max-width:120px">
+          </div>
+          <div class="form-row">
+            <input class="f-inp" id="lNote" placeholder="비고">
+            <button class="f-btn" onclick="addListItem('${tab.id}')">추가</button>
+          </div>
+        </div>
+      </div>
     </div>
-    ${!items.length?`<div class="empty-state"><div class="icon">📋</div><p>항목을 추가해 보세요</p></div>`:''}
+    <div class="ps" id="ps-lt-${tab.id}">
+      <div class="ps-header" onclick="togglePS('ps-lt-${tab.id}')">
+        <span class="ps-title">📋 목록</span>
+        <span class="ps-count">${items.length}개</span>
+        <span class="ps-arrow">▼</span>
+      </div>
+      <div class="ps-body">
+        <div style="overflow-x:auto">
+          <table class="list-table">
+            <thead><tr><th>완료</th><th>이름/항목</th><th>세부내용</th><th>예산</th><th>비고</th><th></th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+        ${!items.length?`<div class="empty-state"><div class="icon">📋</div><p>항목을 추가해 보세요</p></div>`:''}
+      </div>
+    </div>
   </div>`;
+  initPS([`ps-lf-${tab.id}`, `ps-lt-${tab.id}`]);
 }
 
 async function addListItem(tabId) {
@@ -1583,43 +1698,72 @@ function renderCards(container, tab, items) {
       <button class="del-btn" onclick="event.stopPropagation();deleteItem('${item.id}','${tab.id}')">삭제</button>
     </div>`).join('');
 
+  const makeGroupPS = (g, arr) => {
+    const psId = `ps-cg-${tab.id}-${encodeURIComponent(g)}`;
+    return `<div class="ps" id="${psId}">
+      <div class="ps-header" onclick="togglePS('${psId}')">
+        <span class="ps-title">${g}</span>
+        <span class="ps-count">${arr.length}개</span>
+        <span class="ps-arrow">▼</span>
+      </div>
+      <div class="ps-body" style="padding:0 4px">${renderGroupItems(arr)}</div>
+    </div>`;
+  };
+
   const groupHtml = [
-    ...existingGroups.map(g=>`
-      <div class="icard-group">
-        <div class="icard-group-title">${g}</div>
-        ${renderGroupItems(groups[g])}
-      </div>`),
-    noGroup.length?`<div class="icard-group"><div class="icard-group-title">기타</div>${renderGroupItems(noGroup)}</div>`:''
+    ...existingGroups.map(g => makeGroupPS(g, groups[g])),
+    noGroup.length ? makeGroupPS('기타', noGroup) : ''
   ].join('');
 
-  container.innerHTML = `<div class="pane-wrap">
-    <div class="pane-header"><div class="pane-title">🃏 ${tab.title}</div><span class="badge">${items.length}개</span></div>
-    <div class="form-box">
-      <div class="form-row">
-        <button id="cIconBtn" onclick="toggleCardEmojiPicker()" style="width:48px;height:40px;background:rgba(255,255,255,.06);border:1px solid #3a3f6b;border-radius:8px;font-size:20px;cursor:pointer;flex-shrink:0;position:relative" title="이모지 선택">📌</button>
-        <input type="hidden" id="cIcon" value="📌">
-        <input class="f-inp" id="cTitle" placeholder="제목 *" style="flex:2">
-        <input class="f-inp" id="cDetail" placeholder="설명/내용">
-      </div>
-      <div class="form-row" style="position:relative">
-        <input class="f-inp" id="cPlace" placeholder="📍 장소 검색" oninput="cardPlaceSearch(this)" autocomplete="off">
-        <div id="cPlaceSuggest" style="display:none;position:absolute;top:42px;left:0;right:0;background:#1e2240;border:1px solid #3a3f6b;border-radius:8px;z-index:50;max-height:160px;overflow-y:auto"></div>
-        <input class="f-inp" id="cLink" placeholder="링크 URL (선택)">
-      </div>
-      <div class="form-row">
-        <input class="f-inp" id="cGroup" placeholder="카드 그룹" list="cGroupList">
-        <datalist id="cGroupList">${groupOpts}</datalist>
-        <button class="f-btn" onclick="addCard('${tab.id}')">추가</button>
+  const allPsIds = [
+    `ps-cf-${tab.id}`,
+    ...existingGroups.map(g => `ps-cg-${tab.id}-${encodeURIComponent(g)}`),
+    ...(noGroup.length ? [`ps-cg-${tab.id}-${encodeURIComponent('기타')}`] : [])
+  ];
+
+  container.innerHTML = `<div class="pane-wrap" id="pw-card-${tab.id}">
+    <div class="pane-header">
+      <div class="pane-title">🃏 ${tab.title}</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="badge">${items.length}개</span>
+        <button class="pane-collapse-btn" onclick="toggleAllPS('pw-card-${tab.id}',this)">접기 ▲</button>
       </div>
     </div>
-    <div id="cardEmojiPicker" style="display:none;background:#1e2240;border:1px solid #3a3f6b;border-radius:12px;padding:12px;margin-bottom:12px;flex-wrap:wrap;gap:4px">
-      ${CAT_EMOJIS.concat(['🏨','🍽️','☕','🍷','🚇','🚕','🚶','🧭','💰','📞','🎵','🎨','⛪','🏛️','🌸','🌊','🏔️','🗼','🎡','🛒','💈','🎪']).map(e=>
-        `<span onclick="setCardIcon('${e}')" style="font-size:22px;cursor:pointer;padding:4px;border-radius:6px;transition:.1s" onmouseover="this.style.background='rgba(92,107,192,.3)'" onmouseout="this.style.background=''">${e}</span>`
-      ).join('')}
+    <div class="ps" id="ps-cf-${tab.id}">
+      <div class="ps-header" onclick="togglePS('ps-cf-${tab.id}')">
+        <span class="ps-title">＋ 카드 추가</span>
+        <span class="ps-arrow">▼</span>
+      </div>
+      <div class="ps-body">
+        <div class="form-box" style="border:none;border-radius:0;margin:0">
+          <div class="form-row">
+            <button id="cIconBtn" onclick="toggleCardEmojiPicker()" style="width:48px;height:40px;background:rgba(255,255,255,.06);border:1px solid #3a3f6b;border-radius:8px;font-size:20px;cursor:pointer;flex-shrink:0;position:relative" title="이모지 선택">📌</button>
+            <input type="hidden" id="cIcon" value="📌">
+            <input class="f-inp" id="cTitle" placeholder="제목 *" style="flex:2">
+            <input class="f-inp" id="cDetail" placeholder="설명/내용">
+          </div>
+          <div class="form-row" style="position:relative">
+            <input class="f-inp" id="cPlace" placeholder="📍 장소 검색" oninput="cardPlaceSearch(this)" autocomplete="off">
+            <div id="cPlaceSuggest" style="display:none;position:absolute;top:42px;left:0;right:0;background:#1e2240;border:1px solid #3a3f6b;border-radius:8px;z-index:50;max-height:160px;overflow-y:auto"></div>
+            <input class="f-inp" id="cLink" placeholder="링크 URL (선택)">
+          </div>
+          <div class="form-row">
+            <input class="f-inp" id="cGroup" placeholder="카드 그룹" list="cGroupList">
+            <datalist id="cGroupList">${groupOpts}</datalist>
+            <button class="f-btn" onclick="addCard('${tab.id}')">추가</button>
+          </div>
+        </div>
+        <div id="cardEmojiPicker" style="display:none;background:#1e2240;border:1px solid #3a3f6b;border-radius:12px;padding:12px;margin-bottom:12px;flex-wrap:wrap;gap:4px">
+          ${CAT_EMOJIS.concat(['🏨','🍽️','☕','🍷','🚇','🚕','🚶','🧭','💰','📞','🎵','🎨','⛪','🏛️','🌸','🌊','🏔️','🗼','🎡','🛒','💈','🎪']).map(e=>
+            `<span onclick="setCardIcon('${e}')" style="font-size:22px;cursor:pointer;padding:4px;border-radius:6px;transition:.1s" onmouseover="this.style.background='rgba(92,107,192,.3)'" onmouseout="this.style.background=''">${e}</span>`
+          ).join('')}
+        </div>
+      </div>
     </div>
-    <div class="icard-grid">${groupHtml}</div>
+    ${groupHtml}
     ${!items.length?`<div class="empty-state"><div class="icon">🃏</div><p>그룹명과 항목을 추가해 보세요</p></div>`:''}
   </div>`;
+  initPS(allPsIds);
 }
 
 function toggleCardEmojiPicker() {
@@ -2013,32 +2157,56 @@ function renderFiles(container, tab, items) {
     if (t.includes('excel') || t.includes('xls')) return '📊';
     return '📎';
   };
-  container.innerHTML = `<div class="pane-wrap">
-    <div class="pane-header"><div class="pane-title">📎 ${tab.title}</div><span class="badge">${items.length}개</span></div>
-    <div class="form-box">
-      <div class="form-row">
-        <input class="f-inp" id="fName" placeholder="파일/링크 이름 *">
-        <input class="f-inp" id="fType" placeholder="종류 (예: PDF, 이미지, 링크)">
-      </div>
-      <div class="form-row">
-        <input class="f-inp" id="fUrl" placeholder="URL 또는 링크 주소">
-        <input class="f-inp" id="fNote" placeholder="비고">
-        <button class="f-btn" onclick="addFile('${tab.id}')">추가</button>
+  container.innerHTML = `<div class="pane-wrap" id="pw-file-${tab.id}">
+    <div class="pane-header">
+      <div class="pane-title">📎 ${tab.title}</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="badge">${items.length}개</span>
+        <button class="pane-collapse-btn" onclick="toggleAllPS('pw-file-${tab.id}',this)">접기 ▲</button>
       </div>
     </div>
-    <div class="file-list">${items.map(item=>`
-      <div class="file-item">
-        <div class="file-icon">${fileIcon(item.data.type||'')}</div>
-        <div class="file-info">
-          <div class="file-name">${item.data.name||''}</div>
-          <div class="file-meta">${item.data.type||''}${item.data.note?' · '+item.data.note:''}</div>
-          ${item.data.url?`<a class="file-link" href="${item.data.url}" target="_blank">${item.data.url}</a>`:''}
+    <div class="ps" id="ps-ff-${tab.id}">
+      <div class="ps-header" onclick="togglePS('ps-ff-${tab.id}')">
+        <span class="ps-title">＋ 파일/링크 추가</span>
+        <span class="ps-arrow">▼</span>
+      </div>
+      <div class="ps-body">
+        <div class="form-box" style="border:none;border-radius:0;margin:0">
+          <div class="form-row">
+            <input class="f-inp" id="fName" placeholder="파일/링크 이름 *">
+            <input class="f-inp" id="fType" placeholder="종류 (예: PDF, 이미지, 링크)">
+          </div>
+          <div class="form-row">
+            <input class="f-inp" id="fUrl" placeholder="URL 또는 링크 주소">
+            <input class="f-inp" id="fNote" placeholder="비고">
+            <button class="f-btn" onclick="addFile('${tab.id}')">추가</button>
+          </div>
         </div>
-        <button class="del-btn" onclick="deleteItem('${item.id}','${tab.id}')">삭제</button>
-      </div>`).join('')}
+      </div>
     </div>
-    ${!items.length?`<div class="empty-state"><div class="icon">📎</div><p>파일이나 링크를 추가해 보세요</p></div>`:''}
+    <div class="ps" id="ps-fl-${tab.id}">
+      <div class="ps-header" onclick="togglePS('ps-fl-${tab.id}')">
+        <span class="ps-title">📎 파일 목록</span>
+        <span class="ps-count">${items.length}개</span>
+        <span class="ps-arrow">▼</span>
+      </div>
+      <div class="ps-body">
+        <div class="file-list">${items.map(item=>`
+          <div class="file-item">
+            <div class="file-icon">${fileIcon(item.data.type||'')}</div>
+            <div class="file-info">
+              <div class="file-name">${item.data.name||''}</div>
+              <div class="file-meta">${item.data.type||''}${item.data.note?' · '+item.data.note:''}</div>
+              ${item.data.url?`<a class="file-link" href="${item.data.url}" target="_blank">${item.data.url}</a>`:''}
+            </div>
+            <button class="del-btn" onclick="deleteItem('${item.id}','${tab.id}')">삭제</button>
+          </div>`).join('')}
+        </div>
+        ${!items.length?`<div class="empty-state"><div class="icon">📎</div><p>파일이나 링크를 추가해 보세요</p></div>`:''}
+      </div>
+    </div>
   </div>`;
+  initPS([`ps-ff-${tab.id}`, `ps-fl-${tab.id}`]);
 }
 
 async function addFile(tabId) {
@@ -2156,8 +2324,9 @@ function renderBudget(container, tab, items) {
   }).join('');
 
   const rowsHtml = ['krw','eur'].map(cur => {
+    const psId = `ps-bg-${tab.id}-${cur}`;
     const curItems = items.filter(i=>i.data.currency===cur);
-    const label = cur==='krw'?'원화 (KRW)':'유로 (EUR)';
+    const label = cur==='krw'?'₩ 원화 (KRW)':'€ 유로 (EUR)';
     const inRows = curItems.filter(i=>i.data.type==='in');
     const outRows = curItems.filter(i=>i.data.type==='out');
     const mkRows = arr => arr.map(item=>`
@@ -2168,40 +2337,57 @@ function renderBudget(container, tab, items) {
         <td style="color:var(--sub)">${item.data.note||''}</td>
         <td><button class="del-btn" onclick="deleteItem('${item.id}','${tab.id}')">삭제</button></td>
       </tr>`).join('');
-    return `<div style="margin-bottom:20px">
-      <div style="font-size:13px;font-weight:800;color:#9fa8da;margin-bottom:8px">${label}</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div>
-          <div style="font-size:11px;font-weight:700;color:#a5d6a7;margin-bottom:6px">▶ 입금</div>
-          <div style="overflow-x:auto"><table class="list-table"><thead><tr><th>날짜</th><th>항목</th><th>금액</th><th>비고</th><th></th></tr></thead><tbody>${mkRows(inRows)}</tbody></table></div>
-        </div>
-        <div>
-          <div style="font-size:11px;font-weight:700;color:#ef9a9a;margin-bottom:6px">◀ 출금</div>
-          <div style="overflow-x:auto"><table class="list-table"><thead><tr><th>날짜</th><th>항목</th><th>금액</th><th>비고</th><th></th></tr></thead><tbody>${mkRows(outRows)}</tbody></table></div>
+    return `<div class="ps" id="${psId}">
+      <div class="ps-header" onclick="togglePS('${psId}')">
+        <span class="ps-title">${label}</span>
+        <span class="ps-count">${curItems.length}건</span>
+        <span class="ps-arrow">▼</span>
+      </div>
+      <div class="ps-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 4px">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#a5d6a7;margin-bottom:6px">▶ 입금</div>
+            <div style="overflow-x:auto"><table class="list-table"><thead><tr><th>날짜</th><th>항목</th><th>금액</th><th>비고</th><th></th></tr></thead><tbody>${mkRows(inRows)}</tbody></table></div>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#ef9a9a;margin-bottom:6px">◀ 출금</div>
+            <div style="overflow-x:auto"><table class="list-table"><thead><tr><th>날짜</th><th>항목</th><th>금액</th><th>비고</th><th></th></tr></thead><tbody>${mkRows(outRows)}</tbody></table></div>
+          </div>
         </div>
       </div>
     </div>`;
   }).join('');
 
-  container.innerHTML = `<div class="pane-wrap">
-    <div class="pane-header"><div class="pane-title">💰 ${tab.title}</div></div>
-    <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap">${summaryHtml}</div>
-    <div class="form-box">
-      <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--accent2)">＋ 내역 추가</div>
-      <div class="form-row">
-        <select class="f-sel" id="bCur"><option value="krw">₩ 원화</option><option value="eur">€ 유로</option></select>
-        <select class="f-sel" id="bType"><option value="in">▶ 입금</option><option value="out">◀ 출금</option></select>
-        <input class="f-inp" id="bDate" type="date">
-        <input class="f-inp" id="bItem" placeholder="항목 *">
+  container.innerHTML = `<div class="pane-wrap" id="pw-budget-${tab.id}">
+    <div class="pane-header">
+      <div class="pane-title">💰 ${tab.title}</div>
+      <button class="pane-collapse-btn" onclick="toggleAllPS('pw-budget-${tab.id}',this)">접기 ▲</button>
+    </div>
+    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">${summaryHtml}</div>
+    <div class="ps" id="ps-bf-${tab.id}">
+      <div class="ps-header" onclick="togglePS('ps-bf-${tab.id}')">
+        <span class="ps-title">＋ 내역 추가</span>
+        <span class="ps-arrow">▼</span>
       </div>
-      <div class="form-row">
-        <input class="f-inp" id="bAmount" placeholder="금액 *">
-        <input class="f-inp" id="bNote" placeholder="비고">
-        <button class="f-btn" onclick="addBudgetItem('${tab.id}')">추가</button>
+      <div class="ps-body">
+        <div class="form-box" style="border:none;border-radius:0;margin:0">
+          <div class="form-row">
+            <select class="f-sel" id="bCur"><option value="krw">₩ 원화</option><option value="eur">€ 유로</option></select>
+            <select class="f-sel" id="bType"><option value="in">▶ 입금</option><option value="out">◀ 출금</option></select>
+            <input class="f-inp" id="bDate" type="date">
+            <input class="f-inp" id="bItem" placeholder="항목 *">
+          </div>
+          <div class="form-row">
+            <input class="f-inp" id="bAmount" placeholder="금액 *">
+            <input class="f-inp" id="bNote" placeholder="비고">
+            <button class="f-btn" onclick="addBudgetItem('${tab.id}')">추가</button>
+          </div>
+        </div>
       </div>
     </div>
     ${rowsHtml}
   </div>`;
+  initPS([`ps-bf-${tab.id}`, `ps-bg-${tab.id}-krw`, `ps-bg-${tab.id}-eur`]);
 }
 
 async function addBudgetItem(tabId) {

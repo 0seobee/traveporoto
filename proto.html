@@ -49,8 +49,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.92
 .sec-title{font-size:clamp(22px,4vw,36px);font-weight:800;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
 .sec-sub{color:var(--sub);font-size:14px;margin-bottom:36px}
 /* ── 탭 섹션 접기 ── */
-.sec-body{overflow:hidden;transition:max-height .4s cubic-bezier(.4,0,.2,1);max-height:6000px}
-.sec-body.collapsed{max-height:0!important}
+.sec-body{overflow:hidden;transition:height .4s cubic-bezier(.4,0,.2,1)}
 /* 꿀팁 static 박스 카드화 */
 .tip-box-card{border-radius:16px;margin-bottom:24px;overflow:hidden}
 .tip-box-header{display:flex;align-items:center;gap:8px;padding:14px 22px;cursor:pointer;user-select:none;justify-content:space-between}
@@ -3871,6 +3870,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ===== 탭 섹션 접기/펼치기 + 편집 =====
 
+function toggleSecBody(body, btn) {
+  const isOpen = body.style.height !== '0px' && body.style.height !== '0';
+  if (isOpen) {
+    // 접기: 현재 높이 확정 → 0으로 애니메이션
+    body.style.height = body.scrollHeight + 'px';
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => { body.style.height = '0'; });
+    });
+    if (btn) btn.textContent = '펼치기 ▼';
+  } else {
+    // 펼치기: scrollHeight로 애니메이션 → auto
+    body.style.height = body.scrollHeight + 'px';
+    const done = () => { body.style.height = ''; body.removeEventListener('transitionend', done); };
+    body.addEventListener('transitionend', done);
+    if (btn) btn.textContent = '접기 ▲';
+  }
+}
+function initSecBody(body) {
+  body.style.height = body.scrollHeight + 'px';
+  // 다음 프레임에 auto로 해제 (동적 컨텐츠 대응)
+  requestAnimationFrame(() => { body.style.height = ''; });
+}
+
 function wrapSectionBody(sectionId) {
   const section = document.getElementById(sectionId);
   if (!section || section.querySelector('.sec-body')) return;
@@ -3884,8 +3906,7 @@ function wrapSectionBody(sectionId) {
   btn.onclick = () => {
     const body = section.querySelector('.sec-body');
     if (!body) return;
-    const collapsed = body.classList.toggle('collapsed');
-    btn.textContent = collapsed ? '펼치기 ▼' : '접기 ▲';
+    toggleSecBody(body, btn);
   };
   title.appendChild(btn);
 
@@ -3900,6 +3921,7 @@ function wrapSectionBody(sectionId) {
   body.className = 'sec-body';
   children.slice(startIdx).forEach(child => body.appendChild(child));
   section.appendChild(body);
+  initSecBody(body);
 }
 
 // 여행경비 탭은 sec-title 없이 ledger-report-header 사용
@@ -3916,8 +3938,7 @@ function wrapBudgetSection() {
   btn.onclick = () => {
     const body = section.querySelector('.sec-body');
     if (!body) return;
-    const collapsed = body.classList.toggle('collapsed');
-    btn.textContent = collapsed ? '펼치기 ▼' : '접기 ▲';
+    toggleSecBody(body, btn);
   };
   titleEl.appendChild(btn);
 
@@ -3933,6 +3954,7 @@ function wrapBudgetSection() {
   body.className = 'sec-body';
   children.slice(startIdx).forEach(child => body.appendChild(child));
   innerSection.appendChild(body);
+  initSecBody(body);
 }
 
 // ── 꿀팁 static 박스를 접을 수 있는 카드로 변환 ──
@@ -4189,6 +4211,99 @@ function initTabSections() {
   initLisboaCardSection();
   // 여행자료 편집
   initTravelDocsSection();
+  // 나머지 섹션 접기
+  wrapSectionBody('concept');
+  wrapFlightsSection();
+  wrapScheduleSection();
+  wrapMapSection();
+}
+
+function wrapFlightsSection() {
+  const outer = document.getElementById('flights');
+  if (!outer || outer.querySelector('.sec-body')) return;
+  const inner = outer.querySelector('.section');
+  if (!inner) return;
+  const title = inner.querySelector('.sec-title');
+  if (!title || title.querySelector('.info-collapse-btn')) return;
+  const btn = document.createElement('button');
+  btn.className = 'info-collapse-btn';
+  btn.textContent = '접기 ▲';
+  btn.onclick = () => {
+    const body = inner.querySelector('.sec-body');
+    if (!body) return;
+    toggleSecBody(body, btn);
+  };
+  title.style.display = 'flex';
+  title.style.alignItems = 'center';
+  title.style.justifyContent = 'space-between';
+  title.appendChild(btn);
+  const secSub = inner.querySelector('.sec-sub');
+  const startEl = secSub || title;
+  const children = [...inner.children];
+  const startIdx = children.indexOf(startEl) + 1;
+  const body = document.createElement('div');
+  body.className = 'sec-body';
+  children.slice(startIdx).forEach(child => body.appendChild(child));
+  inner.appendChild(body);
+  initSecBody(body);
+}
+
+function wrapScheduleSection() {
+  const sec = document.getElementById('schedule');
+  if (!sec || sec.querySelector('.sec-body')) return;
+  const title = sec.querySelector('.sec-title');
+  if (!title || title.querySelector('.info-collapse-btn')) return;
+  const btn = document.createElement('button');
+  btn.className = 'info-collapse-btn';
+  btn.textContent = '접기 ▲';
+  btn.onclick = () => {
+    const body = sec.querySelector('.sec-body');
+    if (!body) return;
+    toggleSecBody(body, btn);
+  };
+  title.appendChild(btn);
+  const secSub = sec.querySelector('.sec-sub');
+  const startEl = secSub || title;
+  const children = [...sec.children];
+  const startIdx = children.indexOf(startEl) + 1;
+  const body = document.createElement('div');
+  body.className = 'sec-body';
+  children.slice(startIdx).forEach(child => body.appendChild(child));
+  sec.appendChild(body);
+  initSecBody(body);
+}
+
+function wrapMapSection() {
+  const sec = document.getElementById('map');
+  if (!sec || sec.querySelector('.sec-body')) return;
+  const mapInner = sec.querySelector('.map-inner');
+  if (!mapInner) return;
+  const title = mapInner.querySelector('.sec-title');
+  if (!title || title.querySelector('.info-collapse-btn')) return;
+  const btn = document.createElement('button');
+  btn.className = 'info-collapse-btn';
+  btn.textContent = '접기 ▲';
+  btn.onclick = () => {
+    const body = sec.querySelector('.sec-body');
+    if (!body) return;
+    toggleSecBody(body, btn);
+  };
+  // 지도 제목 영역에 버튼 삽입
+  const titleWrap = title.parentElement;
+  titleWrap.style.display = 'flex';
+  titleWrap.style.alignItems = 'center';
+  titleWrap.style.justifyContent = 'space-between';
+  titleWrap.style.flexWrap = 'wrap';
+  titleWrap.appendChild(btn);
+  // map-filter ~ 끝까지 묶기
+  const children = [...mapInner.children];
+  const filterIdx = children.findIndex(c => c.classList.contains('map-filter') || c.classList.contains('map-places-wrap') || c.tagName === 'BUTTON');
+  if (filterIdx < 0) return;
+  const body = document.createElement('div');
+  body.className = 'sec-body';
+  children.slice(filterIdx).forEach(child => body.appendChild(child));
+  mapInner.appendChild(body);
+  initSecBody(body);
 }
 
 // ===== icard 카드별 접기/펼치기 =====
