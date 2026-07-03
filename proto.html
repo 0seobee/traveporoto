@@ -1975,13 +1975,14 @@ function parseCSV(text) {
   return rows;
 }
 
-function renderGsTimeline(el, rows) {
+function renderGsTimeline(el, rows, dayN) {
   const dataRows = rows.filter(r => /^\d{1,2}:\d{2}/.test((r[0]||'').trim()));
   if (!dataRows.length) {
     el.innerHTML = '<div style="padding:32px;text-align:center;color:var(--sub)">📭 시트에 일정 데이터가 없습니다</div>';
     return;
   }
-  el.innerHTML = dataRows.map(row => {
+  el.innerHTML = dataRows.map((row, i) => {
+    const eid = `gs-${dayN}-${i}`;
     const rawTime = (row[0]||'').trim();
     const time = rawTime.includes('~') ? rawTime.split('~')[0].trim() : rawTime;
     const place = (row[2]||'').trim();
@@ -1993,15 +1994,16 @@ function renderGsTimeline(el, rows) {
     if (transport) notes += `<div class="tl-note">🚌 ${transport}</div>`;
     if (memo) notes += `<div class="tl-note">💡 ${memo}</div>`;
     const costBadge = cost ? ` <span class="cost-badge">${cost}</span>` : '';
-    return `<div class="tl-item">
+    return `<div class="tl-item" data-eid="${eid}">
       <div class="tl-time"><div class="t">${time}</div></div>
       <div class="tl-body">
         ${place ? `<div class="tl-place">${place}</div>` : ''}
         <div class="tl-desc">${content}${costBadge}${notes}</div>
       </div>
-      <div class="tl-actions"></div>
+      <div class="tl-actions"><button class="edit-btn" onclick="openEditModal('${eid}')">✏️ 수정</button></div>
     </div>`;
   }).join('');
+  loadEdits();
 }
 
 async function loadGsDay(n) {
@@ -2009,7 +2011,7 @@ async function loadGsDay(n) {
   if (!panel) return;
   const tl = panel.querySelector('.timeline');
   if (!tl) return;
-  if (gsCache[n]) { renderGsTimeline(tl, gsCache[n]); return; }
+  if (gsCache[n]) { renderGsTimeline(tl, gsCache[n], n); return; }
   tl.innerHTML = '<div class="gs-loading">⏳ 구글 시트에서 일정을 불러오는 중...</div>';
   try {
     const url = `https://docs.google.com/spreadsheets/d/${GS_ID}/gviz/tq?tqx=out:csv&sheet=${GS_SHEETS[n]}`;
@@ -2018,7 +2020,7 @@ async function loadGsDay(n) {
     const text = await res.text();
     const rows = parseCSV(text);
     gsCache[n] = rows;
-    renderGsTimeline(tl, rows);
+    renderGsTimeline(tl, rows, n);
   } catch(e) {
     tl.innerHTML = '<div class="gs-err">❌ 일정을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</div>';
   }
