@@ -236,6 +236,27 @@ body.readonly .rest-row-btns,body.readonly .rest-add-row-btn{display:none!import
 .rs-edit-btn{background:rgba(92,107,192,.15);color:#9fa8da}
 .rs-del-btn{background:rgba(229,57,53,.12);color:#ef9a9a}
 body.readonly .rest-card-btns,body.readonly .rest-add-card-btn,body.readonly .rest-section-btns{display:none!important}
+/* ── 날짜 필터 탭 ── */
+.rest-date-filter{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 20px}
+.rdf-btn{padding:6px 14px;border:1px solid var(--border);border-radius:20px;background:transparent;color:var(--sub);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
+.rdf-btn:hover{border-color:#9fa8da;color:#9fa8da}
+.rdf-btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+/* ── 섹션 accordion ── */
+.rest-grid{overflow:hidden;transition:max-height .38s cubic-bezier(.4,0,.2,1)}
+.rest-grid.collapsed{max-height:0!important;margin:0}
+.rs-toggle-btn{background:transparent;border:none;color:var(--sub);font-size:13px;cursor:pointer;padding:0 4px;transition:.2s;line-height:1;margin-left:auto}
+.rs-toggle-btn:hover{color:#c5cae9}
+/* ── 후보 접기/펼치기 ── */
+.cand-toggle-btn{display:block;width:100%;background:transparent;border:none;border-top:1px dashed rgba(255,255,255,.08);color:var(--sub);font-size:11px;font-weight:700;padding:8px 0 4px;cursor:pointer;font-family:inherit;transition:.2s;text-align:center}
+.cand-toggle-btn:hover{color:#9fa8da}
+.rest-row.alt.hidden-cand{display:none}
+/* ── 확정 지정 ── */
+.confirm-btn{border:none;border-radius:7px;padding:3px 9px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1.6;background:rgba(102,187,106,.13);color:#a5d6a7;transition:.2s;white-space:nowrap}
+.confirm-btn:hover{background:rgba(102,187,106,.28);color:#69f0ae}
+.rest-row.is-confirmed{border-left:2px solid #66bb6a;padding-left:8px;background:rgba(102,187,106,.06);border-radius:10px}
+.rest-row.is-confirmed .confirm-btn{background:rgba(102,187,106,.28);color:#69f0ae;cursor:default}
+.confirmed-banner{font-size:11px;font-weight:800;color:#69f0ae;padding:3px 2px 5px;display:flex;align-items:center;gap:4px}
+body.readonly .confirm-btn,.cand-toggle-btn{}
 /* 카드 모달 */
 .card-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:910;align-items:center;justify-content:center;padding:20px}
 .card-modal-bg.open{display:flex}
@@ -1134,6 +1155,17 @@ body.readonly .add-day-btn{display:none!important}
   <div class="sec-title">🍽️ 추천 맛집</div>
   <div class="sec-sub">Google Maps 평점 4.0↑ · 가성비 기준 · 2인 저녁 추정가 포함</div>
 
+  <!-- 날짜 필터 탭 -->
+  <div class="rest-date-filter" id="restDateFilter">
+    <button class="rdf-btn on" onclick="filterRestByDate('all',this)">전체</button>
+    <button class="rdf-btn" onclick="filterRestByDate('0801',this)">8/1 토</button>
+    <button class="rdf-btn" onclick="filterRestByDate('0802',this)">8/2 일</button>
+    <button class="rdf-btn" onclick="filterRestByDate('0803',this)">8/3 월</button>
+    <button class="rdf-btn" onclick="filterRestByDate('0804',this)">8/4 화</button>
+    <button class="rdf-btn" onclick="filterRestByDate('0805',this)">8/5 수</button>
+    <button class="rdf-btn" onclick="filterRestByDate('0806',this)">8/6 목</button>
+  </div>
+
   <!-- 리스본 점심 -->
   <div class="rest-section-wrap" data-section-id="rg-lisbon-lunch">
   <div class="rest-section-header">
@@ -1142,6 +1174,7 @@ body.readonly .add-day-btn{display:none!important}
       <button class="rs-edit-btn" onclick="openSectionModal('rg-lisbon-lunch')">✏️</button>
       <button class="rs-del-btn" onclick="deleteSection('rg-lisbon-lunch')">🗑️</button>
     </div>
+    <button class="rs-toggle-btn" onclick="toggleSection(this,'rg-lisbon-lunch')" title="접기/펼치기">▼</button>
   </div>
   <div class="rest-grid" id="rg-lisbon-lunch">
     <div class="rest-day-card" data-card-id="rc-ls-lunch-0801">
@@ -1305,6 +1338,7 @@ body.readonly .add-day-btn{display:none!important}
       <button class="rs-edit-btn" onclick="openSectionModal('rg-lisbon-dinner')">✏️</button>
       <button class="rs-del-btn" onclick="deleteSection('rg-lisbon-dinner')">🗑️</button>
     </div>
+    <button class="rs-toggle-btn" onclick="toggleSection(this,'rg-lisbon-dinner')" title="접기/펼치기">▼</button>
   </div>
   <div class="rest-grid" id="rg-lisbon-dinner">
     <div class="rest-day-card" data-card-id="rc-ls-dinner-0801">
@@ -1458,6 +1492,7 @@ body.readonly .add-day-btn{display:none!important}
       <button class="rs-edit-btn" onclick="openSectionModal('rg-porto-lunch')">✏️</button>
       <button class="rs-del-btn" onclick="deleteSection('rg-porto-lunch')">🗑️</button>
     </div>
+    <button class="rs-toggle-btn" onclick="toggleSection(this,'rg-porto-lunch')" title="접기/펼치기">▼</button>
   </div>
   <div class="rest-grid" id="rg-porto-lunch">
     <!-- 8/4 점심 -->
@@ -1613,6 +1648,7 @@ body.readonly .add-day-btn{display:none!important}
       <button class="rs-edit-btn" onclick="openSectionModal('rg-porto-dinner')">✏️</button>
       <button class="rs-del-btn" onclick="deleteSection('rg-porto-dinner')">🗑️</button>
     </div>
+    <button class="rs-toggle-btn" onclick="toggleSection(this,'rg-porto-dinner')" title="접기/펼치기">▼</button>
   </div>
   <div class="rest-grid" id="rg-porto-dinner">
     <div class="rest-day-card" data-card-id="rc-pt-dinner-0803">
@@ -3757,7 +3793,140 @@ document.addEventListener('DOMContentLoaded', () => {
   loadHero();
   loadDayCards();
   loadMapPins();
+
+  // 맛집 날짜필터·accordion·후보접기·확정지정 초기화
+  initRestSection();
 });
+
+// ===== 맛집 날짜 필터 =====
+function filterRestByDate(date, btn) {
+  document.querySelectorAll('.rdf-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  document.querySelectorAll('.rest-day-card').forEach(card => {
+    const d = card.dataset.date || '';
+    card.style.display = (date === 'all' || d === date) ? '' : 'none';
+  });
+  // 카드가 없는 섹션 숨기기
+  document.querySelectorAll('.rest-section-wrap').forEach(wrap => {
+    const grid = wrap.querySelector('.rest-grid');
+    if (!grid) return;
+    const hasVisible = [...grid.querySelectorAll('.rest-day-card')].some(c => c.style.display !== 'none');
+    wrap.style.display = hasVisible ? '' : 'none';
+  });
+}
+
+// ===== 섹션 accordion =====
+function toggleSection(btn, gridId) {
+  const grid = document.getElementById(gridId);
+  if (!grid) return;
+  const addWrap = grid.parentElement.querySelector('.rest-add-card-wrap');
+  const collapsed = grid.classList.toggle('collapsed');
+  btn.textContent = collapsed ? '▶' : '▼';
+  if (addWrap) addWrap.style.display = collapsed ? 'none' : '';
+}
+
+// ===== 후보 접기/펼치기 =====
+function toggleCandidates(btn, cardId) {
+  const card = document.querySelector(`[data-card-id="${cardId}"]`);
+  if (!card) return;
+  const alts = [...card.querySelectorAll('.rest-row.alt')];
+  const isHidden = alts[0]?.classList.contains('hidden-cand');
+  alts.forEach(r => r.classList.toggle('hidden-cand', !isHidden));
+  btn.textContent = isHidden ? `후보 ${alts.length}개 접기 ▲` : `후보 ${alts.length}개 보기 ▼`;
+}
+
+// ===== 확정 지정 =====
+const CONFIRMED_KEY = 'pt-confirmed';
+
+function setConfirmed(restId, cardId) {
+  const data = JSON.parse(localStorage.getItem(CONFIRMED_KEY) || '{}');
+  // 같은 식당 다시 누르면 확정 해제
+  if (data[cardId] === restId) {
+    delete data[cardId];
+  } else {
+    data[cardId] = restId;
+  }
+  localStorage.setItem(CONFIRMED_KEY, JSON.stringify(data));
+  renderConfirmed();
+}
+
+function renderConfirmed() {
+  const data = JSON.parse(localStorage.getItem(CONFIRMED_KEY) || '{}');
+  document.querySelectorAll('.rest-day-card').forEach(card => {
+    const cardId = card.dataset.cardId;
+    const confirmedId = data[cardId];
+
+    // 기존 상태 초기화
+    card.querySelectorAll('.confirmed-banner').forEach(b => b.remove());
+    card.querySelectorAll('.rest-row').forEach(row => {
+      row.classList.remove('is-confirmed');
+      const cb = row.querySelector('.confirm-btn');
+      if (cb) cb.textContent = '확정 지정';
+    });
+
+    if (!confirmedId) return;
+    const confirmedRow = card.querySelector(`[data-rest-id="${confirmedId}"]`);
+    if (!confirmedRow) return;
+
+    confirmedRow.classList.add('is-confirmed');
+    const cb = confirmedRow.querySelector('.confirm-btn');
+    if (cb) cb.textContent = '✅ 확정됨';
+
+    // 카드 헤더 아래 배너 삽입
+    const header = card.querySelector('.rest-card-header');
+    if (header) {
+      const name = confirmedRow.querySelector('.rest-name')?.textContent || '';
+      const banner = document.createElement('div');
+      banner.className = 'confirmed-banner';
+      banner.innerHTML = `✅ 확정: <span style="font-weight:600;color:#fff">${name}</span>`;
+      header.insertAdjacentElement('afterend', banner);
+    }
+  });
+}
+
+// ===== 맛집 섹션 초기화 (DOMContentLoaded 내 호출) =====
+function initRestSection() {
+  const dateMap = {'0801':'8/1','0802':'8/2','0803':'8/3','0804':'8/4','0805':'8/5','0806':'8/6'};
+
+  document.querySelectorAll('.rest-day-card').forEach(card => {
+    const cardId = card.dataset.cardId || '';
+    // data-date 자동 설정
+    const match = cardId.match(/(\d{4})$/);
+    if (match) card.dataset.date = match[1];
+
+    // 후보 행 기본 접기 + 토글 버튼 추가
+    const alts = [...card.querySelectorAll('.rest-row.alt')];
+    if (alts.length > 0) {
+      alts.forEach(r => r.classList.add('hidden-cand'));
+      const toggleBtn = document.createElement('button');
+      toggleBtn.className = 'cand-toggle-btn';
+      toggleBtn.textContent = `후보 ${alts.length}개 보기 ▼`;
+      toggleBtn.onclick = () => toggleCandidates(toggleBtn, cardId);
+      const addBtn = card.querySelector('.rest-add-row-btn');
+      card.insertBefore(toggleBtn, addBtn || null);
+    }
+
+    // 각 rest-row에 확정 지정 버튼 추가
+    card.querySelectorAll('.rest-row').forEach(row => {
+      const restId = row.dataset.restId;
+      if (!restId) return;
+      const rowBtns = row.querySelector('.rest-row-btns');
+      if (!rowBtns) return;
+      const confirmBtn = document.createElement('button');
+      confirmBtn.className = 'confirm-btn';
+      confirmBtn.textContent = '확정 지정';
+      confirmBtn.onclick = () => setConfirmed(restId, cardId);
+      rowBtns.prepend(confirmBtn);
+    });
+  });
+
+  // accordion max-height 초기화
+  document.querySelectorAll('.rest-grid').forEach(grid => {
+    grid.style.maxHeight = grid.scrollHeight + 'px';
+  });
+
+  renderConfirmed();
+}
 
 // ===== 맛집 섹션 CRUD =====
 const DINING_KEY = 'pt-dining-edits';
