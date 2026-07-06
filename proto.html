@@ -5917,6 +5917,14 @@ function saveMapPin() {
   closeMapPinModal();
   showToast('📍 핀이 추가되었습니다');
 }
+
+// ===== 펼침 완료 후 max-height 해제 — 내용이 늘어나도 잘리지 않도록 =====
+document.addEventListener('transitionend', e => {
+  if (e.propertyName !== 'max-height') return;
+  const el = e.target;
+  if (el.classList.contains('collapsed')) return;
+  if (el.style.maxHeight && el.style.maxHeight !== '0px') el.style.maxHeight = 'none';
+});
 </script>
 
 <!-- 지도 POI 모달 -->

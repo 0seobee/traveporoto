@@ -149,7 +149,8 @@ textarea.f-inp{resize:vertical;min-height:60px}
 .ps-arrow{font-size:12px;color:var(--sub);transition:transform .25s}
 .ps.collapsed .ps-arrow{transform:rotate(-90deg)}
 .ps-body{overflow:hidden;transition:max-height .35s cubic-bezier(.4,0,.2,1);max-height:4000px}
-.ps.collapsed .ps-body{max-height:0!important}
+.ps:not(.collapsed) .ps-body{overflow-x:auto;overflow-y:visible}
+.ps.collapsed .ps-body{max-height:0!important;overflow:hidden}
 .pane-collapse-btn{background:transparent;border:1px solid var(--border);border-radius:20px;color:var(--sub);font-size:12px;font-weight:700;padding:4px 12px;cursor:pointer;font-family:inherit;transition:.2s;white-space:nowrap}
 .pane-collapse-btn:hover{border-color:var(--accent);color:var(--accent2)}
 
@@ -1610,8 +1611,16 @@ function togglePS(id) {
   if (!el) return;
   const body = el.querySelector('.ps-body');
   const collapsed = el.classList.toggle('collapsed');
-  if (!collapsed && body) body.style.maxHeight = body.scrollHeight + 'px';
+  if (!collapsed && body) psExpand(el, body);
   localStorage.setItem(`ps_${currentProject?.id}_${id}`, collapsed ? '1' : '0');
+}
+
+// 펼침 애니메이션 후 max-height 제한 해제 → 내용이 늘어나도 잘리지 않음
+function psExpand(el, body) {
+  body.style.maxHeight = body.scrollHeight + 'px';
+  setTimeout(() => {
+    if (!el.classList.contains('collapsed')) body.style.maxHeight = 'none';
+  }, 400);
 }
 
 function initPS(ids) {
@@ -1623,7 +1632,7 @@ function initPS(ids) {
     if (localStorage.getItem(`ps_${currentProject?.id}_${id}`) === '1') {
       el.classList.add('collapsed');
     } else {
-      body.style.maxHeight = body.scrollHeight + 'px';
+      body.style.maxHeight = 'none';
     }
   });
 }
@@ -1637,7 +1646,7 @@ function toggleAllPS(containerId, btn) {
     const body = s.querySelector('.ps-body');
     if (allCollapsed) {
       s.classList.remove('collapsed');
-      if (body) body.style.maxHeight = body.scrollHeight + 'px';
+      if (body) psExpand(s, body);
       if (s.id) localStorage.setItem(`ps_${currentProject?.id}_${s.id}`, '0');
     } else {
       s.classList.add('collapsed');
