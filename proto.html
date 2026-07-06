@@ -546,7 +546,7 @@ body.readonly .add-day-btn{display:none!important}
     <a href="#checklist" onclick="navOn(this,event)">🎒 준비물</a>
     <a href="#lisboacard" onclick="navOn(this,event)">📋 리스보아카드</a>
     <a href="#travel-docs" onclick="navOn(this,event)">📁 여행자료</a>
-    <a href="planner.html?project=e06dc406-aa2e-4655-b345-2a6c530849da" style="background:rgba(92,107,192,.3);color:#c5cae9;font-weight:700">📷 사진·추가탭</a>
+    <a href="#photos" onclick="navOn(this,event)">📷 사진</a>
   </div>
 </nav>
 
@@ -2696,6 +2696,58 @@ body.readonly .add-day-btn{display:none!important}
       <div style="font-weight:700;font-size:14px;color:#c5cae9;margin-bottom:6px">교환 장소</div>
       <div style="font-size:13px;color:var(--sub);line-height:1.6">리스본 공항 1층 관광안내소 (도착 후 바로!) · 호텔 컨시어지 · 시내 관광안내소 · 일부 기차역</div>
     </div>
+  </div>
+</div>
+
+<div class="section" id="photos" style="scroll-margin-top:60px">
+  <div class="sec-eyebrow">PHOTO SHARE</div>
+  <div class="sec-title">📷 가족 사진 공유</div>
+  <div class="sec-sub">여행 중 찍은 사진을 올리고 함께 보세요 — 원본 화질로 저장됩니다</div>
+  <style>
+  .ptg-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:16px 0}
+  .ptg-upload-btn{background:var(--accent,#5c6bc0);color:#fff;border:none;border-radius:10px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
+  .ptg-upload-btn:hover{filter:brightness(1.15)}
+  .ptg-upload-btn:disabled{opacity:.5;cursor:wait}
+  .ptg-nick{font-size:12px;color:var(--sub,#7b80a0)}
+  .ptg-nick b{color:#9fa8da}
+  .ptg-nick button{background:none;border:none;color:var(--sub,#7b80a0);font-size:11px;cursor:pointer;text-decoration:underline;font-family:inherit}
+  .ptg-progress{font-size:12px;color:#9fa8da}
+  .ptg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+  .ptg-item{position:relative;border-radius:12px;overflow:hidden;background:rgba(255,255,255,.05);border:1px solid var(--border,#252940);cursor:pointer;aspect-ratio:1}
+  .ptg-item img{width:100%;height:100%;object-fit:cover;display:block;transition:.2s}
+  .ptg-item:hover img{transform:scale(1.05)}
+  .ptg-item-info{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(0,0,0,.75));padding:18px 8px 6px;font-size:11px;color:#fff;display:flex;justify-content:space-between;align-items:flex-end}
+  .ptg-item-del{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);border:none;color:#fff;border-radius:8px;width:24px;height:24px;cursor:pointer;font-size:12px;opacity:0;transition:.2s}
+  .ptg-item:hover .ptg-item-del{opacity:1}
+  .ptg-item-del:hover{background:rgba(229,57,53,.8)}
+  .ptg-empty{color:var(--sub,#7b80a0);font-size:14px;padding:40px 0;text-align:center}
+  .ptg-lightbox{position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:900;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:20px}
+  .ptg-lightbox.open{display:flex}
+  .ptg-lightbox img{max-width:92vw;max-height:80vh;object-fit:contain;border-radius:8px}
+  .ptg-lb-meta{color:#fff;font-size:13px;text-align:center}
+  .ptg-lb-meta .nick{font-weight:800;color:#9fa8da}
+  .ptg-lb-close{position:absolute;top:16px;right:20px;background:rgba(255,255,255,.12);border:none;color:#fff;border-radius:50%;width:40px;height:40px;font-size:18px;cursor:pointer}
+  .ptg-lb-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.1);border:none;color:#fff;border-radius:50%;width:44px;height:44px;font-size:20px;cursor:pointer}
+  .ptg-lb-nav:hover{background:rgba(255,255,255,.25)}
+  .ptg-lb-nav.prev{left:14px}
+  .ptg-lb-nav.next{right:14px}
+  @media(max-width:600px){.ptg-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}}
+  </style>
+  <div class="ptg-toolbar">
+    <input type="file" id="ptgFile" accept="image/*" multiple style="display:none" onchange="ptgUpload(this)">
+    <button class="ptg-upload-btn" id="ptgUpBtn" onclick="ptgPick()">📤 사진 올리기</button>
+    <span class="ptg-progress" id="ptgProgress"></span>
+    <span style="flex:1"></span>
+    <span class="ptg-nick" id="ptgNickBox"></span>
+  </div>
+  <div class="ptg-grid" id="ptgGrid"></div>
+  <div class="ptg-empty" id="ptgEmpty" style="display:none">아직 사진이 없습니다 — 첫 사진을 올려보세요!</div>
+  <div class="ptg-lightbox" id="ptgLb" onclick="if(event.target===this)ptgLbClose()">
+    <button class="ptg-lb-close" onclick="ptgLbClose()">✕</button>
+    <button class="ptg-lb-nav prev" onclick="ptgLbNav(-1)">‹</button>
+    <img id="ptgLbImg" src="">
+    <div class="ptg-lb-meta" id="ptgLbMeta"></div>
+    <button class="ptg-lb-nav next" onclick="ptgLbNav(1)">›</button>
   </div>
 </div>
 
@@ -5918,6 +5970,102 @@ function saveMapPin() {
   closeMapPinModal();
   showToast('📍 핀이 추가되었습니다');
 }
+
+// ===== 가족 사진 공유 갤러리 =====
+const PTG_PROJECT_ID = 'e06dc406-aa2e-4655-b345-2a6c530849da';
+const PTG_CLD_NAME = 'ogjed1ag';
+const PTG_CLD_PRESET = 'proto photo';
+const PTG_NICK_KEY = 'trip-nickname';
+let ptgPhotos = [], ptgLbIdx = 0;
+
+function ptgNick(force) {
+  let n = localStorage.getItem(PTG_NICK_KEY);
+  if (!n || force) {
+    n = (prompt('사진에 표시할 이름(닉네임)을 입력하세요', n || '') || '').trim();
+    if (!n) return null;
+    localStorage.setItem(PTG_NICK_KEY, n);
+  }
+  return n;
+}
+function ptgThumb(url) { return url.replace('/upload/', '/upload/w_400,c_limit,q_auto,f_auto/'); }
+
+async function ptgLoad() {
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/photos?project_id=eq.${PTG_PROJECT_ID}&order=created_at.desc`, { headers: SB_H });
+    ptgPhotos = r.ok ? await r.json() : [];
+  } catch(e) { ptgPhotos = []; }
+  ptgRender();
+}
+
+function ptgRender() {
+  const grid = document.getElementById('ptgGrid');
+  const empty = document.getElementById('ptgEmpty');
+  if (!grid) return;
+  const nick = localStorage.getItem(PTG_NICK_KEY);
+  const nickBox = document.getElementById('ptgNickBox');
+  if (nickBox) nickBox.innerHTML = nick ? `업로더: <b>${nick}</b> <button onclick="ptgNick(true)&&ptgRender()">변경</button>` : '';
+  empty.style.display = ptgPhotos.length ? 'none' : 'block';
+  grid.innerHTML = ptgPhotos.map((p, i) => `
+    <div class="ptg-item" onclick="ptgLbOpen(${i})">
+      <img src="${p.thumb_url || ptgThumb(p.url)}" loading="lazy" alt="">
+      <button class="ptg-item-del" title="삭제" onclick="event.stopPropagation();ptgDelete('${p.id}')">🗑️</button>
+      <div class="ptg-item-info"><span style="font-weight:700">${p.nickname}</span><span>${(p.created_at||'').slice(5,10).replace('-','/')}</span></div>
+    </div>`).join('');
+}
+
+function ptgPick() {
+  if (!ptgNick()) return;
+  document.getElementById('ptgFile').click();
+}
+
+async function ptgUpload(input) {
+  const files = [...input.files];
+  if (!files.length) return;
+  const nick = ptgNick();
+  if (!nick) return;
+  const btn = document.getElementById('ptgUpBtn');
+  const prog = document.getElementById('ptgProgress');
+  btn.disabled = true;
+  let done = 0, failed = 0;
+  for (const file of files) {
+    prog.textContent = `업로드 중… ${done + 1}/${files.length}`;
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('upload_preset', PTG_CLD_PRESET);
+      fd.append('folder', 'trips/포르투갈 7박 8일');
+      const r = await fetch(`https://api.cloudinary.com/v1_1/${PTG_CLD_NAME}/image/upload`, { method: 'POST', body: fd });
+      if (!r.ok) throw new Error(await r.text());
+      const j = await r.json();
+      await fetch(`${SB_URL}/rest/v1/photos`, { method: 'POST', headers: SB_HR, body: JSON.stringify({
+        project_id: PTG_PROJECT_ID, url: j.secure_url, thumb_url: ptgThumb(j.secure_url), nickname: nick
+      })});
+      done++;
+    } catch(e) { console.error('업로드 실패:', e); failed++; }
+  }
+  btn.disabled = false;
+  prog.textContent = failed ? `⚠️ ${done}장 성공, ${failed}장 실패` : `✅ ${done}장 완료`;
+  setTimeout(() => { if (prog.textContent.startsWith('✅')) prog.textContent = ''; }, 3000);
+  input.value = '';
+  await ptgLoad();
+}
+
+async function ptgDelete(id) {
+  if (!confirm('이 사진을 삭제하시겠습니까?')) return;
+  await fetch(`${SB_URL}/rest/v1/photos?id=eq.${id}`, { method: 'DELETE', headers: SB_H });
+  await ptgLoad();
+}
+
+function ptgLbOpen(i) { ptgLbIdx = i; ptgLbUpdate(); document.getElementById('ptgLb').classList.add('open'); }
+function ptgLbClose() { document.getElementById('ptgLb').classList.remove('open'); }
+function ptgLbNav(d) { ptgLbIdx = (ptgLbIdx + d + ptgPhotos.length) % ptgPhotos.length; ptgLbUpdate(); }
+function ptgLbUpdate() {
+  const p = ptgPhotos[ptgLbIdx];
+  if (!p) return;
+  document.getElementById('ptgLbImg').src = p.url;
+  document.getElementById('ptgLbMeta').innerHTML = `<span class="nick">${p.nickname}</span> · ${(p.created_at||'').slice(0,10)} · ${ptgLbIdx+1}/${ptgPhotos.length}`;
+}
+ptgLoad();
 
 // ===== 펼침 완료 후 max-height 해제 — 내용이 늘어나도 잘리지 않도록 =====
 document.addEventListener('transitionend', e => {
