@@ -63,6 +63,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.95
 .project-card:hover .project-card-actions{opacity:1}
 .card-act-btn{background:rgba(0,0,0,.5);border:none;color:#fff;border-radius:8px;width:26px;height:26px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:.2s;text-decoration:none}
 .card-act-btn:hover{background:rgba(229,57,53,.7)}
+.card-act-btn.edit:hover{background:rgba(92,107,192,.8)}
 
 /* 새 여행 추가 카드 */
 .new-card{border:2px dashed var(--border);background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:200px;color:var(--sub);font-size:14px;font-weight:600;cursor:pointer;border-radius:18px;transition:.2s}
@@ -174,7 +175,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.95
 <!-- 새 여행 모달 -->
 <div class="modal-bg" id="projectModal" onclick="if(event.target===this)closeModal()">
   <div class="modal">
-    <div class="modal-title">새 여행 만들기</div>
+    <div class="modal-title" id="modalTitle">새 여행 만들기</div>
     <label class="modal-label">여행 이름 *</label>
     <input class="modal-inp" id="pName" placeholder="예: 도쿄 봄 여행">
     <label class="modal-label">목적지</label>
@@ -193,7 +194,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.95
     <div class="color-grid" id="colorGrid"></div>
     <div class="modal-btns">
       <button class="modal-btn cancel" onclick="closeModal()">취소</button>
-      <button class="modal-btn primary" onclick="saveProject()">저장</button>
+      <button class="modal-btn primary" id="modalSaveBtn" onclick="saveProject()">저장</button>
     </div>
   </div>
 </div>
@@ -207,6 +208,7 @@ const EMOJIS = ['✈️','🌍','🏝️','🗺️','🏔️','🎌','🏰','�
 const COLORS = ['#1a237e','#1b5e20','#4a148c','#b71c1c','#e65100','#006064','#37474f','#880e4f','#1565c0','#2e7d32','#6a1b9a','#c62828'];
 let selectedEmoji = '✈️', selectedColor = '#1a237e';
 let projects = [];
+let editingId = null;
 
 // ── 접기/펼치기 ──
 function toggleHubSection(bodyId, headerEl) {
@@ -261,6 +263,7 @@ function cardHTML(p) {
   return `<a class="project-card" href="planner.html?project=${p.id}">
     <div class="project-card-cover" style="background:${p.cover_color||'#1a237e'}">${p.cover_emoji||'✈️'}</div>
     <div class="project-card-actions" onclick="event.preventDefault()">
+      <span class="card-act-btn edit" title="편집" onclick="openEditModal('${p.id}',event)">✏️</span>
       <span class="card-act-btn" title="삭제" onclick="deleteProject('${p.id}',event)">🗑️</span>
     </div>
     <div class="project-card-body">
@@ -342,24 +345,50 @@ function selEmoji(el,e){document.querySelectorAll('.emoji-opt').forEach(x=>x.cla
 function selColor(el,c){document.querySelectorAll('.color-opt').forEach(x=>x.classList.remove('on'));el.classList.add('on');selectedColor=c;}
 
 function openModal() {
-  ['pName','pDest','pStart','pEnd'].forEach(id=>document.getElementById(id).value='');
+  editingId = null;
+  ['pName','pDest','pStart','pEnd','pMemo'].forEach(id=>document.getElementById(id).value='');
   selectedEmoji='✈️'; selectedColor='#1a237e';
   initEmojiGrid(); initColorGrid();
+  document.getElementById('modalTitle').textContent = '새 여행 만들기';
+  document.getElementById('modalSaveBtn').textContent = '저장';
   document.getElementById('projectModal').classList.add('open');
 }
-function closeModal() { document.getElementById('projectModal').classList.remove('open'); }
+function openEditModal(id, e) {
+  e.preventDefault(); e.stopPropagation();
+  const p = projects.find(x => x.id === id);
+  if (!p) return;
+  editingId = id;
+  document.getElementById('pName').value = p.name || '';
+  document.getElementById('pDest').value = p.destination || '';
+  document.getElementById('pStart').value = p.start_date || '';
+  document.getElementById('pEnd').value = p.end_date || '';
+  document.getElementById('pMemo').value = p.memo || '';
+  selectedEmoji = p.cover_emoji || '✈️';
+  selectedColor = p.cover_color || '#1a237e';
+  initEmojiGrid(); initColorGrid();
+  document.getElementById('modalTitle').textContent = '여행 편집';
+  document.getElementById('modalSaveBtn').textContent = '수정 완료';
+  document.getElementById('projectModal').classList.add('open');
+}
+function closeModal() { document.getElementById('projectModal').classList.remove('open'); editingId = null; }
 
 async function saveProject() {
   const name = document.getElementById('pName').value.trim();
   if (!name) { alert('여행 이름을 입력해 주세요'); return; }
   const data = {
     name, destination: document.getElementById('pDest').value.trim(),
-    start_date: document.getElementById('pStart').value,
-    end_date: document.getElementById('pEnd').value,
-    cover_emoji: selectedEmoji, cover_color: selectedColor,
-    sort_order: projects.length
+    start_date: document.getElementById('pStart').value || null,
+    end_date: document.getElementById('pEnd').value || null,
+    memo: document.getElementById('pMemo').value.trim(),
+    cover_emoji: selectedEmoji, cover_color: selectedColor
   };
-  const r = await fetch(`${SB_URL}/rest/v1/projects`, { method:'POST', headers:SB_H, body:JSON.stringify(data) });
+  let r;
+  if (editingId) {
+    r = await fetch(`${SB_URL}/rest/v1/projects?id=eq.${editingId}`, { method:'PATCH', headers:SB_H, body:JSON.stringify(data) });
+  } else {
+    data.sort_order = projects.length;
+    r = await fetch(`${SB_URL}/rest/v1/projects`, { method:'POST', headers:SB_H, body:JSON.stringify(data) });
+  }
   if (r.ok) { closeModal(); location.reload(); }
 }
 
