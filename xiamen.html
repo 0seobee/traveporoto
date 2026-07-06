@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏮 샤먼 가족 여행 2027 · 1월 7일~10일</title>
+<style>
+  @font-face {
+    font-family: 'CBNUJIKJI';
+    src: url('https://cdn.jsdelivr.net/gh/fontbee/font@main/Chungbuk/CBNUJIKJI.woff') format('woff');
+    font-weight: normal; font-style: normal; font-display: swap;
+  }
+  :root {
+    --red: #F2762E;
+    --gold: #E0A020;
+    --dark-red: #C2410C;
+    --light-gold: #F5E6A3;
+    --bg: #FDF6EC;
+    --card: #FFFFFF;
+    --text: #2C1810;
+    --muted: #7A6355;
+    --border: #E8D5C4;
+    --green: #2E7D32;
+    --blue: #1565C0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'CBNUJIKJI', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; background: var(--bg); color: var(--text); font-size: 16px; line-height: 1.6; }
+
+  /* NAV */
+  nav { background: var(--dark-red); position: sticky; top: 0; z-index: 1000; overflow-x: auto; white-space: nowrap; }
+  nav ul { display: inline-flex; list-style: none; padding: 0 8px; gap: 2px; }
+  nav li a { display: block; padding: 12px 14px; color: #FFD700; text-decoration: none; font-size: 13px; font-weight: 600; transition: background .2s; border-radius: 4px; }
+  nav li a:hover { background: rgba(255,255,255,.15); }
+
+  /* HERO */
+  .hero { position: relative; min-height: 90vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #fff; padding: 60px 20px; background: url('xiamen-hero.png') center 35% / cover no-repeat; overflow: hidden; }
+  .hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8,12,24,.55) 0%, rgba(8,12,24,.30) 38%, rgba(8,12,24,.70) 100%); }
+  .hero > * { position: relative; z-index: 1; }
+  .hero-emojis { font-size: 2.6rem; display: flex; gap: 22px; margin-bottom: 16px; filter: drop-shadow(0 3px 10px rgba(0,0,0,.4)); }
+  .hero h1 { font-size: 4.2rem; font-weight: 900; letter-spacing: -2px; text-shadow: 0 4px 24px rgba(0,0,0,.55); line-height: 1.05; }
+  .hero h1 span { color: var(--light-gold); }
+  .hero .subtitle { font-size: 1.25rem; margin-top: 16px; font-weight: 700; opacity: .96; text-shadow: 0 2px 10px rgba(0,0,0,.5); }
+  .hero .route { font-size: 1rem; margin-top: 8px; color: var(--light-gold); letter-spacing: .5px; text-shadow: 0 2px 8px rgba(0,0,0,.5); }
+  .hero-stats { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; margin-top: 38px; }
+  .hstat { background: rgba(255,255,255,.13); border: 1px solid rgba(255,255,255,.28); backdrop-filter: blur(8px); border-radius: 18px; padding: 16px 22px; min-width: 92px; }
+  .hstat .num { font-size: 2rem; font-weight: 900; color: #fff; }
+  .hstat .lbl { font-size: 12px; opacity: .88; margin-top: 4px; }
+  .hero-cta { display: flex; gap: 14px; margin-top: 38px; flex-wrap: wrap; justify-content: center; }
+  .btn-primary { background: var(--red); color: #fff; padding: 15px 32px; border-radius: 32px; font-weight: 800; font-size: 16px; text-decoration: none; box-shadow: 0 8px 24px rgba(242,118,46,.5); transition: transform .15s; }
+  .btn-ghost { background: rgba(255,255,255,.14); border: 1.5px solid rgba(255,255,255,.6); color: #fff; padding: 15px 32px; border-radius: 32px; font-weight: 800; font-size: 16px; text-decoration: none; backdrop-filter: blur(8px); transition: transform .15s; }
+  .btn-primary:hover, .btn-ghost:hover { transform: translateY(-2px); }
+  @media (max-width: 640px) { .hero h1 { font-size: 2.6rem; } .hero { min-height: 80vh; } .hstat { padding: 12px 16px; min-width: 76px; } .hstat .num { font-size: 1.5rem; } }
+  /* NAV brand */
+  .nav-brand { color: #FFD700; font-weight: 900; padding: 12px 14px; font-size: 15px; white-space: nowrap; display: inline-block; }
+
+  /* SECTION */
+  section { padding: 40px 20px; max-width: 900px; margin: 0 auto; }
+  .section-title { font-size: 1.5rem; font-weight: 800; color: var(--red); border-left: 5px solid var(--gold); padding-left: 14px; margin-bottom: 24px; }
+
+  /* CARDS */
+  .card { background: var(--card); border-radius: 16px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,.08); border: 1px solid var(--border); margin-bottom: 16px; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+
+  /* FLIGHT */
+  .flight-card { background: linear-gradient(135deg, #1A237E, #283593); color: white; border-radius: 16px; padding: 24px; }
+  .flight-route { display: flex; align-items: center; justify-content: center; gap: 16px; margin: 16px 0; }
+  .flight-city { text-align: center; }
+  .flight-city .code { font-size: 2rem; font-weight: 900; color: #FFD700; }
+  .flight-city .name { font-size: 13px; opacity: .8; }
+  .flight-arrow { flex: 1; text-align: center; }
+  .flight-arrow .line { border-top: 2px dashed rgba(255,255,255,.4); position: relative; }
+  .flight-arrow .plane { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); font-size: 20px; }
+  .flight-time { text-align: center; color: #FFD700; font-weight: 700; font-size: 15px; }
+  .flight-details { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  .flight-detail { background: rgba(255,255,255,.1); border-radius: 10px; padding: 10px 14px; font-size: 13px; }
+  .flight-detail .label { opacity: .7; font-size: 11px; margin-bottom: 2px; }
+  .flight-detail .value { font-weight: 700; }
+
+  /* VISA */
+  .visa-box { background: linear-gradient(135deg, #E8F5E9, #F1F8E9); border: 2px solid #4CAF50; border-radius: 16px; padding: 20px 24px; }
+  .visa-box .visa-title { color: var(--green); font-weight: 800; font-size: 1.1rem; margin-bottom: 12px; }
+  .visa-list { list-style: none; }
+  .visa-list li { padding: 6px 0; padding-left: 28px; position: relative; font-size: 15px; }
+  .visa-list li::before { content: '✅'; position: absolute; left: 0; }
+  .warning-box { background: #FFF8E1; border: 2px solid #FFC107; border-radius: 12px; padding: 16px 20px; margin-top: 16px; }
+  .warning-box .w-title { color: #E65100; font-weight: 700; margin-bottom: 8px; }
+
+  /* DAY TABS */
+  .day-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .day-tab { background: white; border: 2px solid var(--border); border-radius: 10px; padding: 10px 20px; cursor: pointer; font-weight: 700; font-size: 14px; transition: all .2s; }
+  .day-tab.active { background: var(--red); color: white; border-color: var(--red); }
+  .day-content { display: none; }
+  .day-content.active { display: block; }
+  .timeline { position: relative; padding-left: 24px; }
+  .timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: linear-gradient(var(--gold), var(--red)); }
+  .timeline-item { position: relative; margin-bottom: 20px; }
+  .timeline-dot { position: absolute; left: -20px; top: 4px; width: 14px; height: 14px; background: var(--gold); border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 2px var(--gold); }
+  .timeline-time { font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 2px; }
+  .timeline-title { font-weight: 700; font-size: 15px; color: var(--text); }
+  .timeline-desc { font-size: 13px; color: var(--muted); margin-top: 3px; }
+  .timeline-tag { display: inline-block; background: var(--light-gold); color: var(--dark-red); border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600; margin-top: 4px; }
+
+  /* FOOD */
+  .food-card { display: flex; gap: 16px; align-items: flex-start; }
+  .food-emoji { font-size: 3rem; flex-shrink: 0; }
+  .food-info h3 { font-size: 1.1rem; font-weight: 800; color: var(--red); margin-bottom: 4px; }
+  .food-info .cn { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .food-info p { font-size: 14px; color: var(--muted); }
+  .price-tag { display: inline-block; background: #FFF3E0; color: #E65100; border-radius: 6px; padding: 2px 10px; font-size: 12px; font-weight: 700; margin-top: 6px; }
+
+  /* LANGUAGE */
+  .phrase-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  .phrase-card { background: linear-gradient(135deg, #FFF8E1, #FFF3CD); border: 1px solid var(--gold); border-radius: 12px; padding: 14px 16px; }
+  .phrase-card .kr { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+  .phrase-card .cn { font-size: 1.3rem; font-weight: 800; color: var(--dark-red); }
+  .phrase-card .pinyin { font-size: 12px; color: var(--red); margin-top: 2px; font-style: italic; }
+  .phrase-card .sound { font-size: 12px; color: var(--muted); }
+
+  /* PAYMENT */
+  .step-list { counter-reset: steps; }
+  .step-item { counter-increment: steps; display: flex; gap: 14px; margin-bottom: 16px; align-items: flex-start; }
+  .step-num { background: var(--red); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; margin-top: 2px; }
+  .step-content h4 { font-weight: 700; font-size: 15px; margin-bottom: 3px; }
+  .step-content p { font-size: 13px; color: var(--muted); }
+
+  /* PRACTICAL */
+  .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+  .info-tile { background: var(--card); border-radius: 14px; padding: 18px; border: 1px solid var(--border); text-align: center; }
+  .info-tile .icon { font-size: 2rem; margin-bottom: 8px; }
+  .info-tile h4 { font-weight: 700; font-size: 14px; color: var(--red); margin-bottom: 6px; }
+  .info-tile p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  /* CHECKLIST */
+  .check-section h3 { font-weight: 700; font-size: 15px; color: var(--dark-red); margin: 16px 0 10px; }
+  .check-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .check-item input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--red); cursor: pointer; flex-shrink: 0; }
+  .check-item label { font-size: 14px; cursor: pointer; }
+  .check-item.checked label { text-decoration: line-through; color: var(--muted); }
+
+  /* FOOTER */
+  footer { background: var(--dark-red); color: rgba(255,255,255,.7); text-align: center; padding: 24px 20px; font-size: 13px; }
+  footer strong { color: #FFD700; }
+
+  /* DIVIDER */
+  .section-divider { height: 6px; background: linear-gradient(90deg, var(--red), var(--gold), var(--red)); opacity: .2; }
+
+  /* RESPONSIVE */
+  @media (max-width: 600px) {
+    .hero h1 { font-size: 1.7rem; }
+    nav li a { padding: 10px 10px; font-size: 12px; }
+    .flight-city .code { font-size: 1.6rem; }
+  }
+
+  /* SCROLL SMOOTH */
+  html { scroll-behavior: smooth; }
+  section[id] { scroll-margin-top: 52px; }
+
+  /* MAP INTERACTIVE */
+  .map-wrap-leaf { border-radius: 16px; overflow: hidden; border: 2px solid var(--border); height: 520px; }
+  #leaflet-map { width: 100%; height: 100%; }
+  .map-filter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .mf-btn { border: none; border-radius: 24px; padding: 8px 18px; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; transition: .2s; opacity: .38; filter: grayscale(50%); }
+  .mf-btn.on { opacity: 1; filter: none; box-shadow: 0 4px 14px rgba(0,0,0,.18); }
+  .mf-d1 { background: #C8102E; color: #fff; }
+  .mf-d2 { background: #1565C0; color: #fff; }
+  .mf-d3 { background: #2E7D32; color: #fff; }
+  .mf-d4 { background: #6A1B9A; color: #fff; }
+  .mf-food { background: #E65100; color: #fff; }
+  .mf-sight { background: #1976D2; color: #fff; }
+  .mf-hotel { background: #C2185B; color: #fff; }
+  .mf-transit { background: #455A64; color: #fff; }
+  .map-places-wrap { display: grid; grid-template-columns: 1fr 320px; gap: 16px; align-items: start; }
+  @media(max-width:900px) { .map-places-wrap { grid-template-columns: 1fr; } }
+  .places-panel { background: var(--card); border: 2px solid var(--border); border-radius: 14px; overflow: hidden; max-height: 560px; display: flex; flex-direction: column; }
+  .pp-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 14px; color: var(--red); }
+  .pp-count { font-size: 12px; color: var(--muted); background: var(--bg); border-radius: 10px; padding: 2px 8px; }
+  .pp-tabs { display: flex; gap: 4px; padding: 8px 12px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .pp-tab { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 10px; padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; transition: .15s; }
+  .pp-tab.on { background: var(--red); color: #fff; border-color: transparent; }
+  .pp-list { overflow-y: auto; flex: 1; }
+  .pp-list::-webkit-scrollbar { width: 4px; }
+  .pp-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  .pp-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-bottom: 1px solid rgba(0,0,0,.05); cursor: pointer; transition: .15s; }
+  .pp-item:hover { background: var(--bg); }
+  .pp-item:last-child { border-bottom: none; }
+  .pp-num { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; flex-shrink: 0; margin-top: 1px; }
+  .pp-info { flex: 1; min-width: 0; }
+  .pp-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pp-desc { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+  .pp-layer { font-size: 10px; color: var(--muted); opacity: .7; }
+  .pp-gmap { color: var(--blue); font-size: 11px; white-space: nowrap; flex-shrink: 0; text-decoration: none; margin-top: 2px; font-weight: 600; }
+  .pp-gmap:hover { color: var(--red); }
+
+  /* SLIDE GALLERY (여행 참고 자료) */
+  .deck-wrap { max-width: 900px; margin: 0 auto; }
+  .deck-stage { position: relative; background: #1b1b1b; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,.18); aspect-ratio: 16 / 9; }
+  .deck-stage img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .deck-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 46px; height: 46px; border-radius: 50%; border: none; background: rgba(0,0,0,.45); color: #fff; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s; z-index: 2; }
+  .deck-nav:hover { background: var(--red); }
+  .deck-prev { left: 12px; } .deck-next { right: 12px; }
+  .deck-counter { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,.55); color: #fff; font-size: 13px; font-weight: 700; padding: 5px 14px; border-radius: 20px; z-index: 2; }
+  .deck-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; }
+  .deck-thumbs { display: flex; gap: 8px; overflow-x: auto; padding: 6px 2px; margin-top: 14px; }
+  .deck-thumbs img { height: 54px; border-radius: 6px; cursor: pointer; border: 2px solid transparent; opacity: .6; transition: .15s; flex-shrink: 0; }
+  .deck-thumbs img.active { border-color: var(--red); opacity: 1; }
+  .deck-thumbs img:hover { opacity: 1; }
+  .deck-download { display: inline-flex; align-items: center; gap: 8px; background: var(--red); color: #fff; text-decoration: none; font-weight: 800; padding: 12px 24px; border-radius: 30px; box-shadow: 0 6px 18px rgba(242,118,46,.4); }
+  .deck-download:hover { transform: translateY(-2px); }
+  .deck-hint { font-size: 13px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <span class="nav-brand">🏮 샤먼 2027</span>
+  <ul>
+    <li><a href="hub.html">← 허브</a></li>
+    <li><a href="#deck">📑 여행자료</a></li>
+    <li><a href="#overview">📋 개요</a></li>
+    <li><a href="#flight">✈️ 항공</a></li>
+    <li><a href="#visa">🛂 입국</a></li>
+    <li><a href="#schedule">📅 일정</a></li>
+    <li><a href="#map">🗺️ 지도</a></li>
+    <li><a href="#food">🍜 음식</a></li>
+    <li><a href="#language">💬 회화</a></li>
+    <li><a href="#payment">💳 결제</a></li>
+    <li><a href="#practical">📌 실용</a></li>
+    <li><a href="#checklist">✅ 준비물</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-emojis">🏮 🌊 🍜</div>
+  <h1><span>샤먼</span> 3박 4일</h1>
+  <p class="subtitle">2027년 1월 7일 ~ 10일 · 가족 13명 · 인천 직항</p>
+  <p class="route">厦门 Xiamen · 인천(ICN) → 샤먼(XMN) · 무비자 입국</p>
+  <div class="hero-stats">
+    <div class="hstat"><div class="num">4</div><div class="lbl">총 일수</div></div>
+    <div class="hstat"><div class="num">13</div><div class="lbl">가족 인원</div></div>
+    <div class="hstat"><div class="num">6+</div><div class="lbl">관광지</div></div>
+    <div class="hstat"><div class="num">8+</div><div class="lbl">맛집</div></div>
+    <div class="hstat"><div class="num">15~18°</div><div class="lbl">1월 날씨</div></div>
+  </div>
+  <div class="hero-cta">
+    <a href="#schedule" class="btn-primary">📅 일정 보기</a>
+    <a href="#map" class="btn-ghost">🗺️ 지도 보기</a>
+  </div>
+</div>
+
+<!-- 여행 참고 자료 (슬라이드) -->
+<section id="deck">
+  <h2 class="section-title">📑 여행 참고 자료</h2>
+  <p style="color:var(--muted);margin-bottom:20px;font-size:15px;">가족에게 샤먼이 선정된 이유와 여행지를 소개하는 발표 자료입니다. 좌우 화살표로 넘겨보세요.</p>
+  <div class="deck-wrap">
+    <div class="deck-stage">
+      <button class="deck-nav deck-prev" onclick="deckMove(-1)" aria-label="이전">‹</button>
+      <img id="deckImg" src="slides/slide-1.png" alt="슬라이드">
+      <button class="deck-nav deck-next" onclick="deckMove(1)" aria-label="다음">›</button>
+      <div class="deck-counter"><span id="deckCur">1</span> / <span id="deckTotal">19</span></div>
+    </div>
+    <div class="deck-thumbs" id="deckThumbs"></div>
+    <div class="deck-bar">
+      <span class="deck-hint">💡 전체 자료(PowerPoint)를 내려받아 크게 볼 수 있어요</span>
+      <a class="deck-download" href="샤먼_가족여행.pptx" download>⬇️ PPT 자료 다운로드</a>
+    </div>
+  </div>
+</section>
+
+<!-- OVERVIEW -->
+<section id="overview">
+  <h2 class="section-title">여행 개요</h2>
+  <div class="card-grid">
+    <div class="card">
+      <div style="font-size:1.5rem;margin-bottom:8px;">👨‍👩‍👧‍👦</div>
+      <h3 style="font-weight:800;color:var(--red);margin-bottom:8px;">가족 구성</h3>
+      <p style="font-size:14px;color:var(--muted);">서철 신부님 <strong>1명</strong><br>서미연 가족 <strong>(   명)</strong><br>서수정 가족 <strong>(   명)</strong><br>서호 가족 <strong>(   명)</strong><br>서륜 가족 <strong>(   명)</strong><br>총 <strong>13명</strong> 대가족 여행</p>
+    </div>
+    <div class="card">
+      <div style="font-size:1.5rem;margin-bottom:8px;">📍</div>
+      <h3 style="font-weight:800;color:var(--red);margin-bottom:8px;">목적지</h3>
+      <p style="font-size:14px;color:var(--muted);">중국 푸젠성(福建省)<br><strong>샤먼(厦门, Xiamen)</strong><br>세계문화유산 쿨랑위 섬 보유</p>
+    </div>
+    <div class="card">
+      <div style="font-size:1.5rem;margin-bottom:8px;">🗓️</div>
+      <h3 style="font-weight:800;color:var(--red);margin-bottom:8px;">여행 기간</h3>
+      <p style="font-size:14px;color:var(--muted);">2027.01.07(수) 출발<br>2027.01.10(토) 귀국<br><strong>3박 4일</strong></p>
+    </div>
+    <div class="card">
+      <div style="font-size:1.5rem;margin-bottom:8px;">🌟</div>
+      <h3 style="font-weight:800;color:var(--red);margin-bottom:8px;">샤먼 특징</h3>
+      <p style="font-size:14px;color:var(--muted);">따뜻한 남방 해양도시<br>유럽풍 건축 + 중국 문화<br>신선한 해산물과 특유의 음식</p>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- FLIGHT -->
+<section id="flight">
+  <h2 class="section-title">항공편 안내</h2>
+  <div class="flight-card">
+    <div style="color:#FFD700;font-weight:700;font-size:13px;opacity:.8;">인천 ↔ 샤먼 직항</div>
+    <div class="flight-route">
+      <div class="flight-city">
+        <div class="code">ICN</div>
+        <div class="name">인천국제공항</div>
+      </div>
+      <div class="flight-arrow" style="flex:1;">
+        <div class="flight-time">약 2~3시간 25분</div>
+        <div class="line" style="margin:6px 0;"><span class="plane">✈️</span></div>
+      </div>
+      <div class="flight-city">
+        <div class="code">XMN</div>
+        <div class="name">샤먼 가오치공항</div>
+      </div>
+    </div>
+    <div class="flight-details">
+      <div class="flight-detail">
+        <div class="label">대한항공 (KE)</div>
+        <div class="value">주 7회 운항</div>
+      </div>
+      <div class="flight-detail">
+        <div class="label">샤먼항공 (MF)</div>
+        <div class="value">매일 1회 운항</div>
+      </div>
+      <div class="flight-detail">
+        <div class="label">13명 단체 예약</div>
+        <div class="value">항공사 직접 문의 권장</div>
+      </div>
+      <div class="flight-detail">
+        <div class="label">1월 비수기</div>
+        <div class="value">가격 상대적 저렴</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px;background:#E3F2FD;border-color:#90CAF9;">
+    <h3 style="color:#1565C0;font-weight:800;margin-bottom:10px;">✈️ 예약 팁 (13명 단체)</h3>
+    <ul style="list-style:none;font-size:14px;color:#37474F;">
+      <li style="padding:4px 0;">• 출발 3~4개월 전 단체 좌석 동시 예약 권장</li>
+      <li style="padding:4px 0;">• 대한항공 단체 담당 부서 (02-2656-2001) 문의 시 할인 가능</li>
+      <li style="padding:4px 0;">• 수하물: 이코노미 기준 23kg × 1개 (13명이면 총 짐 분배 가능)</li>
+      <li style="padding:4px 0;">• 공항 집결: 출발 2시간 30분 전, 탑승권 개별 체크인 또는 단체 체크인</li>
+    </ul>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- VISA -->
+<section id="visa">
+  <h2 class="section-title">비자 및 입국 안내</h2>
+  <div class="visa-box">
+    <div class="visa-title">🎉 한국인 중국 무비자 입국 가능! (2026년 12월 31일까지 연장)</div>
+    <ul class="visa-list">
+      <li>관광·비즈니스 목적 최대 <strong>30일</strong> 무비자</li>
+      <li>여권 유효기간 <strong>6개월 이상</strong> 남아 있어야 함</li>
+      <li>귀국 항공권 소지 필수 (입국 심사 시 확인 가능)</li>
+      <li>입국 후 24시간 이내 <strong>주숙등기(숙소 체크인)</strong> 의무</li>
+    </ul>
+  </div>
+
+  <div class="warning-box">
+    <div class="w-title">⚠️ 중국 입국 필수 사전 준비</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:10px;">
+      <div style="background:white;border-radius:10px;padding:12px;">
+        <div style="font-weight:700;margin-bottom:4px;">📱 알리페이 설치</div>
+        <div style="font-size:13px;color:var(--muted);">중국은 현금 사용이 매우 어렵습니다. <strong>출발 전 반드시</strong> 알리페이 설치 + 카드 등록</div>
+      </div>
+      <div style="background:white;border-radius:10px;padding:12px;">
+        <div style="font-weight:700;margin-bottom:4px;">🌐 VPN 또는 로밍</div>
+        <div style="font-size:13px;color:var(--muted);">중국에서 카카오톡·구글·유튜브 차단. 한국 통신사 데이터 로밍 또는 현지 유심 권장</div>
+      </div>
+      <div style="background:white;border-radius:10px;padding:12px;">
+        <div style="font-weight:700;margin-bottom:4px;">🗺️ 고덕지도 설치</div>
+        <div style="font-size:13px;color:var(--muted);">구글맵 작동 안됨. 중국 내비 앱 「고덕지도(高德地图)」 사전 설치</div>
+      </div>
+      <div style="background:white;border-radius:10px;padding:12px;">
+        <div style="font-weight:700;margin-bottom:4px;">📋 입국카드 작성</div>
+        <div style="font-size:13px;color:var(--muted);">기내에서 입국신고서 배부. 영문 이름, 숙소 주소, 체류 목적(Tourism) 기재</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- SCHEDULE -->
+<section id="schedule">
+  <h2 class="section-title">추천 여행 일정</h2>
+
+  <!-- 일정 요약 테이블 -->
+  <div class="card" style="overflow-x:auto;margin-bottom:20px;">
+    <h3 style="font-weight:800;color:var(--dark-red);margin-bottom:14px;font-size:1rem;">📋 3박 4일 전체 일정 한눈에 보기</h3>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:520px;">
+      <thead>
+        <tr style="background:var(--red);color:white;">
+          <th style="padding:10px 12px;text-align:left;border-radius:8px 0 0 0;">날짜</th>
+          <th style="padding:10px 12px;text-align:left;">오전</th>
+          <th style="padding:10px 12px;text-align:left;">오후</th>
+          <th style="padding:10px 12px;text-align:left;border-radius:0 8px 0 0;">저녁</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="background:#FFF8F0;">
+          <td style="padding:10px 12px;font-weight:800;color:var(--red);white-space:nowrap;">Day 1<br><span style="font-weight:400;color:var(--muted);font-size:11px;">1/7(수)</span></td>
+          <td style="padding:10px 12px;">✈️ 인천 출발<br><span style="color:var(--muted);">샤먼 도착·환전</span></td>
+          <td style="padding:10px 12px;">🏨 숙소 체크인<br><span style="color:var(--muted);">⛴️ 쿨랑위 첫 방문</span></td>
+          <td style="padding:10px 12px;">🍜 중산루<br><span style="color:var(--muted);">사차면 저녁</span></td>
+        </tr>
+        <tr style="background:white;">
+          <td style="padding:10px 12px;font-weight:800;color:var(--red);white-space:nowrap;">Day 2<br><span style="font-weight:400;color:var(--muted);font-size:11px;">1/8(목)</span></td>
+          <td style="padding:10px 12px;">⛴️ 쿨랑위 일찍 입도<br><span style="color:var(--muted);">🗼 일광암 등반</span></td>
+          <td style="padding:10px 12px;">🎹 피아노박물관<br><span style="color:var(--muted);">🌺 숙장화원 산책</span></td>
+          <td style="padding:10px 12px;">🌃 중산루 야시장<br><span style="color:var(--muted);">굴전·해산물 꼬치</span></td>
+        </tr>
+        <tr style="background:#FFF8F0;">
+          <td style="padding:10px 12px;font-weight:800;color:var(--red);white-space:nowrap;">Day 3<br><span style="font-weight:400;color:var(--muted);font-size:11px;">1/9(금)</span></td>
+          <td style="padding:10px 12px;">🛕 남보타사<br><span style="color:var(--muted);">🎓 샤먼대학 캠퍼스</span></td>
+          <td style="padding:10px 12px;">🌊 환도루 해안<br><span style="color:var(--muted);">☕ 쩡쭈오안 카페거리</span></td>
+          <td style="padding:10px 12px;">🚢 야경 유람선<br><span style="color:var(--muted);">(선택 프로그램)</span></td>
+        </tr>
+        <tr style="background:white;">
+          <td style="padding:10px 12px;font-weight:800;color:var(--red);white-space:nowrap;">Day 4<br><span style="font-weight:400;color:var(--muted);font-size:11px;">1/10(토)</span></td>
+          <td style="padding:10px 12px;">🛍️ 자유쇼핑<br><span style="color:var(--muted);">SM면세점·마트</span></td>
+          <td style="padding:10px 12px;">🍽️ 마지막 점심<br><span style="color:var(--muted);">✈️ 공항 이동</span></td>
+          <td style="padding:10px 12px;">🏠 인천 귀국<br><span style="color:var(--muted);">약 2~3시간 25분</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 예상 비용 -->
+  <div class="card" style="background:linear-gradient(135deg,#FFF8E1,#FFF3CD);border-color:var(--gold);margin-bottom:20px;">
+    <h3 style="font-weight:800;color:var(--dark-red);margin-bottom:12px;font-size:1rem;">💰 1인 예상 비용 (항공 제외)</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;">
+      <div style="background:white;border-radius:10px;padding:12px;text-align:center;">
+        <div style="font-size:1.3rem;">🏨</div>
+        <div style="font-weight:700;font-size:13px;margin:4px 0;">숙소</div>
+        <div style="color:var(--red);font-weight:800;">6~12만원/박</div>
+        <div style="font-size:11px;color:var(--muted);">3박 기준</div>
+      </div>
+      <div style="background:white;border-radius:10px;padding:12px;text-align:center;">
+        <div style="font-size:1.3rem;">🍜</div>
+        <div style="font-weight:700;font-size:13px;margin:4px 0;">식비</div>
+        <div style="color:var(--red);font-weight:800;">약 15만원</div>
+        <div style="font-size:11px;color:var(--muted);">3박 4일 전체</div>
+      </div>
+      <div style="background:white;border-radius:10px;padding:12px;text-align:center;">
+        <div style="font-size:1.3rem;">🎫</div>
+        <div style="font-weight:700;font-size:13px;margin:4px 0;">입장료</div>
+        <div style="color:var(--red);font-weight:800;">약 3~4만원</div>
+        <div style="font-size:11px;color:var(--muted);">페리+명소</div>
+      </div>
+      <div style="background:white;border-radius:10px;padding:12px;text-align:center;">
+        <div style="font-size:1.3rem;">🚌</div>
+        <div style="font-weight:700;font-size:13px;margin:4px 0;">교통</div>
+        <div style="color:var(--red);font-weight:800;">약 2~3만원</div>
+        <div style="font-size:11px;color:var(--muted);">택시·버스·자전거</div>
+      </div>
+      <div style="background:white;border-radius:10px;padding:12px;text-align:center;">
+        <div style="font-size:1.3rem;">🛍️</div>
+        <div style="font-weight:700;font-size:13px;margin:4px 0;">쇼핑·기타</div>
+        <div style="color:var(--red);font-weight:800;">자유</div>
+        <div style="font-size:11px;color:var(--muted);">개인차 있음</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;font-size:13px;color:var(--muted);">💡 항공 제외 1인 총 <strong style="color:var(--dark-red);">약 30~50만원</strong> 예상 (숙소 등급·쇼핑에 따라 변동)</div>
+  </div>
+
+  <div class="day-tabs">
+    <button class="day-tab active" onclick="showDay('day1')">Day 1<br><small>1/7(수)</small></button>
+    <button class="day-tab" onclick="showDay('day2')">Day 2<br><small>1/8(목)</small></button>
+    <button class="day-tab" onclick="showDay('day3')">Day 3<br><small>1/9(금)</small></button>
+    <button class="day-tab" onclick="showDay('day4')">Day 4<br><small>1/10(토)</small></button>
+  </div>
+
+  <!-- DAY 1 -->
+  <div id="day1" class="day-content active">
+    <div class="card">
+      <div style="background:linear-gradient(90deg,var(--red),#E85D04);color:white;border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <div>
+          <div style="font-size:1.2rem;font-weight:900;">✈️ Day 1 · 1월 7일(수)</div>
+          <div style="opacity:.85;font-size:13px;margin-top:2px;">인천 출발 → 샤먼 도착 → 중산루 첫 탐방</div>
+        </div>
+        <div style="text-align:right;font-size:12px;opacity:.8;">이동 중심 일정<br>도착 당일 가볍게</div>
+      </div>
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">06:00</div>
+          <div class="timeline-title">🛫 인천국제공항 집결</div>
+          <div class="timeline-desc">출발 2시간 30분 전 도착. 제1·2터미널 사전 확인 필수. 단체 체크인 카운터 이용 → 수하물 위탁 → 면세구역 이동.</div>
+          <span class="timeline-tag">💡 팁: 13명 단체는 별도 카운터 문의</span>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">08:30</div>
+          <div class="timeline-title">✈️ 인천 → 샤먼 직항 출발</div>
+          <div class="timeline-desc">비행시간 약 2시간~3시간 25분. 기내에서 입국신고서 작성 (영문 이름·숙소 주소·체류 목적: Tourism). 샤먼 도착 후 무비자 입국 심사.</div>
+          <span class="timeline-tag">🕐 샤먼 도착 약 11:40 (현지 시각 10:40)</span>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">12:00</div>
+          <div class="timeline-title">🏦 공항 도착 · 환전 · 유심 구매</div>
+          <div class="timeline-desc">공항 내 중국은행에서 위안 환전 (1인 500~1,000위안 권장). 현지 유심(中国电信) 구매 또는 한국 통신사 로밍 활성화. 고덕지도·알리페이 작동 확인.</div>
+          <span class="timeline-tag">💴 환율: 1위안 ≈ 190~200원</span>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">13:30</div>
+          <div class="timeline-title">🚌 시내 이동 · 숙소 체크인</div>
+          <div class="timeline-desc">공항버스(10위안, 약 40분) 또는 디디 택시. 13명은 택시 3~4대 분승. 숙소 도착 후 체크인 → 입국 24시간 이내 주숙등기 자동 처리. 짐 정리 후 휴식.</div>
+          <span class="timeline-tag">🏨 숙박 TIP: 중산루 도보권 호텔 추천</span>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">15:30</div>
+          <div class="timeline-title">🚶 중산루(中山路) 첫 탐방</div>
+          <div class="timeline-desc">샤먼 대표 보행자 거리. 약 1km의 청나라·민국 시대 건축물이 늘어선 거리. 양 옆으로 기념품 가게·카페·먹거리 가득. 가볍게 산책하며 첫 번째 샤먼 탐방.</div>
+          <span class="timeline-tag">📍 숙소에서 도보 이동 가능</span>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">17:30</div>
+          <div class="timeline-title">☕ 카페 휴식 + 황혼 산책</div>
+          <div class="timeline-desc">중산루 인근 카페에서 음료 한 잔. 샤먼의 첫 황혼 감상. 항구 방향 산책. 어르신 체력 배분을 위해 첫날은 가볍게 마무리.</div>
+          <span class="timeline-tag">🌅 1월 일몰 약 17:50</span>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">19:00</div>
+          <div class="timeline-title">🍜 첫 번째 저녁 — 사차면(沙茶面)</div>
+          <div class="timeline-desc">샤먼 대표 음식 사차면으로 첫 현지 식사. 중산루 주변 사차면 전문점 추천. 고소한 사차 국물 + 면 + 해산물. 8~15위안/인분으로 부담 없음. 어르신도 무난하게 드실 수 있는 맛.</div>
+          <span class="timeline-tag">🍜 추천: 아신 사차면(阿新沙茶面)</span>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">21:00</div>
+          <div class="timeline-title">🌃 중산루 야시장 야식 (선택)</div>
+          <div class="timeline-desc">저녁 식사 후 중산루 야시장 분위기 즐기기. 굴전·육종·오향조 간식 맛보기. 내일 쿨랑위 일정을 위해 너무 늦지 않게 귀숙.</div>
+          <span class="timeline-tag">💤 내일 07:30 조기 출발 준비</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAY 2 -->
+  <div id="day2" class="day-content">
+    <div class="card">
+      <div style="background:linear-gradient(90deg,#1565C0,#1976D2);color:white;border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <div>
+          <div style="font-size:1.2rem;font-weight:900;">🏝️ Day 2 · 1월 8일(목)</div>
+          <div style="opacity:.85;font-size:13px;margin-top:2px;">쿨랑위 섬 전일 탐방 — 세계문화유산 완전 정복</div>
+        </div>
+        <div style="text-align:right;font-size:12px;opacity:.8;">도보 중심 일정<br>편한 신발 필수!</div>
+      </div>
+
+      <!-- 쿨랑위 입장료 박스 -->
+      <div style="background:#E3F2FD;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;">
+        <strong style="color:#1565C0;">📌 쿨랑위 입장 안내</strong>
+        <div style="margin-top:6px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;color:#37474F;">
+          <div>⛴️ 페리: <strong>35위안</strong> 왕복 (알리페이)</div>
+          <div>🗼 일광암: <strong>50위안</strong></div>
+          <div>🌺 숙장화원+피아노박물관: <strong>30위안</strong></div>
+          <div>⏰ 페리 첫 배: <strong>07:10</strong> (동절기)</div>
+        </div>
+      </div>
+
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">07:30</div>
+          <div class="timeline-title">🌅 조기 출발 — 국내여객부두(轮渡码头)</div>
+          <div class="timeline-desc">인파가 몰리기 전 이른 아침 출발. 숙소에서 택시 또는 버스로 국내여객부두 이동. 알리페이로 페리 왕복권 구매(35위안). 약 10분 후 쿨랑위 동도두(东渡头) 하선.</div>
+          <span class="timeline-tag">💡 오전 일찍 갈수록 한적하고 사진 좋음</span>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">08:00</div>
+          <div class="timeline-title">🗼 일광암(日光岩) 등반</div>
+          <div class="timeline-desc">쿨랑위 최고봉 92.7m. '샤먼 제1봉'. 정상에서 쿨랑위 섬 전체 + 샤먼 시내 + 푸른 바다 360도 파노라마. 입장료 50위안. 완만한 계단 코스라 어르신도 가능 (약 20분 소요). 정상 사진 명소.</div>
+          <span class="timeline-tag">📸 오전 햇살이 가장 아름다운 뷰포인트</span>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">10:00</div>
+          <div class="timeline-title">🎹 숙장화원(菽庄花园) + 피아노박물관</div>
+          <div class="timeline-desc">통합 입장권 30위안. 1913년 조성된 정원으로 바다와 연결된 독특한 구조. 숙장화원 내 피아노박물관에는 세계 희귀 피아노 100여 대 전시. 쿨랑위 '피아노의 섬' 유래를 알 수 있는 곳. 약 1시간 30분 소요.</div>
+          <span class="timeline-tag">🎵 피아노 연주 공연 시간 확인 권장</span>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">11:30</div>
+          <div class="timeline-title">🏛️ 만국건축박람(万国建筑博览) 골목 산책</div>
+          <div class="timeline-desc">쿨랑위 전체가 유네스코 세계문화유산. 영국·독일·일본 등 각국 영사관 건물이 남아있는 유럽풍 골목. 인스타 명소 골목 탐방. 아기자기한 카페·아이스크림 가게.</div>
+          <span class="timeline-tag">🌍 세계문화유산 2017년 등재</span>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">12:30</div>
+          <div class="timeline-title">🦞 쿨랑위 단체 점심</div>
+          <div class="timeline-desc">섬 내 해산물 레스토랑에서 단체 점심. 민난(闽南) 전통 요리·해산물 코스. 13명 단체는 사전 예약 권장 (룸·바오샹 예약). 1인 60~100위안 예상. 식사 후 섬 내 짧은 낮잠·휴식.</div>
+          <span class="timeline-tag">🍽️ 13명 단체 테이블·룸(包厢) 사전 예약 필수</span>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">14:00</div>
+          <div class="timeline-title">🏖️ 해안 산책로 + 카페 자유 시간</div>
+          <div class="timeline-desc">쿨랑위 섬 해안선 따라 자유 산책. 섬 곳곳의 갤러리·공방·기념품 탐방. 아이스크림·타피오카 음료 즐기기. 어르신은 해변 벤치에서 여유로운 휴식. 석양 전까지 자유롭게.</div>
+          <span class="timeline-tag">📸 골목 사진 찍으며 여유롭게</span>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">16:30</div>
+          <div class="timeline-title">⛴️ 본섬 귀환 페리</div>
+          <div class="timeline-desc">성수기에는 귀환 페리 줄이 길 수 있으니 16:30 이전 부두 도착 권장. 페리로 약 10분. 숙소 귀환 후 샤워·휴식.</div>
+          <span class="timeline-tag">⚠️ 동절기 막 페리 17:30 확인</span>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">19:00</div>
+          <div class="timeline-title">🌃 중산루(中山路) 야시장 저녁</div>
+          <div class="timeline-desc">샤먼 최대 먹거리 보행자 거리. 불빛 환한 야시장 분위기. 굴전(蚵仔煎, 15~25위안), 토순동(土笋冻, 해물묵), 해산물 꼬치, 오향조(五香条), 육종(肉粽). 걸어 다니며 다양한 간식 체험.</div>
+          <span class="timeline-tag">🍢 1인 40~60위안이면 배부르게 먹을 수 있음</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAY 3 -->
+  <div id="day3" class="day-content">
+    <div class="card">
+      <div style="background:linear-gradient(90deg,var(--green),#388E3C);color:white;border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <div>
+          <div style="font-size:1.2rem;font-weight:900;">🏛️ Day 3 · 1월 9일(금)</div>
+          <div style="opacity:.85;font-size:13px;margin-top:2px;">남보타사 · 샤먼대학 · 환도루 해안 · 쩡쭈오안</div>
+        </div>
+        <div style="text-align:right;font-size:12px;opacity:.8;">본섬 핵심 코스<br>약 12~15km 이동</div>
+      </div>
+
+      <div style="background:#E8F5E9;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;">
+        <strong style="color:var(--green);">📌 Day 3 사전 준비사항</strong>
+        <div style="margin-top:6px;color:#37474F;">
+          ⚠️ <strong>샤먼대학</strong>은 위챗(WeChat) 미니프로그램으로 <strong>1~3일 전 예약 필수</strong> (여권번호 등록, 당일 실물 여권 지참)
+        </div>
+      </div>
+
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">08:30</div>
+          <div class="timeline-title">🛕 남보타사(南普陀寺) — 무료 입장</div>
+          <div class="timeline-desc">천 년 역사 불교 사원. 웅장한 산을 배경으로 한 대형 사원 단지. 무료 입장(08:00~17:00). 방생지 연못·대웅보전·관음전 순서로 관람 약 1시간 소요. 어르신 평지 산책 코스. 원하는 분은 사원 뒤편 등산로(약 1~2km) 트레킹 가능.</div>
+          <span class="timeline-tag">🆓 무료 입장 · 약 1시간 소요</span>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">10:00</div>
+          <div class="timeline-title">🎓 샤먼대학(厦门大学) 캠퍼스</div>
+          <div class="timeline-desc">중국 최고 아름다운 캠퍼스로 손꼽히는 곳. 1921년 개교. 붉은 민난(闽南) 스타일 건축과 백로주(白鹭洲) 호수의 조화. 사진 명소. 무료 입장이지만 <strong>위챗 미니프로그램 사전 예약 + 여권 지참 필수</strong>. 약 1.5시간 자유 관람.</div>
+          <span class="timeline-tag">⚠️ 반드시 사전 예약! 당일 입장 불가</span>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">12:00</div>
+          <div class="timeline-title">🦞 단체 해산물 점심</div>
+          <div class="timeline-desc">샤먼대학 인근 해산물 전문 레스토랑. 신선한 전복·새우·꽃게 코스. 13명 단체 테이블·룸(包厢) 사전 예약 필수. 1인 100~150위안 예상. 점심 후 잠깐 휴식.</div>
+          <span class="timeline-tag">🦀 샤먼 최고의 해산물 식사!</span>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">13:30</div>
+          <div class="timeline-title">🌿 샤먼 원림식물원(厦门园林植物园)</div>
+          <div class="timeline-desc">열대우림·선인장 정원·장미원 등 다양한 테마 구역. 드넓은 부지로 <strong>셔틀버스 이용 권장</strong> (입장료 별도). 어르신들도 부담 없이 즐길 수 있는 완만한 산책로. 1월 선인장 전시 특히 인기. 1인 약 30위안.</div>
+          <span class="timeline-tag">🌵 셔틀버스 이용 시 체력 부담 최소화</span>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">15:30</div>
+          <div class="timeline-title">🌊 환도로(环岛路) 해안 일몰</div>
+          <div class="timeline-desc">샤먼 섬 해안선을 따라 이어진 43km 드라이브 코스. 버스·택시 이동. 탁 트인 바다와 하얀 파도. 부모님 세대는 해변 벤치 산책, 자녀 세대는 자전거 대여(약 60위안/일). <strong>1월 일몰 시간 약 17:40</strong> — 황금빛 노을 감상 최적.</div>
+          <span class="timeline-tag">🌅 일몰 명소 · 일몰 30분 전 도착 추천</span>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">15:30</div>
+          <div class="timeline-title">☕ 쩡쭈오안(曾厝垵) 문화창의촌</div>
+          <div class="timeline-desc">옛 어촌 마을이 개성 있는 예술·문화 공간으로 변신. 무료 입장. 알록달록한 벽화·공방·독립 카페 가득. 커피·케이크·타피오카 즐기기. 기념품·수공예품 쇼핑. 젊은 세대와 어르신 모두 좋아하는 분위기.</div>
+          <span class="timeline-tag">🆓 무료 입장 · 카페 1잔 20~30위안</span>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">18:00</div>
+          <div class="timeline-title">🍽️ 쩡쭈오안 야시장 저녁</div>
+          <div class="timeline-desc">해가 지면 불빛이 켜지는 쩡쭈오안 야시장. 꼬치·해산물 튀김·달콤한 디저트. 양꼬치·새우 타코야끼·빙탕후루. 걸어 다니며 즐기는 활기찬 분위기. 1인 30~50위안이면 충분.</div>
+          <span class="timeline-tag">🌃 쩡쭈오안이 중산루보다 한적하고 로컬 분위기</span>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">20:00</div>
+          <div class="timeline-title">🚢 야경 유람선 투어 (선택 프로그램)</div>
+          <div class="timeline-desc">샤먼 항구 유람선으로 쿨랑위·샤먼 야경 감상. 빛으로 물든 야경 파노라마. 1인 120~200위안. 약 1시간 소요. 사전 예약 권장. 체력이 있는 분들 선택 참여.</div>
+          <span class="timeline-tag">🌟 선택 사항 — 체력에 따라 결정</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAY 4 -->
+  <div id="day4" class="day-content">
+    <div class="card">
+      <div style="background:linear-gradient(90deg,#6A1B9A,#7B1FA2);color:white;border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <div>
+          <div style="font-size:1.2rem;font-weight:900;">🛍️ Day 4 · 1월 10일(토)</div>
+          <div style="opacity:.85;font-size:13px;margin-top:2px;">자유 쇼핑 · 마지막 점심 · 귀국</div>
+        </div>
+        <div style="text-align:right;font-size:12px;opacity:.8;">공항 2시간 전 도착<br>짐 미리 준비!</div>
+      </div>
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">07:00</div>
+          <div class="timeline-title">🌅 숙소 조식 + 체크아웃</div>
+          <div class="timeline-desc">마지막 아침 식사. 체크아웃 전 짐 정리. 대형 짐은 호텔 프런트에 보관 요청. 오전 자유 시간 활용.</div>
+          <span class="timeline-tag">🧳 짐 보관 후 가볍게 외출</span>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">09:00</div>
+          <div class="timeline-title">🛍️ 마지막 쇼핑 — 기념품 · 특산품</div>
+          <div class="timeline-desc">
+            <strong>샤먼 특산품 추천:</strong><br>
+            • 샤먼 땅콩버터(花生酱) — 샤먼 대표 기념품<br>
+            • 건해삼·굴 가공품 — 해산물 선물용<br>
+            • 차(铁观音 철관음 우롱차) — 푸젠성 명차<br>
+            • 쿨랑위 수제 쿠키·캔디<br>
+            SM시티 쇼핑몰 또는 중산루 기념품 가게 이용.
+          </div>
+          <span class="timeline-tag">💡 마트(大润发, 大卖场)가 더 저렴함</span>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">11:30</div>
+          <div class="timeline-title">🍜 마지막 단체 점심 — 여행 마무리 식사</div>
+          <div class="timeline-desc">가족 13명 함께하는 마지막 식사. 사차면 전문점 또는 해산물 코스. 여행 소감·추억 나누기. 다음 가족 여행 이야기. 계산은 알리페이로.</div>
+          <span class="timeline-tag">🥢 마지막 사차면은 꼭 드세요!</span>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">13:30</div>
+          <div class="timeline-title">🚌 샤먼 가오치공항(XMN) 이동</div>
+          <div class="timeline-desc">공항버스(10위안, 약 40분) 또는 디디 택시(70~100위안). 13명은 택시 3~4대 분승. 출발 2시간 전 공항 도착 목표. 항공편 시간 최종 확인.</div>
+          <span class="timeline-tag">⏰ 출발 2시간 전 공항 도착 권장</span>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">15:00</div>
+          <div class="timeline-title">✈️ 공항 수속 · 출국</div>
+          <div class="timeline-desc">단체 체크인 카운터. 수하물 위탁 (23kg 초과 주의 — 기념품 무게 체크). 출국 심사 후 면세점 이용. 탑승구 확인.</div>
+          <span class="timeline-tag">🛍️ 면세점에서 마지막 쇼핑 기회</span>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">17:00~</div>
+          <div class="timeline-title">🏠 샤먼 출발 → 인천 귀국</div>
+          <div class="timeline-desc">약 2시간~3시간 25분 비행. 인천공항 도착 후 수하물 수취. 가족 여행 무사히 완료! 🎉</div>
+          <span class="timeline-tag">🎉 3박 4일 가족 여행 완성!</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- MAP -->
+<section id="map">
+  <h2 class="section-title">🗺️ 샤먼 여행 지도</h2>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:16px;">구글 마이맵 · 레이어별 마커 · 마커 클릭 시 상세정보</p>
+
+  <!-- 레이어 범례 버튼 -->
+  <div class="map-filter">
+    <button class="mf-btn mf-d1 on" data-lid="0">🔴 여행 1일차</button>
+    <button class="mf-btn mf-d2 on" data-lid="1">🔵 여행 2일차</button>
+    <button class="mf-btn mf-d3 on" data-lid="2">🟢 여행 3일차</button>
+    <button class="mf-btn mf-d4 on" data-lid="3">🟣 여행 4일차</button>
+    <button class="mf-btn mf-food on" data-lid="4">🍜 음식점</button>
+    <button class="mf-btn mf-sight on" data-lid="5">🛍️ 쇼핑</button>
+  </div>
+
+  <!-- 지도 + 장소 패널 -->
+  <div class="map-places-wrap">
+    <div class="map-wrap-leaf" style="position:relative;">
+      <div id="gmapFacade" onclick="loadGmap()" style="width:100%;height:100%;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg,#1AA89B,#0F766E);color:#fff;text-align:center;padding:20px;">
+        <div style="font-size:2.6rem;">🗺️</div>
+        <div style="font-size:1.05rem;font-weight:800;">샤먼 여행 지도 보기</div>
+        <div style="font-size:13px;opacity:.9;">클릭하면 Google 지도가 열립니다<br>(여행 1~4일차 · 맛집 · 쇼핑 레이어)</div>
+        <div style="margin-top:6px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.5);border-radius:24px;padding:8px 20px;font-weight:700;font-size:14px;">📍 지도 불러오기</div>
+      </div>
+    </div>
+    <div class="places-panel">
+      <div class="pp-header">
+        <span>📍 레이어 안내</span>
+        <span class="pp-count">6개 레이어</span>
+      </div>
+      <div class="pp-tabs">
+        <button class="pp-tab on" onclick="ppLayerTab(this,'all')">전체</button>
+        <button class="pp-tab" onclick="ppLayerTab(this,'day')">일정</button>
+        <button class="pp-tab" onclick="ppLayerTab(this,'spot')">맛집·쇼핑</button>
+      </div>
+      <div class="pp-list" id="ppList"></div>
+    </div>
+  </div>
+
+  <div style="margin-top:12px;font-size:12px;color:var(--muted);text-align:right;">
+    🗺️ <a href="https://www.google.com/maps/d/edit?mid=1FjbtCPM458IsleDSfJu24NlrW1nXYGA&usp=sharing" target="_blank" style="color:var(--blue);">구글 마이맵에서 편집 →</a>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- FOOD -->
+<section id="food">
+  <h2 class="section-title">샤먼 음식 가이드</h2>
+  <div class="card-grid">
+    <div class="card">
+      <div class="food-card">
+        <div class="food-emoji">🍜</div>
+        <div class="food-info">
+          <h3>사차면</h3>
+          <div class="cn">沙茶面 (Shā chá miàn)</div>
+          <p>샤먼 대표 음식. 사차 소스 국물에 면·해산물·두부 등. 고소하고 진한 맛. 어르신도 무난하게 드심.</p>
+          <span class="price-tag">💴 8~15위안</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="food-card">
+        <div class="food-emoji">🦪</div>
+        <div class="food-info">
+          <h3>굴전</h3>
+          <div class="cn">蚵仔煎 (Hézǐ jiān)</div>
+          <p>신선한 굴과 달걀을 볶은 샤먼식 굴전. 바삭한 겉면과 촉촉한 속. 포장마차·야시장에서 즉석 조리.</p>
+          <span class="price-tag">💴 15~25위안</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="food-card">
+        <div class="food-emoji">🍮</div>
+        <div class="food-info">
+          <h3>토순동</h3>
+          <div class="cn">土笋冻 (Tǔ sǔn dòng)</div>
+          <p>갯지렁이 추출물 묵. 특이하지만 콜라겐 풍부. 초간장에 찍어먹는 샤먼 별미. 모험적인 분께 추천!</p>
+          <span class="price-tag">💴 10~20위안</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="food-card">
+        <div class="food-emoji">🥟</div>
+        <div class="food-info">
+          <h3>육종</h3>
+          <div class="cn">肉粽 (Ròu zòng)</div>
+          <p>찹쌀+돼지고기+계란+버섯을 대나무잎에 싼 만두. 든든한 아침식사로 인기. 달콤짭짤한 맛.</p>
+          <span class="price-tag">💴 10~15위안</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="food-card">
+        <div class="food-emoji">🦆</div>
+        <div class="food-info">
+          <h3>생강 오리찜</h3>
+          <div class="cn">姜母鸭 (Jiāng mǔ yā)</div>
+          <p>생강과 오리를 함께 찐 샤먼 전통 보양식. 몸을 따뜻하게 해줘 1월 겨울 여행에 최적. 깊고 진한 국물이 일품. 어르신들 특히 선호.</p>
+          <span class="price-tag">💴 60~100위안/인</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="food-card">
+        <div class="food-emoji">🦀</div>
+        <div class="food-info">
+          <h3>신선 해산물</h3>
+          <div class="cn">海鲜 (Hǎixiān)</div>
+          <p>샤먼은 항구도시. 전복·새우·꽃게 등 초신선 해산물 레스토랑 풍부. 단체 식사에 적합한 대형 레스토랑 다수. 1인 3~5만 원이면 충분히 훌륭한 식사 가능.</p>
+          <span class="price-tag">💴 100~200위안/인</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="food-card">
+        <div class="food-emoji">🧆</div>
+        <div class="food-info">
+          <h3>봄나물 전</h3>
+          <div class="cn">五香条 (Wǔxiāng tiáo)</div>
+          <p>돼지고기+야채를 두부껍질에 말아 튀긴 스낵. 오향 향신료의 독특한 맛. 중산루 야시장 필수 간식.</p>
+          <span class="price-tag">💴 5~10위안</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px;background:#FFF8E1;border-color:var(--gold);">
+    <h3 style="font-weight:800;color:var(--dark-red);margin-bottom:10px;">🏠 단체(12명) 식당 예약 팁</h3>
+    <ul style="list-style:none;font-size:14px;color:var(--muted);">
+      <li style="padding:4px 0;">• 13명 단체는 사전 전화/알리페이 예약 필수 (룸(包厢·바오샹) 요청 권장) (당일 입장 어려울 수 있음)</li>
+      <li style="padding:4px 0;">• 코스 정식(套餐)이 단체에 유리 — 1인 80~150위안 코스 요청 가능</li>
+      <li style="padding:4px 0;">• 어르신을 위한 담백한 음식(蒸菜, 찜 요리) 별도 주문 요청</li>
+      <li style="padding:4px 0;">• 중국 식당은 대부분 알리페이/위챗페이 결제만 가능 (카드 단말기 없는 경우 多)</li>
+    </ul>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- LANGUAGE -->
+<section id="language">
+  <h2 class="section-title">필수 중국어 회화</h2>
+  <div class="phrase-grid">
+    <div class="phrase-card">
+      <div class="kr">안녕하세요</div>
+      <div class="cn">你好</div>
+      <div class="pinyin">Nǐ hǎo</div>
+      <div class="sound">니 하오</div>
+    </div>
+    <div class="phrase-card">
+      <div class="kr">감사합니다</div>
+      <div class="cn">谢谢</div>
+      <div class="pinyin">Xièxie</div>
+      <div class="sound">씨에 씨에</div>
+    </div>
+    <div class="phrase-card">
+      <div class="kr">얼마예요?</div>
+      <div class="cn">多少钱？</div>
+      <div class="pinyin">Duōshǎo qián?</div>
+      <div class="sound">뚜어 샤오 치엔?</div>
+    </div>
+    <div class="phrase-card">
+      <div class="kr">여기로 가주세요</div>
+      <div class="cn">请去这里</div>
+      <div class="pinyin">Qǐng qù zhèlǐ</div>
+      <div class="sound">칭 취 저리</div>
+    </div>
+    <div class="phrase-card">
+      <div class="kr">이거 주세요</div>
+      <div class="cn">要这个</div>
+      <div class="pinyin">Yào zhège</div>
+      <div class="sound">야오 저거</div>
+    </div>
+    <div class="phrase-card">
+      <div class="kr">화장실 어디예요?</div>
+      <div class="cn">厕所在哪里？</div>
+      <div class="pinyin">Cèsuǒ zài nǎlǐ?</div>
+      <div class="sound">처쑤오 짜이 나리?</div>
+    </div>
+    <div class="phrase-card">
+      <div class="kr">도와주세요</div>
+      <div class="cn">请帮帮我</div>
+      <div class="pinyin">Qǐng bāngbāng wǒ</div>
+      <div class="sound">칭 방방 워</div>
+    </div>
+    <div class="phrase-card">
+      <div class="kr">맛있어요!</div>
+      <div class="cn">好吃！</div>
+      <div class="pinyin">Hǎo chī!</div>
+      <div class="sound">하오 츠!</div>
+    </div>
+    <div class="phrase-card">
+      <div class="kr">영수증 주세요</div>
+      <div class="cn">请给我收据</div>
+      <div class="pinyin">Qǐng gěi wǒ shōujù</div>
+      <div class="sound">칭 게이 워 쇼우쥐</div>
+    </div>
+    <div class="phrase-card">
+      <div class="kr">병원 불러주세요</div>
+      <div class="cn">请叫救护车</div>
+      <div class="pinyin">Qǐng jiào jiùhùchē</div>
+      <div class="sound">칭 지아오 지우후처</div>
+    </div>
+    <div class="phrase-card">
+      <div class="kr">한국어 되세요?</div>
+      <div class="cn">有人会说韩语吗？</div>
+      <div class="pinyin">Yǒu rén huì shuō Hányǔ ma?</div>
+      <div class="sound">여우 런 후이 슈오 한위 마?</div>
+    </div>
+    <div class="phrase-card">
+      <div class="kr">천천히 말씀해주세요</div>
+      <div class="cn">请说慢点</div>
+      <div class="pinyin">Qǐng shuō màn diǎn</div>
+      <div class="sound">칭 슈오 만 디엔</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <h3 style="font-weight:800;color:var(--red);margin-bottom:12px;">📱 번역 앱 추천</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
+      <div style="background:var(--bg);border-radius:10px;padding:12px;">
+        <div style="font-weight:700;font-size:15px;">파파고</div>
+        <div style="font-size:13px;color:var(--muted);">카메라 번역 탁월. 메뉴판 촬영으로 즉시 번역</div>
+      </div>
+      <div style="background:var(--bg);border-radius:10px;padding:12px;">
+        <div style="font-weight:700;font-size:15px;">구글 번역</div>
+        <div style="font-size:13px;color:var(--muted);">오프라인 한국어↔중국어 다운로드 필수</div>
+      </div>
+      <div style="background:var(--bg);border-radius:10px;padding:12px;">
+        <div style="font-weight:700;font-size:15px;">위챗 번역</div>
+        <div style="font-size:13px;color:var(--muted);">채팅창에서 바로 번역. 현지인과 소통 편리</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- PAYMENT -->
+<section id="payment">
+  <h2 class="section-title">결제 가이드 — 알리페이 설정</h2>
+  <div class="card" style="background:#FFF3E0;border-color:#FF9800;">
+    <div style="font-weight:800;color:#E65100;font-size:1rem;margin-bottom:8px;">⚠️ 중국은 현금을 거의 안 씁니다! 출발 전 알리페이 설정 필수!</div>
+    <div style="font-size:14px;color:var(--muted);">식당·마트·택시·관광지 입장권 모두 알리페이/위챗페이. 현금 환전은 비상용 소액만.</div>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <h3 style="font-weight:800;color:var(--red);margin-bottom:16px;">알리페이 설정 7단계</h3>
+    <div class="step-list">
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h4>앱 설치</h4>
+          <p>앱스토어/구글플레이에서 「Alipay」 설치 (한국 계정으로 가능)</p>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h4>휴대폰 번호로 회원가입</h4>
+          <p>한국 휴대폰 번호(+82) 사용 가능. SMS 인증코드 입력</p>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h4>여권 인증 (필수)</h4>
+          <p>여권 번호 + 여권 사진 촬영으로 외국인 인증 완료. 1~3일 소요될 수 있음</p>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <h4>Tour Pass 카드 등록</h4>
+          <p>앱 내 「Tour Pass」 메뉴 → VISA/Mastercard 한국 카드 등록 → 충전 없이 직접 카드 결제</p>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <h4>테스트 결제</h4>
+          <p>한국 내 알리페이 가맹점 또는 소액 결제로 사전 테스트 권장</p>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">6</div>
+        <div class="step-content">
+          <h4>QR 코드 결제 방법 숙지</h4>
+          <p>알리페이 앱 열기 → 화면 QR코드 보여주기(소비자 QR) 또는 상점 QR 스캔</p>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">7</div>
+        <div class="step-content">
+          <h4>13명 전원 설치 확인</h4>
+          <p>출발 1주일 전 가족 카톡방에서 설치 여부 확인. 어르신은 자녀가 도움 제공</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px;background:#E8F5E9;border-color:#4CAF50;">
+    <h3 style="font-weight:800;color:var(--green);margin-bottom:10px;">💱 현금 환전 안내</h3>
+    <ul style="list-style:none;font-size:14px;color:var(--muted);">
+      <li style="padding:4px 0;">• 1위안(CNY) ≈ 190~200원 (환율 변동 확인)</li>
+      <li style="padding:4px 0;">• 인천공항 출국 전 환전 권장 (공항 환전소, 하나은행·신한은행)</li>
+      <li style="padding:4px 0;">• 1인당 500~1,000위안 현금 소지 (비상용, 택시·포장마차 등)</li>
+      <li style="padding:4px 0;">• 200위안 이상 알리페이 결제 시 약 3% 수수료 발생</li>
+    </ul>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- PRACTICAL -->
+<section id="practical">
+  <h2 class="section-title">실용 정보</h2>
+  <div class="info-grid">
+    <div class="info-tile">
+      <div class="icon">🌡️</div>
+      <h4>1월 날씨</h4>
+      <p>평균 최고 17°C<br>평균 최저 10°C<br>아침저녁 쌀쌀<br>가벼운 패딩 필요</p>
+    </div>
+    <div class="info-tile">
+      <div class="icon">👕</div>
+      <h4>옷차림</h4>
+      <p>경량 패딩 or 두꺼운 후드<br>실내 난방 없는 곳 多<br>도톰한 잠옷 지참<br>편한 운동화 필수</p>
+    </div>
+    <div class="info-tile">
+      <div class="icon">🚌</div>
+      <h4>시내 교통</h4>
+      <p>지하철 1~4호선 운영<br>BRT 급행버스<br>디디(滴滴) 택시 앱<br>쿨랑위 페리 35위안</p>
+    </div>
+    <div class="info-tile">
+      <div class="icon">🚐</div>
+      <h4>13인 전세버스 추천</h4>
+      <p>9시간 맞춤형 전세버스 이용 시<br>단체 이동 편의·단결력 ↑<br>트립닷컴 '프라이빗 투어'<br>1666-0060 (한국 고객센터)<br><small style="color:var(--muted)">※ 구랑위 섬 내부 차량 진입 불가</small></p>
+    </div>
+    <div class="info-tile">
+      <div class="icon">📶</div>
+      <h4>와이파이·통신</h4>
+      <p><strong>홍콩망 eSIM 추천</strong> (VPN 불필요)<br>한국 통신사 로밍도 가능<br>현지 유심 20~30위안/일<br>카카오톡·구글 차단됨</p>
+    </div>
+    <div class="info-tile">
+      <div class="icon">🏥</div>
+      <h4>긴급 연락처</h4>
+      <p>경찰: 110<br>구급차: 120<br>소방: 119<br>한국총영사관: 0592-509-6280</p>
+    </div>
+    <div class="info-tile">
+      <div class="icon">🔌</div>
+      <h4>전기·어댑터</h4>
+      <p>220V (한국과 동일)<br>콘센트 모양 다를 수 있음<br>멀티 어댑터 1개 지참<br>보조배터리 필수</p>
+    </div>
+    <div class="info-tile">
+      <div class="icon">⏰</div>
+      <h4>시차</h4>
+      <p>중국 = 한국 - 1시간<br>(한국 오전 10시 = 중국 오전 9시)<br>입국 시 시계 조정</p>
+    </div>
+    <div class="info-tile">
+      <div class="icon">🏨</div>
+      <h4>숙소 추천</h4>
+      <p>쿨랑위 섬 내 게스트하우스<br>(풍경 최고, 사전 예약 필수)<br>샤먼 본섬 비즈니스 호텔<br>(교통 편리, 단체 대형 객실)</p>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- CHECKLIST -->
+<section id="checklist">
+  <h2 class="section-title">출발 전 준비물 체크리스트</h2>
+  <div class="card">
+    <div class="check-section">
+      <h3>📄 필수 서류</h3>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>여권 (유효기간 6개월 이상 남아있는지 확인)</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>귀국 항공권 출력 또는 스크린샷 저장</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>숙소 예약 확인서 (주소 영문 포함)</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>여행자 보험 가입 및 증서 출력</label></div>
+    </div>
+    <div class="check-section">
+      <h3>📱 앱 설치 (출발 전 반드시!)</h3>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>알리페이 설치 + 여권 인증 + 카드 등록 완료</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>고덕지도(高德地图) 설치 (중국 내비게이션)</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>파파고 또는 구글번역 오프라인 팩 다운로드</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>디디(滴滴) 택시 앱 설치 및 카드 등록</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>홍콩망 eSIM 개통 또는 한국 통신사 로밍 신청 (VPN 없이 카카오톡 사용 가능)</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>샤먼대학 캠퍼스 위챗 미니프로그램 사전 예약 + 여권 등록</label></div>
+    </div>
+    <div class="check-section">
+      <h3>💰 금전 준비</h3>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>위안화(CNY) 환전 — 1인당 500~1,000위안 현금 (비상용)</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>은련카드(銀聯/Union Pay) 준비 — 알리페이 안될 때 대비</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>해외결제 가능 VISA/Mastercard 카드 지참</label></div>
+    </div>
+    <div class="check-section">
+      <h3>👕 의류 및 기타</h3>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>얇은 옷 여러 겹 + 바람막이·가디건 (1월 15~18°C)</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>편한 운동화 (많이 걷는 일정)</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>도톰한 잠옷 (실내 난방 부족한 경우 대비)</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>보조배터리 10,000mAh 이상 (기내 수하물 반입)</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>3구 플러그용 멀티탭 (중국 콘센트 대응, 1가족 1개)</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>상비약 (소화제, 진통제, 감기약)</label></div>
+    </div>
+    <div style="margin-top:16px;text-align:right;">
+      <button onclick="resetChecklist()" style="background:var(--muted);color:white;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;font-size:13px;">초기화</button>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div style="font-size:1.5rem;margin-bottom:8px;">🏮</div>
+  <div><strong>샤먼 대가족 여행 2027</strong> · 1월 7일 ~ 10일 · 3박 4일 · 13명</div>
+  <div style="margin-top:6px;">厦门 · Xiamen · 福建省 · China</div>
+  <div style="margin-top:12px;font-size:12px;opacity:.6;">정보 기준: 2026년 · 최신 정보는 출발 전 재확인 바랍니다 · 한국 총영사관(샤먼): 0592-509-6280</div>
+</footer>
+
+<script>
+// SLIDE DECK (여행 참고 자료)
+var DECK_TOTAL = 19;
+var deckIdx = 1;
+(function initDeck(){
+  var thumbs = document.getElementById('deckThumbs');
+  if (!thumbs) return;
+  document.getElementById('deckTotal').textContent = DECK_TOTAL;
+  for (var i = 1; i <= DECK_TOTAL; i++) {
+    var t = document.createElement('img');
+    t.src = 'slides/slide-' + i + '.png';
+    t.loading = 'lazy';
+    t.dataset.n = i;
+    t.onclick = (function(n){ return function(){ deckGo(n); }; })(i);
+    if (i === 1) t.className = 'active';
+    thumbs.appendChild(t);
+  }
+})();
+function deckGo(n){
+  if (n < 1) n = DECK_TOTAL;
+  if (n > DECK_TOTAL) n = 1;
+  deckIdx = n;
+  document.getElementById('deckImg').src = 'slides/slide-' + n + '.png';
+  document.getElementById('deckCur').textContent = n;
+  var ts = document.querySelectorAll('#deckThumbs img');
+  ts.forEach(function(t){ t.classList.toggle('active', +t.dataset.n === n); });
+  var active = ts[n-1];
+  if (active) active.scrollIntoView({ block:'nearest', inline:'center', behavior:'smooth' });
+}
+function deckMove(d){ deckGo(deckIdx + d); }
+document.addEventListener('keydown', function(e){
+  if (!document.getElementById('deck')) return;
+  if (e.key === 'ArrowLeft') deckMove(-1);
+  if (e.key === 'ArrowRight') deckMove(1);
+});
+
+// MAP: 클릭 시 Google 지도 로드 (초기 로딩 속도·미리보기 개선)
+function loadGmap() {
+  var f = document.getElementById('gmapFacade');
+  if (!f) return;
+  var iframe = document.createElement('iframe');
+  iframe.id = 'gmapEmbed';
+  iframe.src = 'https://www.google.com/maps/d/embed?mid=1FjbtCPM458IsleDSfJu24NlrW1nXYGA&hl=ko';
+  iframe.style.cssText = 'width:100%;height:100%;border:0;';
+  iframe.setAttribute('allowfullscreen', '');
+  f.replaceWith(iframe);
+}
+
+// DAY TABS
+function showDay(dayId) {
+  document.querySelectorAll('.day-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.day-tab').forEach(el => el.classList.remove('active'));
+  document.getElementById(dayId).classList.add('active');
+  event.target.closest('.day-tab').classList.add('active');
+}
+
+// CHECKLIST
+function toggleCheck(item) {
+  const cb = item.querySelector('input[type=checkbox]');
+  cb.checked = !cb.checked;
+  item.classList.toggle('checked', cb.checked);
+  saveChecklist();
+}
+function saveChecklist() {
+  const states = Array.from(document.querySelectorAll('.check-item input')).map(cb => cb.checked);
+  localStorage.setItem('shamon_checklist', JSON.stringify(states));
+}
+function loadChecklist() {
+  const saved = localStorage.getItem('shamon_checklist');
+  if (!saved) return;
+  const states = JSON.parse(saved);
+  document.querySelectorAll('.check-item').forEach((item, i) => {
+    if (states[i]) {
+      item.querySelector('input').checked = true;
+      item.classList.add('checked');
+    }
+  });
+}
+function resetChecklist() {
+  document.querySelectorAll('.check-item').forEach(item => {
+    item.querySelector('input').checked = false;
+    item.classList.remove('checked');
+  });
+  localStorage.removeItem('shamon_checklist');
+}
+loadChecklist();
+
+// ──────────────────────────────────────────
+// NAV AUTO-SCROLL
+// ──────────────────────────────────────────
+document.querySelectorAll('nav a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+
+// ──────────────────────────────────────────
+// 구글 마이맵 레이어 패널
+// ──────────────────────────────────────────
+const MAP_LAYERS = [
+  { key:'day1',  label:'여행 1일차', emoji:'🔴', color:'#C8102E', type:'day',
+    desc:'인천 출발 · 공항 도착 · 숙소 체크인 · 중산루 야시장',
+    gmap:'https://www.google.com/maps/d/viewer?mid=1FjbtCPM458IsleDSfJu24NlrW1nXYGA' },
+  { key:'day2',  label:'여행 2일차', emoji:'🔵', color:'#1565C0', type:'day',
+    desc:'쿨랑위 섬 전일 탐방 · 일광암 · 숙장화원 · 피아노 박물관',
+    gmap:'https://www.google.com/maps/d/viewer?mid=1FjbtCPM458IsleDSfJu24NlrW1nXYGA' },
+  { key:'day3',  label:'여행 3일차', emoji:'🟢', color:'#2E7D32', type:'day',
+    desc:'남보타사 · 샤먼대학 · 환도루 · 쩡쭈오안 마을',
+    gmap:'https://www.google.com/maps/d/viewer?mid=1FjbtCPM458IsleDSfJu24NlrW1nXYGA' },
+  { key:'day4',  label:'여행 4일차', emoji:'🟣', color:'#6A1B9A', type:'day',
+    desc:'자유시간 · 귀국 공항 이동 · 인천 도착',
+    gmap:'https://www.google.com/maps/d/viewer?mid=1FjbtCPM458IsleDSfJu24NlrW1nXYGA' },
+  { key:'food',  label:'음식점',    emoji:'🍜', color:'#E65100', type:'spot',
+    desc:'사차면·굴전·해물묵·단체 식사 가능 레스토랑',
+    gmap:'https://www.google.com/maps/d/viewer?mid=1FjbtCPM458IsleDSfJu24NlrW1nXYGA' },
+  { key:'shop',  label:'쇼핑',      emoji:'🛍️', color:'#1976D2', type:'spot',
+    desc:'중산루 쇼핑거리 · 기념품점 · 슈퍼마켓',
+    gmap:'https://www.google.com/maps/d/viewer?mid=1FjbtCPM458IsleDSfJu24NlrW1nXYGA' },
+];
+
+function ppLayerTab(btn, filter) {
+  document.querySelectorAll('.pp-tab').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderLayerList(filter);
+}
+
+function renderLayerList(filter) {
+  const list = document.getElementById('ppList');
+  if (!list) return;
+  const items = filter === 'all' ? MAP_LAYERS
+    : filter === 'day' ? MAP_LAYERS.filter(l => l.type === 'day')
+    : MAP_LAYERS.filter(l => l.type === 'spot');
+  list.innerHTML = items.map((l, i) => `
+    <div class="pp-item" onclick="window.open('${l.gmap}','_blank')">
+      <div class="pp-num" style="background:${l.color}">${l.emoji}</div>
+      <div class="pp-info">
+        <div class="pp-name">${l.label}</div>
+        <div class="pp-desc">${l.desc}</div>
+      </div>
+      <a class="pp-gmap" href="${l.gmap}" target="_blank" onclick="event.stopPropagation()">지도</a>
+    </div>`).join('');
+}
+
+// 초기 렌더
+renderLayerList('all');
+
+</script>
+</body>
+</html>

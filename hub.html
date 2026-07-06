@@ -277,11 +277,14 @@ function getStatus(p) {
   return 'active';
 }
 
+// ── 전용 페이지 연결 (이름 → 페이지) ──
+const PAGE_LINKS = { '샤먼 가족여행': 'xiamen.html' };
+
 // ── 카드 HTML ──
 function cardHTML(p) {
   const dates = p.start_date ? `${p.start_date}${p.end_date ? ' ~ ' + p.end_date : ''}` : '';
   const dd = dday(p.start_date);
-  return `<a class="project-card" data-id="${p.id}" href="planner.html?project=${p.id}">
+  return `<a class="project-card" data-id="${p.id}" href="${PAGE_LINKS[p.name] || `planner.html?project=${p.id}`}">
     <div class="project-card-cover" style="background:${p.cover_color||'#1a237e'}">${p.cover_emoji||'✈️'}</div>
     <div class="project-card-actions" onclick="event.preventDefault()">
       <span class="card-act-btn edit" title="편집" onclick="openEditModal('${p.id}',event)">✏️</span>
