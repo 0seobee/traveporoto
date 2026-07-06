@@ -96,6 +96,13 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.95
 .color-opt:hover,.color-opt.on{border-color:#fff}
 
 @media(max-width:600px){.project-grid{grid-template-columns:1fr}}
+
+/* 드래그 앤 드롭 */
+.project-card[draggable=true],.pt-card[draggable=true]{cursor:grab}
+.project-card.dragging,.pt-card.dragging{opacity:.35;transform:scale(.97);cursor:grabbing}
+.drop-indicator{display:none;position:absolute;left:0;right:0;height:3px;background:var(--accent);border-radius:2px;z-index:10;pointer-events:none}
+.project-card,.pt-card{position:relative}
+.project-grid.drag-active{outline:2px dashed rgba(92,107,192,.3);border-radius:16px;outline-offset:4px}
 </style>
 </head>
 <body>
@@ -274,7 +281,7 @@ function getStatus(p) {
 function cardHTML(p) {
   const dates = p.start_date ? `${p.start_date}${p.end_date ? ' ~ ' + p.end_date : ''}` : '';
   const dd = dday(p.start_date);
-  return `<a class="project-card" href="planner.html?project=${p.id}">
+  return `<a class="project-card" data-id="${p.id}" href="planner.html?project=${p.id}">
     <div class="project-card-cover" style="background:${p.cover_color||'#1a237e'}">${p.cover_emoji||'✈️'}</div>
     <div class="project-card-actions" onclick="event.preventDefault()">
       <span class="card-act-btn edit" title="편집" onclick="openEditModal('${p.id}',event)">✏️</span>
@@ -454,9 +461,146 @@ function openPtEditModal(e) {
   document.getElementById('projectModal').classList.add('open');
 }
 
+// ── 드래그 앤 드롭 ──
+const ORDER_KEY = 'pt-hub-order';
+let dragSrc = null;
+
+function initDraggable() {
+  const GRIDS = ['grid-active', 'grid-planning', 'grid-done'].map(id => document.getElementById(id));
+
+  // 카드에 드래그 이벤트 부착
+  function attachCard(card) {
+    if (card.dataset.dragInit) return;
+    card.dataset.dragInit = '1';
+    card.draggable = true;
+
+    card.addEventListener('dragstart', e => {
+      dragSrc = card;
+      e.dataTransfer.effectAllowed = 'move';
+      setTimeout(() => card.classList.add('dragging'), 0);
+      GRIDS.forEach(g => g && g.classList.add('drag-active'));
+    });
+
+    card.addEventListener('dragend', () => {
+      card.classList.remove('dragging');
+      GRIDS.forEach(g => g && g.classList.remove('drag-active'));
+      dragSrc = null;
+      saveHubOrder();
+    });
+
+    card.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (!dragSrc || dragSrc === card) return;
+      const rect = card.getBoundingClientRect();
+      const after = e.clientY > rect.top + rect.height / 2;
+      const grid = card.closest('.project-grid');
+      if (after) grid.insertBefore(dragSrc, card.nextSibling);
+      else        grid.insertBefore(dragSrc, card);
+    });
+  }
+
+  // 그리드에도 dragover — 빈 영역에 드롭 가능
+  GRIDS.forEach(grid => {
+    if (!grid) return;
+    grid.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (!dragSrc) return;
+      const target = e.target.closest('.project-card, .pt-card');
+      if (target) return; // 카드 위면 카드의 dragover가 처리
+      // 그리드 빈 공간: new-card 앞에 삽입
+      const newCard = grid.querySelector('.new-card');
+      if (newCard) grid.insertBefore(dragSrc, newCard);
+      else         grid.appendChild(dragSrc);
+    });
+    grid.addEventListener('drop', e => e.preventDefault());
+  });
+
+  // 현재 DOM의 모든 카드에 부착
+  document.querySelectorAll('.project-card, .pt-card').forEach(attachCard);
+
+  // renderProjects 후 새로 추가된 카드에도 부착 (MutationObserver)
+  const observer = new MutationObserver(muts => {
+    muts.forEach(m => m.addedNodes.forEach(n => {
+      if (n.classList?.contains('project-card')) attachCard(n);
+    }));
+  });
+  GRIDS.forEach(g => g && observer.observe(g, { childList: true }));
+}
+
+function saveHubOrder() {
+  const order = {};
+  ['active', 'planning', 'done'].forEach(section => {
+    const grid = document.getElementById('grid-' + section);
+    if (!grid) return;
+    [...grid.children].forEach((card, i) => {
+      if (card.classList.contains('new-card') || card.classList.contains('hub-empty')) return;
+      const id = card.dataset.id || (card.id === 'ptCard' ? '__pt__' : null);
+      if (id) order[id] = { section, index: i };
+    });
+  });
+  localStorage.setItem(ORDER_KEY, JSON.stringify(order));
+
+  // Supabase sort_order 동기화
+  ['active', 'planning', 'done'].forEach(section => {
+    const grid = document.getElementById('grid-' + section);
+    if (!grid) return;
+    const cards = [...grid.querySelectorAll('.project-card[data-id]')];
+    cards.forEach((card, i) => {
+      fetch(`${SB_URL}/rest/v1/projects?id=eq.${card.dataset.id}`, {
+        method: 'PATCH', headers: SB_H, body: JSON.stringify({ sort_order: i })
+      });
+    });
+  });
+
+  updateSectionCounts();
+}
+
+function applyHubOrder() {
+  const order = JSON.parse(localStorage.getItem(ORDER_KEY) || '{}');
+  if (!Object.keys(order).length) return;
+
+  const grids = {
+    active: document.getElementById('grid-active'),
+    planning: document.getElementById('grid-planning'),
+    done: document.getElementById('grid-done')
+  };
+  const allCards = {};
+  document.querySelectorAll('.project-card[data-id]').forEach(c => { allCards[c.dataset.id] = c; });
+  const ptCard = document.getElementById('ptCard');
+  if (ptCard) allCards['__pt__'] = ptCard;
+
+  Object.entries(order)
+    .sort((a, b) => a[1].index - b[1].index)
+    .forEach(([id, { section }]) => {
+      const card = allCards[id];
+      const grid = grids[section];
+      if (!card || !grid) return;
+      const newCard = grid.querySelector('.new-card');
+      if (newCard) grid.insertBefore(card, newCard);
+      else         grid.appendChild(card);
+    });
+
+  updateSectionCounts();
+}
+
+function updateSectionCounts() {
+  ['active', 'planning', 'done'].forEach(s => {
+    const grid = document.getElementById('grid-' + s);
+    if (!grid) return;
+    const count = [...grid.children].filter(c =>
+      !c.classList.contains('new-card') && !c.classList.contains('hub-empty')
+    ).length;
+    const el = document.getElementById('cnt-' + s);
+    if (el) el.textContent = count + '개';
+  });
+}
+
 restoreCollapseStates();
 loadPtCard();
-loadProjects();
+loadProjects().then(() => {
+  applyHubOrder();
+  initDraggable();
+});
 </script>
 </body>
 </html>
