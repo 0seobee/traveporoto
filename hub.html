@@ -102,7 +102,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.95
 .project-card.dragging,.pt-card.dragging{opacity:.35;transform:scale(.97);cursor:grabbing}
 .drop-indicator{display:none;position:absolute;left:0;right:0;height:3px;background:var(--accent);border-radius:2px;z-index:10;pointer-events:none}
 .project-card,.pt-card{position:relative}
-.project-grid.drag-active{outline:2px dashed rgba(92,107,192,.3);border-radius:16px;outline-offset:4px}
+.project-grid.drag-active{outline:2px dashed rgba(92,107,192,.3);border-radius:16px;outline-offset:4px;min-height:110px}
 </style>
 </head>
 <body>
@@ -478,12 +478,40 @@ function initDraggable() {
       dragSrc = card;
       e.dataTransfer.effectAllowed = 'move';
       setTimeout(() => card.classList.add('dragging'), 0);
-      GRIDS.forEach(g => g && g.classList.add('drag-active'));
+      GRIDS.forEach(g => {
+        if (!g) return;
+        g.classList.add('drag-active');
+        // 접힌 섹션 펼치기 — 드롭 가능하도록
+        const body = g.closest('.hub-sec-body');
+        if (body && body.classList.contains('collapsed')) {
+          body.classList.remove('collapsed');
+          const header = document.querySelector(`[onclick*="${body.id}"]`);
+          const btn = header?.querySelector('.hub-sec-toggle');
+          if (btn) btn.textContent = '▼';
+        }
+        // 빈 안내 문구 제거 — 드롭 방해 방지
+        g.querySelectorAll('.hub-empty').forEach(el => el.remove());
+      });
     });
 
     card.addEventListener('dragend', () => {
       card.classList.remove('dragging');
-      GRIDS.forEach(g => g && g.classList.remove('drag-active'));
+      GRIDS.forEach(g => {
+        if (!g) return;
+        g.classList.remove('drag-active');
+        // 빈 그리드에 안내 문구 복원
+        const hasCard = g.querySelector('.project-card, .pt-card');
+        if (!hasCard && !g.querySelector('.hub-empty')) {
+          const empty = document.createElement('div');
+          empty.className = 'hub-empty';
+          empty.textContent = g.id === 'grid-done' ? '완료된 여행이 없습니다'
+                            : g.id === 'grid-active' ? '진행 중인 여행이 없습니다'
+                            : '계획 중인 여행이 없습니다';
+          const newCard = g.querySelector('.new-card');
+          if (newCard) g.insertBefore(empty, newCard);
+          else g.appendChild(empty);
+        }
+      });
       dragSrc = null;
       saveHubOrder();
     });
