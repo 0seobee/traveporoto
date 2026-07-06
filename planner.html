@@ -1041,8 +1041,8 @@ async function renderSchedule(container, tab, items) {
     <div class="pane-header">
       <div class="pane-title">📅 ${tab.title}</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="add-btn" style="font-size:12px;background:rgba(92,107,192,.2);border:1px solid var(--accent)" onclick="document.getElementById('schedXlsInput').click()">📊 Excel 가져오기</button>
-        <button class="add-btn" style="font-size:12px;background:rgba(92,107,192,.2);border:1px solid var(--accent)" onclick="document.getElementById('schedSheetBox').classList.toggle('open')">🔗 구글시트 연결</button>
+        <button class="add-btn" style="font-size:12px;background:rgba(92,107,192,.2);border:1px solid var(--accent);color:var(--text)" onclick="document.getElementById('schedXlsInput').click()">📊 Excel 가져오기</button>
+        <button class="add-btn" style="font-size:12px;background:rgba(92,107,192,.2);border:1px solid var(--accent);color:var(--text)" onclick="document.getElementById('schedSheetBox').classList.toggle('open')">🔗 구글시트 연결</button>
         <button class="pane-collapse-btn" onclick="toggleAllPS('pw-sched-${tab.id}',this)">접기 ▲</button>
       </div>
     </div>
