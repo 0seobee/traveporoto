@@ -1053,7 +1053,8 @@ async function renderSchedule(container, tab, items) {
           </div>
           <div class="form-row">
             <input class="f-inp" id="sNote" placeholder="메모/노트">
-            <button class="f-btn" onclick="addSchedItem('${tab.id}')">추가</button>
+            <button class="f-btn" id="sAddBtn" onclick="addSchedItem('${tab.id}')">추가</button>
+            <button class="f-btn" id="sCancelEdit" onclick="cancelSchedEdit()" style="display:none;background:rgba(255,255,255,.08);border:1px solid var(--border)">취소</button>
           </div>
         </div>
       </div>
@@ -1172,7 +1173,11 @@ function confirmAddSchedDate() {
   renderSchedDates([]);
 }
 
+let schedItemsCache = [];
+let schedEditingId = null;
+
 function renderSchedItems(items, date) {
+  schedItemsCache = items;
   const el = document.getElementById('schedItems');
   if (!el) return;
   const sym = { KRW:'₩', EUR:'€', USD:'$', JPY:'¥' };
@@ -1198,6 +1203,7 @@ function renderSchedItems(items, date) {
           ${costStr?`<div class="sched-cost">💰 ${costStr}</div>`:''}
         </div>
         <div class="sched-item-actions">
+          <button class="del-btn" style="background:rgba(92,107,192,.15);color:#9fa8da" onclick="editSchedItem('${item.id}')">수정</button>
           <button class="del-btn" onclick="deleteItem('${item.id}','${currentTab.id}')">삭제</button>
         </div>
       </div>`;
@@ -1262,12 +1268,55 @@ async function addSchedItem(tabId) {
   const payMethod = currentPayMethod;
   const note = document.getElementById('sNote').value.trim();
   if (!place && !content) { alert('장소 또는 내용을 입력하세요'); return; }
-  await sbPost('tab_items', { tab_id: tabId, data: { date, time, place, content, cost, currency, payMethod, note }, sort_order: 0 });
+  if (schedEditingId) {
+    // 수정 모드: 기존 날짜 유지하며 PATCH
+    const orig = schedItemsCache.find(i => i.id === schedEditingId);
+    const keepDate = orig?.data?.date || date;
+    await sbPatch('tab_items', schedEditingId, { data: { date: keepDate, time, place, content, cost, currency, payMethod, note } });
+    cancelSchedEdit();
+  } else {
+    await sbPost('tab_items', { tab_id: tabId, data: { date, time, place, content, cost, currency, payMethod, note }, sort_order: 0 });
+  }
   ['sTimeH','sTimeM','sPlace','sContent','sCost','sNote'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
   renderSchedDates(items);
   if (date) currentSchedDate = date;
   renderSchedItems(items, currentSchedDate);
+}
+
+function editSchedItem(id) {
+  const item = schedItemsCache.find(i => i.id === id);
+  if (!item) return;
+  const d = item.data;
+  schedEditingId = id;
+  const [h, mn] = (d.time || ':').split(':');
+  document.getElementById('sTimeH').value = h || '';
+  document.getElementById('sTimeM').value = mn || '';
+  document.getElementById('sPlace').value = d.place || '';
+  document.getElementById('sContent').value = d.content || '';
+  document.getElementById('sCost').value = d.cost || '';
+  document.getElementById('sCurrency').value = d.currency || 'KRW';
+  setPayMethod(d.payMethod || 'cash');
+  document.getElementById('sNote').value = d.note || '';
+  const btn = document.getElementById('sAddBtn');
+  btn.textContent = '수정 완료';
+  document.getElementById('sCancelEdit').style.display = '';
+  // 입력폼 섹션이 접혀 있으면 펼치고 스크롤
+  const form = btn.closest('.ps');
+  if (form) {
+    if (form.classList.contains('collapsed')) togglePS(form.id);
+    form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+function cancelSchedEdit() {
+  schedEditingId = null;
+  const btn = document.getElementById('sAddBtn');
+  if (btn) btn.textContent = '추가';
+  const cancel = document.getElementById('sCancelEdit');
+  if (cancel) cancel.style.display = 'none';
+  ['sTimeH','sTimeM','sPlace','sContent','sCost','sNote'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  setPayMethod('cash');
 }
 
 // ── 일정 Excel/구글시트 가져오기 ──
