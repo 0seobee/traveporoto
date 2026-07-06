@@ -2344,6 +2344,9 @@ async function uploadGalPhotos(input) {
       const fd = new FormData();
       fd.append('file', file);
       fd.append('upload_preset', CLD_PRESET);
+      // 여행별 폴더 분리: trips/<여행이름>
+      const folderName = (currentProject.name || currentProject.id).replace(/[\\/?%*:|"<>]/g, '').trim();
+      fd.append('folder', `trips/${folderName}`);
       const r = await fetch(`https://api.cloudinary.com/v1_1/${CLD_NAME}/image/upload`, { method: 'POST', body: fd });
       if (!r.ok) throw new Error(await r.text());
       const j = await r.json();
