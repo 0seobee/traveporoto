@@ -42,6 +42,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.95
 /* 포르투갈 고정 카드 */
 .pt-card{background:linear-gradient(135deg,#b71c1c,#c62828,#1a237e);border-radius:20px;overflow:hidden;cursor:pointer;transition:.2s;position:relative;text-decoration:none;display:block}
 .pt-card:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(183,28,28,.4)}
+.pt-card-actions{position:absolute;top:8px;left:8px;display:flex;gap:4px;opacity:0;transition:.2s;z-index:2}
+.pt-card:hover .pt-card-actions{opacity:1}
 .pt-card-cover{height:140px;display:flex;align-items:center;justify-content:center;font-size:56px;position:relative}
 .pt-card-cover::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(0,0,0,.5))}
 .pt-badge{position:absolute;top:12px;right:12px;background:rgba(255,255,255,.2);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.3);border-radius:12px;padding:3px 10px;font-size:10px;font-weight:800;color:#fff;z-index:1}
@@ -122,14 +124,17 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.95
     <div class="hub-sec-body" id="hs-active-body">
       <div class="project-grid" id="grid-active">
         <!-- 포르투갈 고정 카드 -->
-        <a class="pt-card" href="proto.html">
-          <div class="pt-badge">진행중 D-32</div>
-          <div class="pt-card-cover">🇵🇹</div>
+        <a class="pt-card" id="ptCard" href="proto.html">
+          <div class="pt-card-actions" onclick="event.preventDefault()">
+            <span class="card-act-btn edit" title="편집" onclick="openPtEditModal(event)">✏️</span>
+          </div>
+          <div class="pt-badge" id="ptBadge">진행중 D-32</div>
+          <div class="pt-card-cover" id="ptEmoji">🇵🇹</div>
           <div class="pt-card-body">
-            <div class="pt-card-name">포르투갈 7박 8일</div>
-            <div class="pt-card-dest">🌍 리스본 · 신트라 · 포르투 · 가이아</div>
+            <div class="pt-card-name" id="ptName">포르투갈 7박 8일</div>
+            <div class="pt-card-dest" id="ptDest">🌍 리스본 · 신트라 · 포르투 · 가이아</div>
             <div class="pt-card-meta">
-              <span class="pt-meta-tag">2026.07.31 ~ 08.07</span>
+              <span class="pt-meta-tag" id="ptDates">2026.07.31 ~ 08.07</span>
               <span class="pt-meta-tag">지도 103곳</span>
               <span class="pt-meta-tag">경비 관리</span>
             </div>
@@ -148,6 +153,15 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.95
     </div>
     <div class="hub-sec-body" id="hs-planning-body">
       <div class="project-grid" id="grid-planning">
+        <!-- 광저우·마카오 고정 카드 -->
+        <a class="project-card" href="guangzhou.html" style="background:linear-gradient(135deg,#1a237e,#880e4f,#b71c1c)">
+          <div class="project-card-cover" style="background:transparent;height:110px">🇨🇳🎰</div>
+          <div class="project-card-body">
+            <div class="project-card-name" style="color:#fff">광저우·마카오 가족여행</div>
+            <div class="project-card-dest" style="color:rgba(255,255,255,.65)">🌏 광저우 · 마카오 · 코타이</div>
+            <div class="project-card-dates" style="background:rgba(255,255,255,.15);color:rgba(255,255,255,.9)">2027.01 예정 · 3박4일 · 13~15명</div>
+          </div>
+        </a>
         <div class="new-card" onclick="openModal()">
           <div class="plus">＋</div>
           <span>새 여행 추가</span>
@@ -383,7 +397,14 @@ async function saveProject() {
     cover_emoji: selectedEmoji, cover_color: selectedColor
   };
   let r;
-  if (editingId) {
+  if (editingId === '__pt__') {
+    localStorage.setItem(PT_KEY, JSON.stringify({
+      name: data.name, dest: data.destination,
+      start: data.start_date, end: data.end_date,
+      memo: data.memo, emoji: selectedEmoji
+    }));
+    closeModal(); loadPtCard(); return;
+  } else if (editingId) {
     r = await fetch(`${SB_URL}/rest/v1/projects?id=eq.${editingId}`, { method:'PATCH', headers:SB_H, body:JSON.stringify(data) });
   } else {
     data.sort_order = projects.length;
@@ -399,7 +420,42 @@ async function deleteProject(id, e) {
   location.reload();
 }
 
+// ── 포르투갈 고정 카드 편집 ──
+const PT_KEY = 'pt-card-data';
+
+function loadPtCard() {
+  const d = JSON.parse(localStorage.getItem(PT_KEY) || '{}');
+  if (d.name)  document.getElementById('ptName').textContent  = d.name;
+  if (d.dest)  document.getElementById('ptDest').textContent  = d.dest;
+  if (d.emoji) document.getElementById('ptEmoji').textContent = d.emoji;
+  if (d.start && d.end) {
+    const fmt = s => s.replace(/-/g, '.').slice(2); // 2026-07-31 → 26.07.31
+    document.getElementById('ptDates').textContent = fmt(d.start) + ' ~ ' + fmt(d.end).slice(3);
+    const diff = Math.ceil((new Date(d.start) - new Date()) / 86400000);
+    const dd = diff > 0 ? `D-${diff}` : diff === 0 ? 'D-Day' : `D+${Math.abs(diff)}`;
+    document.getElementById('ptBadge').textContent = (diff <= 0 && new Date(d.end) >= new Date() ? '진행중 ' : '') + dd;
+  }
+}
+
+function openPtEditModal(e) {
+  e.preventDefault(); e.stopPropagation();
+  editingId = '__pt__';
+  const d = JSON.parse(localStorage.getItem(PT_KEY) || '{}');
+  document.getElementById('pName').value  = d.name  || document.getElementById('ptName').textContent;
+  document.getElementById('pDest').value  = d.dest  || document.getElementById('ptDest').textContent;
+  document.getElementById('pStart').value = d.start || '2026-07-31';
+  document.getElementById('pEnd').value   = d.end   || '2026-08-07';
+  document.getElementById('pMemo').value  = d.memo  || '';
+  selectedEmoji = d.emoji || '🇵🇹';
+  selectedColor = '#b71c1c';
+  initEmojiGrid(); initColorGrid();
+  document.getElementById('modalTitle').textContent    = '포르투갈 카드 편집';
+  document.getElementById('modalSaveBtn').textContent  = '수정 완료';
+  document.getElementById('projectModal').classList.add('open');
+}
+
 restoreCollapseStates();
+loadPtCard();
 loadProjects();
 </script>
 </body>
