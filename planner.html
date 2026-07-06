@@ -242,6 +242,37 @@ textarea.f-inp{resize:vertical;min-height:60px}
 .file-link{font-size:12px;color:var(--accent2);text-decoration:none;display:block;margin-top:4px;word-break:break-all}
 .file-link:hover{text-decoration:underline}
 
+/* ── GALLERY ── */
+.gal-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.gal-upload-btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
+.gal-upload-btn:hover{background:#7986cb}
+.gal-upload-btn:disabled{opacity:.5;cursor:wait}
+.gal-nick{font-size:12px;color:var(--sub)}
+.gal-nick b{color:var(--accent2)}
+.gal-nick-change{background:none;border:none;color:var(--sub);font-size:11px;cursor:pointer;text-decoration:underline;font-family:inherit}
+.gal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.gal-item{position:relative;border-radius:12px;overflow:hidden;background:var(--card);border:1px solid var(--border);cursor:pointer;aspect-ratio:1}
+.gal-item img{width:100%;height:100%;object-fit:cover;display:block;transition:.2s}
+.gal-item:hover img{transform:scale(1.05)}
+.gal-item-info{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(0,0,0,.75));padding:18px 8px 6px;font-size:11px;color:#fff;display:flex;justify-content:space-between;align-items:flex-end;gap:4px}
+.gal-item-nick{font-weight:700}
+.gal-item-del{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);border:none;color:#fff;border-radius:8px;width:24px;height:24px;cursor:pointer;font-size:12px;opacity:0;transition:.2s}
+.gal-item:hover .gal-item-del{opacity:1}
+.gal-item-del:hover{background:rgba(229,57,53,.8)}
+.gal-progress{font-size:12px;color:var(--accent2)}
+/* 라이트박스 */
+.gal-lightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:900;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:20px}
+.gal-lightbox.open{display:flex}
+.gal-lightbox img{max-width:92vw;max-height:80vh;object-fit:contain;border-radius:8px}
+.gal-lb-meta{color:#fff;font-size:13px;text-align:center}
+.gal-lb-meta .nick{font-weight:800;color:#9fa8da}
+.gal-lb-close{position:absolute;top:16px;right:20px;background:rgba(255,255,255,.12);border:none;color:#fff;border-radius:50%;width:40px;height:40px;font-size:18px;cursor:pointer}
+.gal-lb-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.1);border:none;color:#fff;border-radius:50%;width:44px;height:44px;font-size:20px;cursor:pointer}
+.gal-lb-nav:hover{background:rgba(255,255,255,.25)}
+.gal-lb-nav.prev{left:14px}
+.gal-lb-nav.next{right:14px}
+@media(max-width:600px){.gal-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}}
+
 /* ── MODAL ── */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
 .modal-bg.open{display:flex}
@@ -465,6 +496,9 @@ textarea.f-inp{resize:vertical;min-height:60px}
       <div class="tab-type-card" data-type="budget" onclick="selectTabType(this)">
         <div class="icon">💰</div><div class="label">경비형</div>
       </div>
+      <div class="tab-type-card" data-type="gallery" onclick="selectTabType(this)">
+        <div class="icon">📷</div><div class="label">갤러리형</div>
+      </div>
     </div>
     <label class="modal-label">탭 이름</label>
     <input class="modal-inp" id="tabTitle" placeholder="예: 도쿄 일정">
@@ -477,8 +511,8 @@ textarea.f-inp{resize:vertical;min-height:60px}
 
 <script>
 // ── Supabase ──
-const SB_URL = 'https://inxvbiyfwndjqouvgjdq.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlueHZiaXlmd25kanFvdXZnamRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2Njk1NTYsImV4cCI6MjA5ODI0NTU1Nn0.N_7GGA4RoOxLKkPoZ1yEIqhYeF7pxGerx_NbLK2vBN8';
+const SB_URL = 'https://ciljiutblgbnwlgcdiyq.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpbGppdXRibGdibndsZ2NkaXlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0Mzg5MDksImV4cCI6MjA5ODAxNDkwOX0.fjjZDzV-RziE_tYlHQrZjIMHQhxipPyy6YQVRqw381Q';
 const SB_H  = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
 const SB_HR = { ...SB_H, 'Prefer': 'return=representation' };
 
@@ -508,7 +542,11 @@ let selectedTabType = 'schedule';
 // ── Init ──
 const EMOJIS = ['✈️','🌍','🏝️','🗺️','🏔️','🎌','🏰','🌆','🌊','🍜','🎭','🚢','🚂','🏕️','🎒','📸'];
 const COLORS = ['#1a237e','#1b5e20','#4a148c','#b71c1c','#e65100','#006064','#37474f','#880e4f','#1565c0','#2e7d32','#6a1b9a','#c62828'];
-const TAB_ICONS = { schedule:'📅', checklist:'✅', list:'📋', card:'🃏', map:'🗺️', file:'📎', budget:'💰' };
+const TAB_ICONS = { schedule:'📅', checklist:'✅', list:'📋', card:'🃏', map:'🗺️', file:'📎', budget:'💰', gallery:'📷' };
+
+// ── Cloudinary (사진 업로드) ──
+const CLD_NAME = 'ogjed1ag';
+const CLD_PRESET = 'proto photo';
 
 function initEmojiGrid() {
   const g = document.getElementById('emojiGrid');
@@ -931,6 +969,7 @@ async function renderTabContent(tab) {
   else if (tab.type === 'map') renderMap(container, tab, items);
   else if (tab.type === 'file') renderFiles(container, tab, items);
   else if (tab.type === 'budget') renderBudget(container, tab, items);
+  else if (tab.type === 'gallery') await renderGallery(container, tab);
   else if (tab.type === 'slides') renderSlides(container, tab);
 }
 
@@ -2222,6 +2261,132 @@ async function addFile(tabId) {
   const tab = currentTab;
   const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
   renderFiles(document.getElementById('tabContent'), tab, items);
+}
+
+// ── GALLERY ──
+const NICK_KEY = 'trip-nickname';
+let galPhotos = [], galLbIndex = 0;
+
+function getNickname(force) {
+  let nick = localStorage.getItem(NICK_KEY);
+  if (!nick || force) {
+    nick = (prompt('사진에 표시할 이름(닉네임)을 입력하세요', nick || '') || '').trim();
+    if (!nick) return null;
+    localStorage.setItem(NICK_KEY, nick);
+  }
+  return nick;
+}
+
+function galThumb(url) {
+  // Cloudinary URL에 썸네일 변환 삽입: /upload/ → /upload/w_400,c_limit,q_auto,f_auto/
+  return url.replace('/upload/', '/upload/w_400,c_limit,q_auto,f_auto/');
+}
+
+async function renderGallery(container, tab) {
+  galPhotos = await sbGet('photos', `project_id=eq.${currentProject.id}&order=created_at.desc`);
+  const nick = localStorage.getItem(NICK_KEY);
+  container.innerHTML = `<div class="pane-wrap" id="pw-gal-${tab.id}">
+    <div class="pane-header">
+      <div class="pane-title">📷 ${tab.title}</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="badge">${galPhotos.length}장</span>
+      </div>
+    </div>
+    <div class="gal-toolbar">
+      <input type="file" id="galFile" accept="image/*" multiple style="display:none" onchange="uploadGalPhotos(this)">
+      <button class="gal-upload-btn" id="galUpBtn" onclick="galPickFiles()">📤 사진 올리기</button>
+      <span class="gal-progress" id="galProgress"></span>
+      <span style="flex:1"></span>
+      ${nick ? `<span class="gal-nick">업로더: <b>${nick}</b> <button class="gal-nick-change" onclick="changeNickname()">변경</button></span>` : ''}
+    </div>
+    <div class="gal-grid" id="galGrid">${galPhotos.map((p, i) => `
+      <div class="gal-item" onclick="openGalLb(${i})">
+        <img src="${p.thumb_url || galThumb(p.url)}" alt="${p.caption || ''}" loading="lazy">
+        <button class="gal-item-del" title="삭제" onclick="event.stopPropagation();deleteGalPhoto('${p.id}')">🗑️</button>
+        <div class="gal-item-info">
+          <span class="gal-item-nick">${p.nickname}</span>
+          <span>${(p.created_at || '').slice(5, 10).replace('-', '/')}</span>
+        </div>
+      </div>`).join('')}
+    </div>
+    ${!galPhotos.length ? `<div class="empty-state"><div class="icon">📷</div><p>여행 사진을 올려 함께 공유해 보세요</p></div>` : ''}
+    <div class="gal-lightbox" id="galLb" onclick="if(event.target===this)closeGalLb()">
+      <button class="gal-lb-close" onclick="closeGalLb()">✕</button>
+      <button class="gal-lb-nav prev" onclick="navGalLb(-1)">‹</button>
+      <img id="galLbImg" src="">
+      <div class="gal-lb-meta" id="galLbMeta"></div>
+      <button class="gal-lb-nav next" onclick="navGalLb(1)">›</button>
+    </div>
+  </div>`;
+}
+
+function galPickFiles() {
+  if (!getNickname()) return;
+  document.getElementById('galFile').click();
+}
+
+function changeNickname() {
+  if (getNickname(true)) renderGallery(document.getElementById('tabContent'), currentTab);
+}
+
+async function uploadGalPhotos(input) {
+  const files = [...input.files];
+  if (!files.length) return;
+  const nick = getNickname();
+  if (!nick) return;
+  const btn = document.getElementById('galUpBtn');
+  const prog = document.getElementById('galProgress');
+  btn.disabled = true;
+  let done = 0, failed = 0;
+  for (const file of files) {
+    prog.textContent = `업로드 중… ${done + 1}/${files.length}`;
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('upload_preset', CLD_PRESET);
+      const r = await fetch(`https://api.cloudinary.com/v1_1/${CLD_NAME}/image/upload`, { method: 'POST', body: fd });
+      if (!r.ok) throw new Error(await r.text());
+      const j = await r.json();
+      await sbPost('photos', {
+        project_id: currentProject.id,
+        url: j.secure_url,
+        thumb_url: galThumb(j.secure_url),
+        nickname: nick
+      });
+      done++;
+    } catch (err) {
+      console.error('업로드 실패:', err);
+      failed++;
+    }
+  }
+  btn.disabled = false;
+  prog.textContent = failed ? `⚠️ ${done}장 성공, ${failed}장 실패` : '';
+  input.value = '';
+  await renderGallery(document.getElementById('tabContent'), currentTab);
+}
+
+async function deleteGalPhoto(id) {
+  if (!confirm('이 사진을 삭제하시겠습니까?')) return;
+  await sbDelete('photos', id);
+  await renderGallery(document.getElementById('tabContent'), currentTab);
+}
+
+function openGalLb(i) {
+  galLbIndex = i;
+  updateGalLb();
+  document.getElementById('galLb').classList.add('open');
+}
+function closeGalLb() { document.getElementById('galLb').classList.remove('open'); }
+function navGalLb(d) {
+  galLbIndex = (galLbIndex + d + galPhotos.length) % galPhotos.length;
+  updateGalLb();
+}
+function updateGalLb() {
+  const p = galPhotos[galLbIndex];
+  if (!p) return;
+  document.getElementById('galLbImg').src = p.url;
+  document.getElementById('galLbMeta').innerHTML =
+    `<span class="nick">${p.nickname}</span> · ${(p.created_at || '').slice(0, 10)} · ${galLbIndex + 1}/${galPhotos.length}`;
 }
 
 // ── Common Delete ──
