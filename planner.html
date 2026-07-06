@@ -151,6 +151,13 @@ textarea.f-inp{resize:vertical;min-height:60px}
 .ps-body{overflow:hidden;transition:max-height .35s cubic-bezier(.4,0,.2,1);max-height:4000px}
 .ps:not(.collapsed) .ps-body{overflow-x:auto;overflow-y:visible}
 .ps.collapsed .ps-body{max-height:0!important;overflow:hidden}
+
+/* ── 목록 내부 스크롤 ── */
+.scroll-list{max-height:62vh;overflow-y:auto;overflow-x:auto;padding-right:4px}
+.scroll-list::-webkit-scrollbar{width:8px;height:8px}
+.scroll-list::-webkit-scrollbar-track{background:rgba(255,255,255,.03);border-radius:4px}
+.scroll-list::-webkit-scrollbar-thumb{background:rgba(92,107,192,.4);border-radius:4px}
+.scroll-list::-webkit-scrollbar-thumb:hover{background:rgba(92,107,192,.7)}
 .pane-collapse-btn{background:transparent;border:1px solid var(--border);border-radius:20px;color:var(--sub);font-size:12px;font-weight:700;padding:4px 12px;cursor:pointer;font-family:inherit;transition:.2s;white-space:nowrap}
 .pane-collapse-btn:hover{border-color:var(--accent);color:var(--accent2)}
 
@@ -1008,7 +1015,7 @@ async function renderSchedule(container, tab, items) {
       </div>
       <div class="ps-body">
         <div class="sched-cost-bar" id="schedCostBar"></div>
-        <div id="schedItems"></div>
+        <div id="schedItems" class="scroll-list"></div>
       </div>
     </div>
     <div class="ps" id="${sfId}">
@@ -1518,7 +1525,7 @@ function renderChecklist(container, tab, items) {
       <span style="font-size:11px;color:#7b80a0">내 카테고리:</span>
       ${customCats.map(c=>`<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(92,107,192,.15);border:1px solid #3a3f6b;border-radius:8px;padding:3px 10px;font-size:12px;color:#9fa8da">${c}<span onclick="removeCat('${tab.id}','${c}')" style="cursor:pointer;opacity:.6;margin-left:2px" title="삭제">✕</span></span>`).join('')}
     </div>` : ''}
-    <div class="cl-list">${groupHtml}
+    <div class="cl-list scroll-list">${groupHtml}
       ${!items.length?`<div class="empty-state"><div class="icon">✅</div><p>준비물을 추가해 보세요</p></div>`:''}
     </div>
   </div>`;
@@ -1731,7 +1738,7 @@ function renderList(container, tab, items) {
         <span class="ps-arrow">▼</span>
       </div>
       <div class="ps-body">
-        <div style="overflow-x:auto">
+        <div class="scroll-list">
           <table class="list-table">
             <thead><tr><th>완료</th><th>이름/항목</th><th>세부내용</th><th>예산</th><th>비고</th><th></th></tr></thead>
             <tbody>${rows}</tbody>
@@ -2288,7 +2295,7 @@ function renderFiles(container, tab, items) {
         <span class="ps-arrow">▼</span>
       </div>
       <div class="ps-body">
-        <div class="file-list">${items.map(item=>`
+        <div class="file-list scroll-list">${items.map(item=>`
           <div class="file-item">
             <div class="file-icon">${fileIcon(item.data.type||'')}</div>
             <div class="file-info">
@@ -2357,7 +2364,7 @@ async function renderGallery(container, tab) {
       <span style="flex:1"></span>
       ${nick ? `<span class="gal-nick">업로더: <b>${nick}</b> <button class="gal-nick-change" onclick="changeNickname()">변경</button></span>` : ''}
     </div>
-    <div class="gal-grid" id="galGrid">${galPhotos.map((p, i) => `
+    <div class="gal-grid scroll-list" id="galGrid">${galPhotos.map((p, i) => `
       <div class="gal-item" onclick="openGalLb(${i})">
         <img src="${p.thumb_url || galThumb(p.url)}" alt="${p.caption || ''}" loading="lazy">
         <button class="gal-item-del" title="삭제" onclick="event.stopPropagation();deleteGalPhoto('${p.id}')">🗑️</button>
@@ -2573,11 +2580,11 @@ function renderBudget(container, tab, items) {
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 4px">
           <div>
             <div style="font-size:11px;font-weight:700;color:#a5d6a7;margin-bottom:6px">▶ 입금</div>
-            <div style="overflow-x:auto"><table class="list-table"><thead><tr><th>날짜</th><th>항목</th><th>금액</th><th>비고</th><th></th></tr></thead><tbody>${mkRows(inRows)}</tbody></table></div>
+            <div class="scroll-list"><table class="list-table"><thead><tr><th>날짜</th><th>항목</th><th>금액</th><th>비고</th><th></th></tr></thead><tbody>${mkRows(inRows)}</tbody></table></div>
           </div>
           <div>
             <div style="font-size:11px;font-weight:700;color:#ef9a9a;margin-bottom:6px">◀ 출금</div>
-            <div style="overflow-x:auto"><table class="list-table"><thead><tr><th>날짜</th><th>항목</th><th>금액</th><th>비고</th><th></th></tr></thead><tbody>${mkRows(outRows)}</tbody></table></div>
+            <div class="scroll-list"><table class="list-table"><thead><tr><th>날짜</th><th>항목</th><th>금액</th><th>비고</th><th></th></tr></thead><tbody>${mkRows(outRows)}</tbody></table></div>
           </div>
         </div>
       </div>
