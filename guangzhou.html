@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🇨🇳 광저우·마카오 가족 여행 2027</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0f1a;--surface:#13162a;--card:#181c30;--border:#252940;
+  --text:#e8eaf6;--sub:#7b80a0;--accent:#5c6bc0;--accent2:#7986cb;
+}
+body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;min-height:100vh}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);height:52px;display:flex;align-items:center;padding:0 20px;gap:12px}
+.nav-back{background:rgba(255,255,255,.07);border:1px solid var(--border);border-radius:10px;color:var(--sub);font-size:13px;font-weight:600;padding:6px 14px;cursor:pointer;text-decoration:none;transition:.2s}
+.nav-back:hover{background:rgba(92,107,192,.2);color:#9fa8da}
+.nav-logo{font-size:16px;font-weight:800;white-space:nowrap}
+.nav-spacer{flex:1}
+
+/* ── HERO ── */
+.hero{position:relative;min-height:72vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:linear-gradient(135deg,#1a237e 0%,#880e4f 40%,#b71c1c 70%,#e65100 100%);opacity:.85}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(13,15,26,.1) 0%,rgba(13,15,26,.75) 100%)}
+.hero-content{position:relative;text-align:center;padding:100px 24px 60px}
+.hero-emoji{font-size:56px;margin-bottom:16px}
+.hero-title{font-size:clamp(28px,5.5vw,62px);font-weight:900;letter-spacing:-1px;line-height:1.1;margin-bottom:10px}
+.hero-title span{color:#f48fb1}
+.hero-sub{color:rgba(255,255,255,.75);font-size:15px;margin-bottom:6px}
+.hero-route{color:rgba(255,255,255,.5);font-size:13px;margin-bottom:32px}
+.hero-stats{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:36px}
+.stat-box{background:rgba(255,255,255,.1);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:14px 22px;text-align:center;min-width:85px}
+.stat-box .num{font-size:26px;font-weight:800}
+.stat-box .lbl{font-size:11px;color:rgba(255,255,255,.6);margin-top:2px}
+.hero-scroll{display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,.4);font-size:13px;cursor:pointer;transition:.2s;border:none;background:none;font-family:inherit}
+.hero-scroll:hover{color:rgba(255,255,255,.7)}
+
+/* ── MAIN TABS ── */
+.tab-bar-wrap{position:sticky;top:52px;z-index:150;background:rgba(13,15,26,.97);border-bottom:1px solid var(--border);backdrop-filter:blur(12px)}
+.tab-bar{display:flex;gap:0;overflow-x:auto;max-width:1100px;margin:0 auto;padding:0 24px}
+.tab-bar::-webkit-scrollbar{display:none}
+.tab-btn{border:none;background:none;color:var(--sub);font-size:14px;font-weight:600;padding:16px 20px;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:.2s;font-family:inherit;position:relative;bottom:-1px}
+.tab-btn.on{color:#e8eaf6;border-bottom-color:var(--accent2)}
+.tab-btn:hover:not(.on){color:#c5cae9}
+
+/* ── SECTION ── */
+.section{padding:56px 24px 48px;max-width:1100px;margin:0 auto}
+.sec-eyebrow{font-size:11px;font-weight:800;letter-spacing:3px;color:#7986cb;text-transform:uppercase;margin-bottom:8px}
+.sec-title{font-size:clamp(20px,3.5vw,32px);font-weight:800;margin-bottom:8px}
+.sec-sub{color:var(--sub);font-size:13px;margin-bottom:28px}
+
+.tab-pane{display:none}
+.tab-pane.show{display:block}
+
+/* ── DAY TABS ── */
+.day-tabs{display:flex;gap:8px;overflow-x:auto;margin-bottom:24px;padding-bottom:4px}
+.day-tabs::-webkit-scrollbar{display:none}
+.dt-btn{border:1px solid var(--border);border-radius:12px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;background:var(--card);color:var(--sub);transition:.2s;font-family:inherit}
+.dt-btn.on{color:#fff;border-color:transparent}
+.dt-d1.on{background:linear-gradient(135deg,#b71c1c,#c62828)}
+.dt-d2.on{background:linear-gradient(135deg,#1a237e,#283593)}
+.dt-d3.on{background:linear-gradient(135deg,#1b5e20,#2e7d32)}
+.dt-d4.on{background:linear-gradient(135deg,#6a1b9a,#7b1fa2)}
+
+.day-panel{display:none}
+.day-panel.show{display:block}
+
+.day-hero{border-radius:14px 14px 0 0;padding:18px 22px}
+.d1-h{background:linear-gradient(135deg,#b71c1c,#c62828)}
+.d2-h{background:linear-gradient(135deg,#1a237e,#283593)}
+.d3-h{background:linear-gradient(135deg,#1b5e20,#2e7d32)}
+.d4-h{background:linear-gradient(135deg,#6a1b9a,#7b1fa2)}
+.day-hero h3{font-size:18px;font-weight:800;margin-bottom:4px}
+.day-hero p{font-size:13px;opacity:.75}
+
+.timeline{background:var(--card);border:1px solid var(--border);border-top:none;border-radius:0 0 14px 14px;overflow:hidden}
+.tl-item{display:grid;grid-template-columns:86px 1fr;gap:0;border-bottom:1px solid var(--border)}
+.tl-item:last-child{border-bottom:none}
+.tl-time{padding:16px 12px;text-align:center;border-right:1px solid var(--border);background:rgba(0,0,0,.2)}
+.tl-time .t{font-size:13px;font-weight:800;color:#c5cae9}
+.tl-time .dur{font-size:10px;color:var(--sub);margin-top:3px}
+.tl-body{padding:14px 16px}
+.tl-cats{display:flex;gap:5px;margin-bottom:6px;flex-wrap:wrap}
+.cat{border-radius:8px;padding:2px 8px;font-size:10px;font-weight:700}
+.cat-flight{background:rgba(92,107,192,.25);color:#9fa8da}
+.cat-move{background:rgba(121,134,203,.2);color:#b39ddb}
+.cat-sight{background:rgba(79,142,247,.2);color:#90caf9}
+.cat-meal{background:rgba(255,152,0,.2);color:#ffcc80}
+.cat-hotel{background:rgba(0,188,212,.2);color:#80deea}
+.cat-shop{background:rgba(76,175,80,.2);color:#a5d6a7}
+.cat-tip{background:rgba(156,39,176,.2);color:#ce93d8}
+.cat-free{background:rgba(255,87,34,.2);color:#ff8a65}
+.tl-place{font-size:15px;font-weight:700;margin-bottom:4px}
+.tl-desc{font-size:13px;color:#b0bec5;line-height:1.55}
+.tl-note{font-size:11px;color:var(--sub);margin-top:6px;line-height:1.5;background:rgba(255,255,255,.03);border-radius:8px;padding:6px 10px}
+
+/* ── RESTAURANT ── */
+.rest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.rest-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;display:flex;gap:14px;transition:.2s}
+.rest-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.rest-icon{font-size:36px;flex-shrink:0;width:52px;height:52px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(255,255,255,.05)}
+.rest-info{flex:1}
+.rest-name{font-size:14px;font-weight:800;margin-bottom:4px}
+.rest-location{font-size:11px;color:var(--sub);margin-bottom:6px}
+.rest-desc{font-size:12px;color:#b0bec5;line-height:1.5;margin-bottom:8px}
+.rest-tags{display:flex;flex-wrap:wrap;gap:5px}
+.rest-tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:rgba(92,107,192,.15);color:#9fa8da}
+.rest-tag.rec{background:rgba(255,152,0,.2);color:#ffcc80}
+.rest-section-title{font-size:13px;font-weight:800;color:#7986cb;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;margin-top:28px}
+.rest-section-title:first-child{margin-top:0}
+
+/* ── SHOPPING ── */
+.shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.shop-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;transition:.2s}
+.shop-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.shop-card-head{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.shop-card-icon{font-size:28px;width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(255,255,255,.06);flex-shrink:0}
+.shop-card-name{font-size:14px;font-weight:800}
+.shop-card-location{font-size:11px;color:var(--sub)}
+.shop-card-desc{font-size:12px;color:#b0bec5;line-height:1.55;margin-bottom:8px}
+.shop-items{display:flex;flex-wrap:wrap;gap:5px}
+.shop-item{font-size:10px;padding:2px 8px;border-radius:8px;background:rgba(76,175,80,.15);color:#a5d6a7;font-weight:700}
+
+/* ── BUDGET ── */
+.budget-table{width:100%;border-collapse:collapse;margin-bottom:24px}
+.budget-table th{text-align:left;padding:10px 14px;font-size:11px;color:var(--sub);font-weight:700;letter-spacing:1px;border-bottom:1px solid var(--border)}
+.budget-table td{padding:12px 14px;border-bottom:1px solid rgba(37,41,64,.6);font-size:13px}
+.budget-table tr:last-child td{border-bottom:none}
+.budget-table td:last-child{text-align:right;font-weight:700;color:#a5d6a7}
+.budget-table .total-row td{font-size:15px;font-weight:800;color:var(--text);border-top:1px solid var(--accent2);padding-top:16px}
+.budget-table .total-row td:last-child{color:#80deea}
+.budget-note{background:rgba(92,107,192,.1);border:1px solid rgba(92,107,192,.2);border-radius:12px;padding:14px 18px;font-size:12px;color:#b0bec5;line-height:1.7;margin-top:8px}
+.budget-section{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px}
+.budget-section-title{font-size:13px;font-weight:800;color:#7986cb;margin-bottom:14px}
+
+/* ── CHECKLIST ── */
+.cl-section-title{font-size:13px;font-weight:800;color:#7986cb;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;margin-top:28px}
+.cl-section-title:first-child{margin-top:0}
+.cl-grid{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.cl-item{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;cursor:pointer;transition:.2s}
+.cl-item:hover{border-color:rgba(92,107,192,.4)}
+.cl-item.done{opacity:.5}
+.cl-item.done .cl-text{text-decoration:line-through;color:var(--sub)}
+.cl-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;transition:.2s}
+.cl-item.done .cl-check{background:var(--accent);border-color:var(--accent)}
+.cl-text{flex:1;font-size:13px}
+.cl-tag{font-size:10px;color:var(--sub);background:rgba(255,255,255,.06);border-radius:6px;padding:2px 8px;white-space:nowrap}
+
+/* ── TIPS BOX ── */
+.tip-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:20px}
+.tip-box-title{font-size:14px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.tip-list{list-style:none;display:flex;flex-direction:column;gap:8px}
+.tip-list li{font-size:13px;color:#b0bec5;line-height:1.55;padding-left:20px;position:relative}
+.tip-list li::before{content:'·';position:absolute;left:6px;color:var(--accent2);font-weight:900}
+.tip-list li strong{color:var(--text)}
+
+/* ── INFO BADGE ── */
+.info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-bottom:28px}
+.info-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px}
+.info-card-label{font-size:11px;color:var(--sub);font-weight:700;margin-bottom:6px}
+.info-card-value{font-size:14px;font-weight:700;line-height:1.4}
+.info-card-value.warn{color:#ffcc80}
+
+/* ── FLIGHT CARD ── */
+.flight-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+@media(max-width:600px){.flight-grid{grid-template-columns:1fr}}
+.flight-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px}
+.fc-header{font-size:11px;color:var(--sub);font-weight:700;letter-spacing:1px;margin-bottom:16px}
+.fc-row{display:flex;align-items:center;gap:8px}
+.fc-airport{text-align:center}
+.fc-airport .code{font-size:26px;font-weight:900;letter-spacing:-1px}
+.fc-airport .city{font-size:10px;color:var(--sub);margin-top:2px}
+.fc-arrow{flex:1;text-align:center}
+.fc-arrow .line{height:1px;background:var(--border);position:relative;margin:12px 0}
+.fc-arrow .plane{font-size:16px}
+.fc-arrow .dur{font-size:11px;color:var(--sub)}
+.fc-meta{margin-top:14px;display:flex;flex-wrap:wrap;gap:6px}
+.fc-tag{background:rgba(92,107,192,.15);color:#9fa8da;border-radius:10px;padding:3px 10px;font-size:11px}
+
+@media(max-width:600px){
+  .rest-grid,.shop-grid{grid-template-columns:1fr}
+  .info-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-back" href="hub.html">← 허브</a>
+  <div class="nav-logo">🇨🇳 광저우·마카오 가족여행</div>
+  <div class="nav-spacer"></div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="hero-emoji">🇨🇳🎰</div>
+    <div class="hero-title">광저우 · 마카오<br><span>가족 여행</span></div>
+    <div class="hero-sub">2027년 1월 · 인천 출발</div>
+    <div class="hero-route">✈ ICN → CAN · 광저우 거점 · 마카오 당일치기</div>
+    <div class="hero-stats">
+      <div class="stat-box"><div class="num">3박</div><div class="lbl">4일</div></div>
+      <div class="stat-box"><div class="num">13~</div><div class="lbl">15명</div></div>
+      <div class="stat-box"><div class="num">2</div><div class="lbl">도시</div></div>
+      <div class="stat-box"><div class="num">3</div><div class="lbl">세대</div></div>
+    </div>
+    <button class="hero-scroll" onclick="document.querySelector('.tab-bar-wrap').scrollIntoView({behavior:'smooth'})">
+      일정 보기 ↓
+    </button>
+  </div>
+</div>
+
+<!-- TAB BAR -->
+<div class="tab-bar-wrap">
+  <div class="tab-bar">
+    <button class="tab-btn on" onclick="switchTab(0,this)">📅 일정</button>
+    <button class="tab-btn" onclick="switchTab(1,this)">🍜 맛집</button>
+    <button class="tab-btn" onclick="switchTab(2,this)">🛍 쇼핑</button>
+    <button class="tab-btn" onclick="switchTab(3,this)">💰 예산</button>
+    <button class="tab-btn" onclick="switchTab(4,this)">✅ 준비물</button>
+  </div>
+</div>
+
+<!-- ══════════ TAB 0: 일정 ══════════ -->
+<div class="tab-pane show" id="pane-0">
+<div class="section">
+  <div class="sec-eyebrow">여행 일정</div>
+  <div class="sec-title">3박 4일 플랜</div>
+  <div class="sec-sub">광저우 거점 · D2 마카오 당일치기 동선</div>
+
+  <!-- 항공편 -->
+  <div class="flight-grid">
+    <div class="flight-card">
+      <div class="fc-header">▶ 출국 · 인천 → 광저우</div>
+      <div class="fc-row">
+        <div class="fc-airport"><div class="code">ICN</div><div class="city">인천</div></div>
+        <div class="fc-arrow">
+          <div class="plane">✈️</div>
+          <div class="line"></div>
+          <div class="dur">약 4시간 30분</div>
+        </div>
+        <div class="fc-airport"><div class="code">CAN</div><div class="city">광저우 바이윈</div></div>
+      </div>
+      <div class="fc-meta">
+        <span class="fc-tag">미정 (1월 중)</span>
+        <span class="fc-tag">대한항공 / 중국남방항공</span>
+        <span class="fc-tag">13~15명 단체</span>
+      </div>
+    </div>
+    <div class="flight-card">
+      <div class="fc-header">◀ 귀국 · 광저우 → 인천</div>
+      <div class="fc-row">
+        <div class="fc-airport"><div class="code">CAN</div><div class="city">광저우 바이윈</div></div>
+        <div class="fc-arrow">
+          <div class="plane">✈️</div>
+          <div class="line"></div>
+          <div class="dur">약 4시간 30분</div>
+        </div>
+        <div class="fc-airport"><div class="code">ICN</div><div class="city">인천</div></div>
+      </div>
+      <div class="fc-meta">
+        <span class="fc-tag">D4 오후 출발 권장</span>
+        <span class="fc-tag">단체 예약 필수</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 공지 -->
+  <div class="tip-box" style="margin-bottom:28px">
+    <div class="tip-box-title">💡 동선 포인트</div>
+    <ul class="tip-list">
+      <li><strong>광저우 거점 숙박</strong> — 전 일정 광저우 1개 호텔 연박. 13명+ 단체는 연박이 짐·이동 효율에 유리</li>
+      <li><strong>D2 마카오 당일치기</strong> — 광저우 남역에서 주하이 경유 또는 페리(가오슝·주하이 코타이 직통) 이용, 편도 약 1.5~2시간</li>
+      <li><strong>비자</strong> — 한국인은 광저우(광둥성) 144시간 무비자 입국 가능 (2027년 기준 확인 필요). 마카오는 별도 비자 불요</li>
+    </ul>
+  </div>
+
+  <!-- Day Tabs -->
+  <div class="day-tabs" id="dayTabs">
+    <button class="dt-btn dt-d1 on" onclick="switchDay(1,this)">D1 · 도착·체크인</button>
+    <button class="dt-btn dt-d2" onclick="switchDay(2,this)">D2 · 마카오</button>
+    <button class="dt-btn dt-d3" onclick="switchDay(3,this)">D3 · 광저우</button>
+    <button class="dt-btn dt-d4" onclick="switchDay(4,this)">D4 · 쇼핑·귀국</button>
+  </div>
+
+  <!-- D1 -->
+  <div class="day-panel show" id="day-1">
+    <div class="day-hero d1-h">
+      <h3>D1 · 인천 출발 → 광저우 도착</h3>
+      <p>비행 후 체크인 · 첫날 저녁 광저우 딤섬</p>
+    </div>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">오전</div><div class="dur">비행</div></div>
+        <div class="tl-body">
+          <div class="tl-cats"><span class="cat cat-flight">항공</span></div>
+          <div class="tl-place">인천국제공항 (ICN) 출발</div>
+          <div class="tl-desc">13~15명 단체 탑승 — 공항 3시간 전 집결 권장. 짐 부치는 인원 분산 배치.</div>
+          <div class="tl-note">🎫 단체 체크인 카운터 사전 확인 | 여권 전원 소지 확인</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">오후</div><div class="dur">~4.5h</div></div>
+        <div class="tl-body">
+          <div class="tl-cats"><span class="cat cat-flight">항공</span></div>
+          <div class="tl-place">광저우 바이윈 국제공항 (CAN) 도착</div>
+          <div class="tl-desc">입국심사 후 짐 수령 → 시내 이동. 공항↔호텔 셔틀 또는 공항 철도(지하철 3호선) 이용.</div>
+          <div class="tl-note">🚇 공항철도: 光圆路(광위안루) 환승 → 주요 호텔 구역까지 약 40분 | 택시는 2~3대 분할 이동</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">저녁</div></div>
+        <div class="tl-body">
+          <div class="tl-cats"><span class="cat cat-hotel">숙소</span></div>
+          <div class="tl-place">호텔 체크인</div>
+          <div class="tl-desc">13명+ 그룹은 객실 6~8실 필요. 패밀리룸 보유 호텔 우선 선택. 체크인 후 잠시 휴식.</div>
+          <div class="tl-note">🏨 추천 권역: 텐허(天河) 또는 웨슈(越秀) — 관광지·맛집 접근성 우수</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">19:00~</div></div>
+        <div class="tl-body">
+          <div class="tl-cats"><span class="cat cat-meal">식사</span></div>
+          <div class="tl-place">첫날 저녁 — 광저우 딤섬 or 焼鵝(소아)</div>
+          <div class="tl-desc">도착 첫날이라 이동 부담 적은 호텔 근처 광저우 요리 식당 추천. 단체 예약은 사전 연락 필수.</div>
+          <div class="tl-note">🍽 광저우 4대 음식: 딤섬, 소아(구운거위), 서지(에그타르트), 운둔(완탕면)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- D2 -->
+  <div class="day-panel" id="day-2">
+    <div class="day-hero d2-h">
+      <h3>D2 · 마카오 당일치기</h3>
+      <p>세계문화유산 · 카지노 야경 · 포르투갈 분위기</p>
+    </div>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">07:30</div></div>
+        <div class="tl-body">
+          <div class="tl-cats"><span class="cat cat-meal">아침</span></div>
+          <div class="tl-place">호텔 조식 후 출발 준비</div>
+          <div class="tl-desc">당일치기이므로 이른 출발 권장. 귀중품·여권은 반드시 지참.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">08:30</div><div class="dur">이동</div></div>
+        <div class="tl-body">
+          <div class="tl-cats"><span class="cat cat-move">이동</span></div>
+          <div class="tl-place">광저우 → 마카오 이동</div>
+          <div class="tl-desc">① 광저우남역(广州南站)에서 고속철 → 주하이(珠海) → 마카오 육로 입경 (약 1.5~2h)<br>② 또는 주하이 코타이 페리 터미널 → 마카오 코타이 직통 (단체는 사전 예약)</div>
+          <div class="tl-note">🚌 13명 단체: 전세 미니버스 대절도 검토 | 경계(이민) 대기 시간 여유 있게 잡기</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">11:00</div></div>
+        <div class="tl-body">
+          <div class="tl-cats"><span class="cat cat-sight">관광</span></div>
+          <div class="tl-place">세나도 광장 (議事亭前地) · 성 도미니크 성당</div>
+          <div class="tl-desc">마카오 구도심 중심부. 유럽풍 광장과 파스텔 색 건물들. 도보 관광 최적 구역.</div>
+          <div class="tl-note">👴 어르신 포함 — 유모차·보행 불편자 대비 이동 경로 사전 확인 권장</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">12:00</div></div>
+        <div class="tl-body">
+          <div class="tl-cats"><span class="cat cat-sight">관광</span></div>
+          <div class="tl-place">성 바울 성당 폐허 (大三巴牌坊)</div>
+          <div class="tl-desc">마카오 상징 랜드마크. 세계문화유산 등재 지역. 주변 골목 기념품 쇼핑.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">13:00</div></div>
+        <div class="tl-body">
+          <div class="tl-cats"><span class="cat cat-meal">식사</span></div>
+          <div class="tl-place">마카오 포르투기즈 요리 or 에그타르트</div>
+          <div class="tl-desc">마카오식 포르투갈 요리 (African Chicken, 대구요리) 또는 로드 스토우 베이커리 에그타르트. 13명 단체 예약 필수.</div>
+          <div class="tl-note">🥐 로드 스토우 베이커리는 줄이 길 수 있음 — 인근 분점 활용</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">15:00</div></div>
+        <div class="tl-body">
+          <div class="tl-cats"><span class="cat cat-sight">관광</span></div>
+          <div class="tl-place">베네시안 마카오 (코타이 지구)</div>
+          <div class="tl-desc">세계 최대 카지노 리조트 겸 쇼핑몰. 실내 운하 곤돌라, 무료 관람 가능. 아이들도 즐길 수 있음.</div>
+          <div class="tl-note">🎰 성인 카지노 입장 가능 (어르신·성인 자유 시간) | 쇼핑몰·식당은 전 연령 가능</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">18:00</div></div>
+        <div class="tl-body">
+          <div class="tl-cats"><span class="cat cat-meal">저녁</span></div>
+          <div class="tl-place">코타이 지구 저녁 식사</div>
+          <div class="tl-desc">베네시안 내부 또는 인근 레스토랑. 이후 야경 감상 후 광저우로 귀환.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">20:00~</div><div class="dur">이동</div></div>
+        <div class="tl-body">
+          <div class="tl-cats"><span class="cat cat-move">귀환</span></div>
+          <div class="tl-place">마카오 → 광저우 귀환</div>
+          <div class="tl-desc">페리 또는 버스로 주하이 경유 광저우 귀환. 야간 이동이므로 어르신·어린이 피로도 고려.</div>
+          <div class="tl-note">🚌 귀환 교통편 사전 예약 필수 | 늦어도 22시 이전 마카오 출발 권장</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- D3 -->
+  <div class="day-panel" id="day-3">
+    <div class="day-hero d3-h">
+      <h3>D3 · 광저우 관광</h3>
+      <p>황화강 · 진가사 · 광저우타워 야경</p>
+    </div>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">08:30</div></div>
+        <div class="tl-body">
+          <div class="tl-cats"><span class="cat cat-meal">아침</span></div>
+          <div class="tl-place">광저우 전통 아침 — 점심(飲茶 / 얌차)</div>
+          <div class="tl-desc">광저우 명물 얌차(飲茶). 다양한 딤섬을 작은 접시로 주문. 넓은 홀의 단체 입장 가능한 곳 선택.</div>
+          <div class="tl-note">🍵 얌차는 오전 7~11시 영업. 인기 식당은 평일도 웨이팅 있음 — 사전 예약 또는 일찍 방문</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">10:00</div></div>
+        <div class="tl-body">
+          <div class="tl-cats"><span class="cat cat-sight">관광</span></div>
+          <div class="tl-place">진가사 (陳家祠 / 陳家書院)</div>
+          <div class="tl-desc">청나라 시대 광저우 최대 사당. 정교한 목조·석조 조각 건축. 광저우 전통문화 체험 최적지.</div>
+          <div class="tl-note">🏛 입장료 있음 (성인/경로/어린이 별도) | 단체 입장 가능, 안내 가이드 이용 추천</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">12:00</div></div>
+        <div class="tl-body">
+          <div class="tl-cats"><span class="cat cat-meal">점심</span></div>
+          <div class="tl-place">서관 (西關) 지역 광저우 요리</div>
+          <div class="tl-desc">진가사 인근 서관 거리. 노포 광저우 요리 식당 밀집. 소아(구운거위), 완탕면 등.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">14:00</div></div>
+        <div class="tl-body">
+          <div class="tl-cats"><span class="cat cat-sight">관광</span></div>
+          <div class="tl-place">황화강 (黃花崗) · 중산기념당</div>
+          <div class="tl-desc">신해혁명 관련 역사 명소. 황화강 72열사 묘원은 넓은 공원으로 산책하며 역사 이야기.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">16:00</div></div>
+        <div class="tl-body">
+          <div class="tl-cats"><span class="cat cat-free">자유</span></div>
+          <div class="tl-place">북경로 (北京路) 보행가 — 쇼핑·산책</div>
+          <div class="tl-desc">광저우 최대 번화가. 중저가 쇼핑, 기념품, 길거리 음식. 가족 자유 시간.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">18:30</div></div>
+        <div class="tl-body">
+          <div class="tl-cats"><span class="cat cat-meal">저녁</span></div>
+          <div class="tl-place">저녁 식사 — 해산물 or 광저우 요리</div>
+          <div class="tl-desc">헤이핑루(和平路) 또는 텐허 지구 단체 가능 식당. 광저우는 신선한 해산물 요리가 특히 유명.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">20:00</div></div>
+        <div class="tl-body">
+          <div class="tl-cats"><span class="cat cat-sight">관광</span></div>
+          <div class="tl-place">광저우타워 야경 (广州塔 · 캔톤타워)</div>
+          <div class="tl-desc">높이 600m, 세계 4위 타워. 주강(珠江) 강변과 야경이 인상적. 전망대 또는 강변 산책.</div>
+          <div class="tl-note">🌃 전망대 입장료 있음 (150CNY 내외) | 강변 산책은 무료로 야경 감상 가능</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- D4 -->
+  <div class="day-panel" id="day-4">
+    <div class="day-hero d4-h">
+      <h3>D4 · 쇼핑 · 귀국</h3>
+      <p>마지막 쇼핑 · 공항 이동 · 인천 귀환</p>
+    </div>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">08:00</div></div>
+        <div class="tl-body">
+          <div class="tl-cats"><span class="cat cat-meal">아침</span></div>
+          <div class="tl-place">호텔 조식 + 체크아웃 준비</div>
+          <div class="tl-desc">짐 정리 후 체크아웃. 귀국편 출발 시간에 맞춰 일정 역산.</div>
+          <div class="tl-note">🧳 공항 3시간 전 도착 기준 역산 필수 | 단체 짐 모아 대형 택시/밴 이용</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">09:30</div></div>
+        <div class="tl-body">
+          <div class="tl-cats"><span class="cat cat-shop">쇼핑</span></div>
+          <div class="tl-place">텐허 / 정자 쇼핑몰 마지막 쇼핑</div>
+          <div class="tl-desc">정자(正佳廣場) · 텐허청(天河城). 짐 보관 후 마지막 기념품·선물 구매. 화장품·식품·차 인기.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">12:00</div></div>
+        <div class="tl-body">
+          <div class="tl-cats"><span class="cat cat-meal">점심</span></div>
+          <div class="tl-place">마지막 광저우 식사</div>
+          <div class="tl-desc">귀국 전 마지막 광저우 요리. 너무 자극적이지 않은 메뉴 권장.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">14:00~</div><div class="dur">이동</div></div>
+        <div class="tl-body">
+          <div class="tl-cats"><span class="cat cat-move">이동</span></div>
+          <div class="tl-place">광저우 바이윈 공항 이동</div>
+          <div class="tl-desc">공항까지 차량 이동. 13명+ 단체 전세버스 또는 복수 택시 분산 이동. 출발편 기준 3시간 전 도착 목표.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time"><div class="t">17:00~</div></div>
+        <div class="tl-body">
+          <div class="tl-cats"><span class="cat cat-flight">항공</span></div>
+          <div class="tl-place">광저우 → 인천 출발 (CAN → ICN)</div>
+          <div class="tl-desc">귀국 비행. 약 4시간 30분 소요. 인천 저녁 도착 예정.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /section -->
+</div><!-- /pane-0 -->
+
+<!-- ══════════ TAB 1: 맛집 ══════════ -->
+<div class="tab-pane" id="pane-1">
+<div class="section">
+  <div class="sec-eyebrow">맛집 가이드</div>
+  <div class="sec-title">딤섬 · 광저우 요리 · 마카오</div>
+  <div class="sec-sub">13명+ 단체 입장 가능 식당 위주로 구성. 사전 예약 필수.</div>
+
+  <div class="rest-section-title">🥟 딤섬 전문점 (광저우)</div>
+  <div class="rest-grid">
+    <div class="rest-card">
+      <div class="rest-icon">🥟</div>
+      <div class="rest-info">
+        <div class="rest-name">陶陶居 (타오타오쥐)</div>
+        <div class="rest-location">📍 荔湾区 第十甫路</div>
+        <div class="rest-desc">1880년대 개업 광저우 100년 노포. 정통 얌차·딤섬. 넓은 홀로 단체 입장 가능. 광저우 딤섬의 상징.</div>
+        <div class="rest-tags"><span class="rest-tag rec">단체 추천</span><span class="rest-tag">100년 노포</span><span class="rest-tag">얌차</span></div>
+      </div>
+    </div>
+    <div class="rest-card">
+      <div class="rest-icon">🫖</div>
+      <div class="rest-info">
+        <div class="rest-name">莲香楼 (리엔샹러우)</div>
+        <div class="rest-location">📍 荔湾区 第十甫路</div>
+        <div class="rest-desc">타오타오쥐와 같은 서관 지역 전통 딤섬 명가. 蓮蓉包(연꽃 앙금 빵)로 유명. 관광객보다 현지인 비중 높음.</div>
+        <div class="rest-tags"><span class="rest-tag rec">현지인 픽</span><span class="rest-tag">연꽃빵</span></div>
+      </div>
+    </div>
+    <div class="rest-card">
+      <div class="rest-icon">🍤</div>
+      <div class="rest-info">
+        <div class="rest-name">广州酒家 (광저우 지우자)</div>
+        <div class="rest-location">📍 荔湾区 文昌南路</div>
+        <div class="rest-desc">"식재광州"의 본점. 광저우 요리 전반을 아우르는 국빈 수준 식당. 단체 연회석 구비.</div>
+        <div class="rest-tags"><span class="rest-tag rec">단체 연회</span><span class="rest-tag">광저우 요리</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rest-section-title">🦆 광저우 요리 (소아 · 해산물)</div>
+  <div class="rest-grid">
+    <div class="rest-card">
+      <div class="rest-icon">🦢</div>
+      <div class="rest-info">
+        <div class="rest-name">烧鹅仔 계열 식당 (소아)</div>
+        <div class="rest-location">📍 웨슈·리완 구 일대</div>
+        <div class="rest-desc">광저우 명물 구운 거위(烧鹅). 촉촉한 육즙과 바삭한 껍질. 밥과 함께 제공. 점심·저녁 모두 가능.</div>
+        <div class="rest-tags"><span class="rest-tag">소아</span><span class="rest-tag">광둥 요리</span></div>
+      </div>
+    </div>
+    <div class="rest-card">
+      <div class="rest-icon">🦞</div>
+      <div class="rest-info">
+        <div class="rest-name">番禺 해산물 식당가</div>
+        <div class="rest-location">📍 番禺区 (판위 구)</div>
+        <div class="rest-desc">살아있는 해산물 직접 선택해 요리하는 광저우 스타일. 왕새우, 랍스터, 굴, 조개 등. 단체 대형 홀 가능.</div>
+        <div class="rest-tags"><span class="rest-tag rec">단체 추천</span><span class="rest-tag">해산물</span></div>
+      </div>
+    </div>
+    <div class="rest-card">
+      <div class="rest-icon">🍜</div>
+      <div class="rest-info">
+        <div class="rest-name">竹升麺 (죽승면 / 완탕면)</div>
+        <div class="rest-location">📍 서관 일대 노포</div>
+        <div class="rest-desc">대나무 장대로 반죽한 전통 광저우 완탕면. 쫄깃한 면발과 새우 완탕. 아침·점심 간식으로 인기.</div>
+        <div class="rest-tags"><span class="rest-tag">완탕면</span><span class="rest-tag">조식</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rest-section-title">🇲🇴 마카오 추천</div>
+  <div class="rest-grid">
+    <div class="rest-card">
+      <div class="rest-icon">🥧</div>
+      <div class="rest-info">
+        <div class="rest-name">Lord Stow's Bakery (로드 스토우)</div>
+        <div class="rest-location">📍 路環 (콜로안 본점)</div>
+        <div class="rest-desc">마카오 에그타르트 원조. 바삭한 파이 껍질에 촉촉한 커스터드 필링. 마카오 방문 시 필수.</div>
+        <div class="rest-tags"><span class="rest-tag rec">필수</span><span class="rest-tag">에그타르트</span></div>
+      </div>
+    </div>
+    <div class="rest-card">
+      <div class="rest-icon">🐔</div>
+      <div class="rest-info">
+        <div class="rest-name">African Chicken 식당</div>
+        <div class="rest-location">📍 마카오 반도 포르투갈 식당가</div>
+        <div class="rest-desc">마카오 포르투갈 요리의 상징 '아프리칸 치킨'. 코코넛·향신료 소스에 구운 치킨. 이색적인 맛.</div>
+        <div class="rest-tags"><span class="rest-tag">마카오 퓨전</span><span class="rest-tag">포르투갈 요리</span></div>
+      </div>
+    </div>
+    <div class="rest-card">
+      <div class="rest-icon">🍱</div>
+      <div class="rest-info">
+        <div class="rest-name">베네시안 푸드코트</div>
+        <div class="rest-location">📍 코타이 베네시안 마카오 내부</div>
+        <div class="rest-desc">대규모 푸드코트로 다양한 음식 동시 취식 가능. 입맛 다양한 대가족에 최적. 단체 자유석.</div>
+        <div class="rest-tags"><span class="rest-tag rec">단체 추천</span><span class="rest-tag">다양한 메뉴</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tip-box" style="margin-top:28px">
+    <div class="tip-box-title">📌 단체 식당 이용 팁</div>
+    <ul class="tip-list">
+      <li>광저우 인기 딤섬 식당은 <strong>전날 전화·위챗 예약</strong> 필수. 13명 이상이면 단체석 문의.</li>
+      <li>얌차(飲茶)는 오전 <strong>7~11시</strong>가 핵심. 점심 이후는 가격이 오르거나 메뉴 축소됨.</li>
+      <li>마카오 레스토랑도 성수기(1월 설 전후) 예약 필수. 코타이 리조트 식당은 예약 앱/홈피 이용.</li>
+      <li>어르신·어린이 모두 있으니 <strong>너무 매운 사천 요리는 피하고</strong> 광둥 요리 위주로 선택.</li>
+    </ul>
+  </div>
+</div>
+</div>
+
+<!-- ══════════ TAB 2: 쇼핑 ══════════ -->
+<div class="tab-pane" id="pane-2">
+<div class="section">
+  <div class="sec-eyebrow">쇼핑 가이드</div>
+  <div class="sec-title">광저우 쇼핑 · 마카오 면세</div>
+  <div class="sec-sub">대가족 쇼핑 — 구역별로 나눠서 이동하는 것을 추천</div>
+
+  <div class="rest-section-title">🏬 광저우 쇼핑몰</div>
+  <div class="shop-grid">
+    <div class="shop-card">
+      <div class="shop-card-head">
+        <div class="shop-card-icon">🏢</div>
+        <div><div class="shop-card-name">正佳廣場 (정자 광장)</div><div class="shop-card-location">📍 天河区 天河路 228号</div></div>
+      </div>
+      <div class="shop-card-desc">광저우 최대 쇼핑몰 중 하나. 의류·화장품·식품·레스토랑 모두 구비. 지하철 텐허청역 연결.</div>
+      <div class="shop-items"><span class="shop-item">의류</span><span class="shop-item">화장품</span><span class="shop-item">식품</span><span class="shop-item">레스토랑</span></div>
+    </div>
+    <div class="shop-card">
+      <div class="shop-card-head">
+        <div class="shop-card-icon">🛒</div>
+        <div><div class="shop-card-name">天河城 (텐허청)</div><div class="shop-card-location">📍 天河区 天河路 208号</div></div>
+      </div>
+      <div class="shop-card-desc">정자 광장 바로 옆 위치. 중저가 브랜드 위주. 현지 패션·잡화 다양. 가성비 쇼핑 최적.</div>
+      <div class="shop-items"><span class="shop-item">중저가</span><span class="shop-item">잡화</span><span class="shop-item">패션</span></div>
+    </div>
+    <div class="shop-card">
+      <div class="shop-card-head">
+        <div class="shop-card-icon">🫖</div>
+        <div><div class="shop-card-name">芳村 茶葉城 (차 시장)</div><div class="shop-card-location">📍 荔湾区 芳村大道</div></div>
+      </div>
+      <div class="shop-card-desc">광저우 최대 차(茶) 도매·소매 시장. 보이차·공부차·다기 등 다양한 중국 차 구매. 어르신 선물로 인기.</div>
+      <div class="shop-items"><span class="shop-item">보이차</span><span class="shop-item">다기</span><span class="shop-item">선물용</span></div>
+    </div>
+    <div class="shop-card">
+      <div class="shop-card-head">
+        <div class="shop-card-icon">🛍</div>
+        <div><div class="shop-card-name">北京路 (북경로) 보행가</div><div class="shop-card-location">📍 越秀区 北京路</div></div>
+      </div>
+      <div class="shop-card-desc">광저우 전통 번화가 쇼핑 거리. 중저가 의류·잡화·기념품. 옛 광저우 거리 분위기와 함께 산책.</div>
+      <div class="shop-items"><span class="shop-item">기념품</span><span class="shop-item">잡화</span><span class="shop-item">중저가</span></div>
+    </div>
+    <div class="shop-card">
+      <div class="shop-card-head">
+        <div class="shop-card-icon">💊</div>
+        <div><div class="shop-card-name">广药集团 / 약재 시장</div><div class="shop-card-location">📍 清平中药市场</div></div>
+      </div>
+      <div class="shop-card-desc">전통 한약재·건강식품 도매 시장. 녹용·홍삼·구기자·진피 등 다양. 어르신 선물 또는 건강 선물 구매.</div>
+      <div class="shop-items"><span class="shop-item">한약재</span><span class="shop-item">건강식품</span><span class="shop-item">어르신 선물</span></div>
+    </div>
+    <div class="shop-card">
+      <div class="shop-card-head">
+        <div class="shop-card-icon">🧴</div>
+        <div><div class="shop-card-name">Watsons / 万宁 (만닝)</div><div class="shop-card-location">📍 광저우 전역</div></div>
+      </div>
+      <div class="shop-card-desc">중국 드럭스토어. 한국 화장품 포함 아시아 뷰티 제품 다수. 百雀羚·珀莱雅 등 중국 로컬 브랜드도 구매 가능.</div>
+      <div class="shop-items"><span class="shop-item">화장품</span><span class="shop-item">스킨케어</span><span class="shop-item">뷰티</span></div>
+    </div>
+  </div>
+
+  <div class="rest-section-title">🎰 마카오 쇼핑</div>
+  <div class="shop-grid">
+    <div class="shop-card">
+      <div class="shop-card-head">
+        <div class="shop-card-icon">🛥</div>
+        <div><div class="shop-card-name">The Venetian Shops</div><div class="shop-card-location">📍 코타이 베네시안 마카오</div></div>
+      </div>
+      <div class="shop-card-desc">300개 이상의 브랜드. 명품부터 중가 브랜드까지. 마카오 면세 혜택. 실내 쇼핑몰로 날씨 무관.</div>
+      <div class="shop-items"><span class="shop-item">면세</span><span class="shop-item">명품</span><span class="shop-item">의류</span></div>
+    </div>
+    <div class="shop-card">
+      <div class="shop-card-head">
+        <div class="shop-card-icon">🍫</div>
+        <div><div class="shop-card-name">마카오 기념품 / 杏仁饼</div><div class="shop-card-location">📍 세나도 광장 주변</div></div>
+      </div>
+      <div class="shop-card-desc">마카오 명물 행인병(아몬드 쿠키)·돼지고기 포·에그롤. 기념품으로 최적. 진공포장 제품 구매 추천.</div>
+      <div class="shop-items"><span class="shop-item">행인병</span><span class="shop-item">돼지고기 포</span><span class="shop-item">기념품</span></div>
+    </div>
+  </div>
+
+  <div class="tip-box" style="margin-top:28px">
+    <div class="tip-box-title">💡 쇼핑 팁</div>
+    <ul class="tip-list">
+      <li>광저우 쇼핑에서 <strong>위안화 현금</strong> 필수. 소규모 상점은 카드 안 받는 곳 많음. 알리페이/위챗페이 연동 추천.</li>
+      <li>광저우 약재 시장은 <strong>흥정 문화</strong>. 처음 제시가의 50~70%에서 시작해 협상.</li>
+      <li>마카오는 <strong>홍콩달러·마카오 파타카</strong> 모두 통용. 카드 결제 가능 범위 넓음.</li>
+      <li>액체류·식품 등 <strong>귀국 수하물 제한</strong> 확인. 한약재 등 일부 품목은 한국 반입 규정 체크.</li>
+    </ul>
+  </div>
+</div>
+</div>
+
+<!-- ══════════ TAB 3: 예산 ══════════ -->
+<div class="tab-pane" id="pane-3">
+<div class="section">
+  <div class="sec-eyebrow">여행 예산</div>
+  <div class="sec-title">3박4일 13명 기준 견적</div>
+  <div class="sec-sub">1월 기준 추정치. 환율·항공가 변동 있음. 단체 협상 시 절감 가능.</div>
+
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="info-card-label">기준 인원</div>
+      <div class="info-card-value">13명 (3세대 가족)</div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-label">여행 기간</div>
+      <div class="info-card-value">3박 4일</div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-label">환율 기준 (CNY)</div>
+      <div class="info-card-value warn">1 CNY ≈ 190~200원 (확인 필요)</div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-label">마카오 (MOP)</div>
+      <div class="info-card-value warn">1 MOP ≈ 170~180원 (확인 필요)</div>
+    </div>
+  </div>
+
+  <div class="budget-section">
+    <div class="budget-section-title">✈️ 항공 (인천 ↔ 광저우)</div>
+    <table class="budget-table">
+      <thead><tr><th>항목</th><th>기준</th><th>금액 (원)</th></tr></thead>
+      <tbody>
+        <tr><td>항공권 (왕복 · 성인)</td><td>1인 약 50~80만원</td><td>650,000~1,040,000</td></tr>
+        <tr><td>항공권 (왕복 · 소아)</td><td>1인 약 40~65만원 (추정)</td><td>400,000~650,000</td></tr>
+        <tr><td colspan="2" style="color:var(--sub);font-size:12px">※ 13명 합계 (성인 10·소아 3 가정)</td><td>약 7,700만~1억2천만원</td></tr>
+      </tbody>
+    </table>
+    <div class="budget-note">1월은 춘절(설) 시즌 전후 성수기. 최소 2~3개월 전 예약 권장. 단체 10인 이상은 항공사 그룹 예약 문의.</div>
+  </div>
+
+  <div class="budget-section">
+    <div class="budget-section-title">🏨 숙소 (광저우 3박)</div>
+    <table class="budget-table">
+      <thead><tr><th>항목</th><th>기준</th><th>금액 (원)</th></tr></thead>
+      <tbody>
+        <tr><td>3~4성 호텔 객실</td><td>1박 1실 약 15~25만원 × 7실</td><td>315,000~525,000/박</td></tr>
+        <tr><td>3박 합계</td><td>7실 × 3박</td><td>약 945만~1,575만원</td></tr>
+        <tr><td>1인당 숙소 비용</td><td>÷ 13명</td><td>약 72만~121만원</td></tr>
+      </tbody>
+    </table>
+    <div class="budget-note">텐허·웨슈 지역 4성급 기준. 13~15명은 단체 계약 시 할인 협상 가능. 패밀리룸 보유 여부 사전 확인.</div>
+  </div>
+
+  <div class="budget-section">
+    <div class="budget-section-title">🍜 식비 (1인 기준)</div>
+    <table class="budget-table">
+      <thead><tr><th>항목</th><th>1식 기준</th><th>총 예상 (4일)</th></tr></thead>
+      <tbody>
+        <tr><td>아침 (얌차·호텔 조식)</td><td>30,000~50,000원/인</td><td>120,000~200,000원</td></tr>
+        <tr><td>점심 (식당)</td><td>25,000~40,000원/인</td><td>100,000~160,000원</td></tr>
+        <tr><td>저녁 (단체 식당)</td><td>40,000~70,000원/인</td><td>160,000~280,000원</td></tr>
+        <tr class="total-row"><td colspan="2">1인 식비 합계 (4일)</td><td>약 38~64만원</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="budget-section">
+    <div class="budget-section-title">🚌 교통 (현지)</div>
+    <table class="budget-table">
+      <thead><tr><th>항목</th><th>기준</th><th>금액</th></tr></thead>
+      <tbody>
+        <tr><td>공항↔호텔 이동</td><td>왕복 택시/버스 (13명 분할)</td><td>약 30~60만원</td></tr>
+        <tr><td>광저우 시내 이동</td><td>지하철·택시 3일</td><td>약 5~10만원/인</td></tr>
+        <tr><td>광저우↔마카오 왕복</td><td>버스/페리 1인 3~5만원</td><td>약 39~65만원 (13인)</td></tr>
+        <tr class="total-row"><td colspan="2">교통 합계</td><td>약 120~200만원</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="budget-section">
+    <div class="budget-section-title">📊 총 예산 요약 (13명 합계)</div>
+    <table class="budget-table">
+      <thead><tr><th>항목</th><th>예산</th></tr></thead>
+      <tbody>
+        <tr><td>항공 (13명)</td><td>약 7,700~10,400만원</td></tr>
+        <tr><td>숙소 (3박)</td><td>약 945~1,575만원</td></tr>
+        <tr><td>식비 (4일)</td><td>약 494~832만원</td></tr>
+        <tr><td>현지 교통</td><td>약 120~200만원</td></tr>
+        <tr><td>관광·입장료</td><td>약 150~300만원</td></tr>
+        <tr><td>쇼핑 (개인 예산 별도)</td><td>각자 부담</td></tr>
+        <tr class="total-row"><td>총 합계 (쇼핑 제외)</td><td>약 9,400~1억3,300만원</td></tr>
+        <tr class="total-row"><td>1인당 (÷13명)</td><td>약 72~102만원</td></tr>
+      </tbody>
+    </table>
+    <div class="budget-note">⚠️ 항공권 가격이 전체의 75%+. 빠른 예약이 핵심. 단체 10인 이상 그룹 할인 문의 권장. 위 금액은 참고 추정치이며 실제 예약 시 재확인 필요.</div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════ TAB 4: 준비물 ══════════ -->
+<div class="tab-pane" id="pane-4">
+<div class="section">
+  <div class="sec-eyebrow">여행 준비물</div>
+  <div class="sec-title">체크리스트</div>
+  <div class="sec-sub">체크 항목을 클릭하면 완료 처리됩니다. (브라우저 로컬 저장)</div>
+
+  <div class="cl-section-title">📄 필수 서류</div>
+  <div class="cl-grid" id="cl-docs"></div>
+
+  <div class="cl-section-title">💊 건강 · 의약품</div>
+  <div class="cl-grid" id="cl-health"></div>
+
+  <div class="cl-section-title">💴 환전 · 결제</div>
+  <div class="cl-grid" id="cl-money"></div>
+
+  <div class="cl-section-title">👕 의류 · 날씨</div>
+  <div class="cl-grid" id="cl-clothes"></div>
+
+  <div class="cl-section-title">📱 전자기기</div>
+  <div class="cl-grid" id="cl-tech"></div>
+
+  <div class="cl-section-title">👶 어린이·어르신 특별 준비물</div>
+  <div class="cl-grid" id="cl-special"></div>
+
+  <div class="cl-section-title">🎒 단체 여행 사전 준비</div>
+  <div class="cl-grid" id="cl-group"></div>
+
+  <div class="tip-box" style="margin-top:28px">
+    <div class="tip-box-title">🌡 1월 광저우·마카오 날씨</div>
+    <ul class="tip-list">
+      <li>광저우 1월 평균 기온: <strong>약 13~18°C</strong>. 서울보다 훨씬 따뜻하지만 아침저녁 쌀쌀.</li>
+      <li>마카오 1월 기온: 광저우와 유사. <strong>얇은 겉옷(바람막이·카디건)</strong> 필수.</li>
+      <li>한국 겨울 두꺼운 패딩은 오히려 짐이 됨. <strong>레이어링</strong> (얇은 옷 여러 겹) 전략 권장.</li>
+      <li>1월 강수량은 적지만 습도는 높을 수 있음. 우산 한 개씩 챙기면 편리.</li>
+    </ul>
+  </div>
+</div>
+</div>
+
+<script>
+// ── 탭 전환 ──
+function switchTab(idx, btn) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('on', i===idx));
+  document.querySelectorAll('.tab-pane').forEach((p,i) => p.classList.toggle('show', i===idx));
+}
+
+// ── 일정 탭 전환 ──
+function switchDay(d, btn) {
+  document.querySelectorAll('.dt-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  document.querySelectorAll('.day-panel').forEach(p => p.classList.remove('show'));
+  document.getElementById('day-' + d).classList.add('show');
+}
+
+// ── 체크리스트 ──
+const CL_DATA = {
+  'cl-docs': [
+    {id:'d1', text:'여권 (전원 유효기간 6개월 이상 확인)', tag:'필수'},
+    {id:'d2', text:'광저우 144시간 무비자 입국 자격 확인 (2027 시점 재확인)', tag:'필수'},
+    {id:'d3', text:'항공권 e-티켓 출력 또는 모바일 저장', tag:'필수'},
+    {id:'d4', text:'숙소 예약 확인서 (영문)', tag:'필수'},
+    {id:'d5', text:'여행자 보험 가입 증서', tag:'권장'},
+    {id:'d6', text:'긴급 연락처 메모 (대사관, 현지 가이드 등)', tag:'권장'},
+  ],
+  'cl-health': [
+    {id:'h1', text:'상비약 (소화제, 지사제, 진통제, 감기약)', tag:'필수'},
+    {id:'h2', text:'어린이 전용 상비약', tag:'어린이'},
+    {id:'h3', text:'어르신 처방약 (여유분 포함)', tag:'어르신'},
+    {id:'h4', text:'모기 기피제 (겨울이지만 광저우는 모기 가능)', tag:'권장'},
+    {id:'h5', text:'손세정제·물티슈', tag:'위생'},
+    {id:'h6', text:'마스크 (미세먼지·위생용)', tag:'권장'},
+  ],
+  'cl-money': [
+    {id:'m1', text:'위안화(CNY) 환전 — 1인 20~30만원 현금 권장', tag:'필수'},
+    {id:'m2', text:'마카오 파타카(MOP) 또는 홍콩달러 소액 환전', tag:'필수'},
+    {id:'m3', text:'해외 결제 가능 신용/체크카드 (VISA/Master)', tag:'필수'},
+    {id:'m4', text:'알리페이 or 위챗페이 계정 준비 (외국인 등록 가능)', tag:'권장'},
+    {id:'m5', text:'긴급 예비 현금 (USD 또는 원화)', tag:'권장'},
+  ],
+  'cl-clothes': [
+    {id:'c1', text:'바람막이 또는 얇은 재킷 (낮 활동용)', tag:'필수'},
+    {id:'c2', text:'얇은 니트·긴팔 (아침저녁 기온 대비)', tag:'필수'},
+    {id:'c3', text:'편한 걷기 신발 (관광지 도보 많음)', tag:'필수'},
+    {id:'c4', text:'휴대용 우산 (1인 1개 권장)', tag:'권장'},
+    {id:'c5', text:'여분 속옷 · 양말', tag:'필수'},
+  ],
+  'cl-tech': [
+    {id:'t1', text:'중국용 유심 또는 데이터 로밍 (VPN 앱 병행 권장)', tag:'필수'},
+    {id:'t2', text:'VPN 앱 한국에서 미리 설치 (중국 내 설치 불가)', tag:'중요'},
+    {id:'t3', text:'멀티탭 (콘센트 220V, 포크형 사용)', tag:'권장'},
+    {id:'t4', text:'보조배터리 (1인 1개 권장)', tag:'권장'},
+    {id:'t5', text:'카메라 / 스마트폰 충전기', tag:'필수'},
+    {id:'t6', text:'번역 앱 다운로드 (파파고·구글번역 오프라인 팩)', tag:'권장'},
+  ],
+  'cl-special': [
+    {id:'s1', text:'유아용 카시트 (필요시, 렌터카 이용 시)', tag:'어린이'},
+    {id:'s2', text:'어린이 간식·음료 (비행기·장거리 이동용)', tag:'어린이'},
+    {id:'s3', text:'어르신 이동 보조용품 (보행 보조기 등 필요시)', tag:'어르신'},
+    {id:'s4', text:'어르신 의약품 리스트 영문 번역본', tag:'어르신'},
+    {id:'s5', text:'목 베개 (비행기 및 장거리 이동)', tag:'어르신·어린이'},
+  ],
+  'cl-group': [
+    {id:'g1', text:'항공권 단체 예약 완료 (10인 이상 그룹 할인 문의)', tag:'예약'},
+    {id:'g2', text:'호텔 단체 예약 완료 (객실 수 확인, 연박 확인)', tag:'예약'},
+    {id:'g3', text:'마카오 당일치기 교통 예약 (페리 또는 버스)', tag:'예약'},
+    {id:'g4', text:'주요 식당 사전 예약 (얌차·저녁 단체석)', tag:'예약'},
+    {id:'g5', text:'여행 단체 톡방 개설 및 일정 공유', tag:'소통'},
+    {id:'g6', text:'비상 연락 체계 구성 (인솔자 지정)', tag:'필수'},
+    {id:'g7', text:'공항 집결 장소·시간 사전 공지', tag:'필수'},
+    {id:'g8', text:'단체 여행자보험 가입 완료', tag:'필수'},
+  ]
+};
+
+const DONE_KEY = 'gz-cl-done';
+let done = JSON.parse(localStorage.getItem(DONE_KEY) || '[]');
+
+function renderChecklists() {
+  Object.entries(CL_DATA).forEach(([containerId, items]) => {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    el.innerHTML = items.map(item => `
+      <div class="cl-item${done.includes(item.id) ? ' done' : ''}" onclick="toggleCL('${item.id}', this)">
+        <div class="cl-check">${done.includes(item.id) ? '✓' : ''}</div>
+        <div class="cl-text">${item.text}</div>
+        <div class="cl-tag">${item.tag}</div>
+      </div>
+    `).join('');
+  });
+}
+
+function toggleCL(id, el) {
+  const idx = done.indexOf(id);
+  if (idx === -1) done.push(id); else done.splice(idx, 1);
+  localStorage.setItem(DONE_KEY, JSON.stringify(done));
+  el.classList.toggle('done');
+  const check = el.querySelector('.cl-check');
+  check.textContent = done.includes(id) ? '✓' : '';
+}
+
+renderChecklists();
+</script>
+</body>
+</html>
