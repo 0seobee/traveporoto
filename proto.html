@@ -22,6 +22,15 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.92
 .nav-links::-webkit-scrollbar{display:none}
 .nav-links a{color:var(--sub);text-decoration:none;padding:5px 12px;border-radius:16px;font-size:13px;white-space:nowrap;transition:.2s}
 .nav-links a:hover,.nav-links a.on{background:rgba(92,107,192,.25);color:#9fa8da}
+/* 모바일: 로고 줄 + 탭 줄 2단 배치 */
+@media(max-width:768px){
+  nav{height:auto;flex-wrap:wrap;padding:8px 12px 0;gap:0}
+  .nav-logo{font-size:15px;margin-right:0;flex:1;padding-bottom:6px}
+  .nav-links{order:2;width:100%;padding:0 0 8px;gap:4px;-webkit-overflow-scrolling:touch}
+  .nav-links a{padding:7px 13px;font-size:13px;background:rgba(255,255,255,.05);border-radius:18px}
+  .nav-links a.on{background:rgba(92,107,192,.35)}
+  .map-section,.section,[id]{scroll-margin-top:96px}
+}
 
 /* ── HERO ── */
 .hero{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
