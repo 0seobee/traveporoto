@@ -2038,6 +2038,11 @@ function renderMap(container, tab, items) {
         <div class="map-add-form">
           <div style="font-size:12px;font-weight:700;color:var(--accent2);margin-bottom:8px">＋ 장소 추가</div>
           <div style="position:relative;margin-bottom:6px">
+            <input class="f-inp" id="mSearch" placeholder="🔍 장소 이름으로 검색" style="width:100%" autocomplete="off"
+              oninput="mapPlaceSearch(this.value)" onblur="setTimeout(()=>document.getElementById('mSearchDropdown').innerHTML='',200)">
+            <div id="mSearchDropdown" style="position:absolute;top:100%;left:0;right:0;z-index:50;background:#1e2240;border:1px solid #3a3f6b;border-radius:8px;overflow:hidden;margin-top:4px;max-height:180px;overflow-y:auto"></div>
+          </div>
+          <div style="position:relative;margin-bottom:6px">
             <input class="f-inp" id="mGurl" placeholder="🗺️ 구글맵 URL 붙여넣기 (자동 입력)" style="width:100%;padding-right:60px" oninput="parseGmapUrl(this.value)">
             <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--sub)">자동</span>
           </div>
@@ -2277,6 +2282,39 @@ async function importKML(input, tabId) {
   // 지도 새로고침
   const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
   renderMap(document.getElementById('tabContent'), currentTab, items);
+}
+
+let mapPlaceSearchTimer = null;
+async function mapPlaceSearch(q) {
+  clearTimeout(mapPlaceSearchTimer);
+  const dd = document.getElementById('mSearchDropdown');
+  if (!q || q.length < 2) { dd.innerHTML = ''; return; }
+  mapPlaceSearchTimer = setTimeout(async () => {
+    try {
+      const data = await geocodeSearch(q);
+      if (!data.length) { dd.innerHTML = `<div style="padding:10px 14px;font-size:12px;color:#7b80a0">검색 결과 없음</div>`; return; }
+      dd.innerHTML = data.map(p => {
+        const parts = p.display_name.split(',');
+        const name = parts[0];
+        const addr = parts.slice(1,3).join(', ');
+        return `<div onclick='selectMapSearchPlace(${JSON.stringify(name)},${JSON.stringify(addr)},${p.lat},${p.lon})'
+          style="padding:9px 14px;font-size:13px;color:#e0e2f5;cursor:pointer;border-bottom:1px solid #2a2f50"
+          onmouseover="this.style.background='rgba(92,107,192,.2)'" onmouseout="this.style.background=''">
+          <div style="font-weight:700">${name}</div><div style="font-size:11px;color:#9fa8da">${addr}</div>
+        </div>`;
+      }).join('');
+    } catch(e) { dd.innerHTML = `<div style="padding:10px 14px;font-size:12px;color:#7b80a0">검색 실패</div>`; }
+  }, 350);
+}
+
+function selectMapSearchPlace(name, addr, lat, lng) {
+  document.getElementById('mSearch').value = name;
+  document.getElementById('mSearchDropdown').innerHTML = '';
+  document.getElementById('mName').value = name;
+  document.getElementById('mDesc').value = addr;
+  document.getElementById('mLat').value = parseFloat(lat).toFixed(6);
+  document.getElementById('mLng').value = parseFloat(lng).toFixed(6);
+  if (window.leafletMap) window.leafletMap.setView([lat, lng], 16);
 }
 
 function parseGmapUrl(url) {
