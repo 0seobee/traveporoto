@@ -1457,7 +1457,26 @@ async function importSchedSheet(tabId) {
   }
 }
 
-// ── 장소 검색 (Nominatim) ──
+// ── 장소 검색 (한국어는 Kakao, 그 외는 Nominatim) ──
+const HANGUL_RE = /[가-힣]/;
+
+// 반환 형식을 { display_name, lat, lon } 배열로 통일
+async function geocodeSearch(q) {
+  if (HANGUL_RE.test(q)) {
+    const r = await fetch(`/api/kakao-search?q=${encodeURIComponent(q)}`);
+    const j = await r.json();
+    if (!r.ok || j.error) throw new Error(j.error || 'kakao search failed');
+    return (j.documents || []).map(d => ({
+      display_name: d.road_address_name ? `${d.place_name}, ${d.road_address_name}` : `${d.place_name}, ${d.address_name}`,
+      lat: d.y, lon: d.x
+    }));
+  }
+  const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=6&accept-language=ko`, {
+    headers: { 'Accept-Language': 'ko' }
+  });
+  return await res.json();
+}
+
 let placeSearchTimer = null;
 async function searchPlace(q) {
   clearTimeout(placeSearchTimer);
@@ -1465,10 +1484,7 @@ async function searchPlace(q) {
   if (!q || q.length < 2) { dd.innerHTML = ''; return; }
   placeSearchTimer = setTimeout(async () => {
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=6&accept-language=ko`, {
-        headers: { 'Accept-Language': 'ko' }
-      });
-      const data = await res.json();
+      const data = await geocodeSearch(q);
       if (!data.length) { dd.innerHTML = `<div style="padding:10px 14px;font-size:12px;color:#7b80a0">검색 결과 없음</div>`; return; }
       dd.innerHTML = data.map(p => {
         const name = p.display_name.split(',').slice(0,3).join(', ');
@@ -1476,7 +1492,7 @@ async function searchPlace(q) {
           style="padding:9px 14px;font-size:13px;cursor:pointer;border-bottom:1px solid #2a2f50;transition:.15s"
           onmouseover="this.style.background='rgba(92,107,192,.2)'" onmouseout="this.style.background=''">${name}</div>`;
       }).join('');
-    } catch(e) { dd.innerHTML = ''; }
+    } catch(e) { dd.innerHTML = `<div style="padding:10px 14px;font-size:12px;color:#7b80a0">검색 실패</div>`; }
   }, 350);
 }
 
@@ -1943,8 +1959,7 @@ async function cardPlaceSearch(input) {
   cardPlaceLat = null; cardPlaceLng = null; cardPlaceName = '';
   if (q.length < 2) { box.style.display = 'none'; return; }
   try {
-    const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&accept-language=ko`);
-    const list = await r.json();
+    const list = await geocodeSearch(q);
     if (!list.length) { box.style.display = 'none'; return; }
     box.style.display = 'block';
     box.innerHTML = list.map(p => `
