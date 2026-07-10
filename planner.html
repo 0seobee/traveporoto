@@ -223,8 +223,8 @@ textarea.f-inp{resize:vertical;min-height:60px}
 .sched-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;gap:14px;align-items:flex-start}
 .sched-time{font-size:13px;font-weight:800;color:var(--accent2);min-width:50px;text-align:center;padding-top:2px}
 .sched-body{flex:1}
-.sched-place{font-size:14px;font-weight:700;margin-bottom:3px}
-.sched-content{font-size:13px;color:var(--sub);line-height:1.5}
+.sched-place{font-size:12px;color:var(--sub);line-height:1.5;margin-top:3px}
+.sched-content{font-size:14px;font-weight:700;margin-bottom:0}
 .sched-note{font-size:11px;color:#7986cb;margin-top:4px;background:rgba(92,107,192,.08);border-radius:6px;padding:4px 8px;display:inline-block}
 .sched-cost{font-size:11px;color:#a5d6a7;margin-top:4px}
 .sched-item-actions{display:flex;gap:4px;flex-shrink:0}
@@ -404,8 +404,8 @@ textarea.f-inp{resize:vertical;min-height:60px}
   /* SCHEDULE */
   .sched-item{padding:10px 12px;gap:10px}
   .sched-time{min-width:42px;font-size:12px}
-  .sched-place{font-size:13px}
-  .sched-content{font-size:12px}
+  .sched-place{font-size:11px}
+  .sched-content{font-size:13px}
   .date-tab{padding:5px 10px;font-size:11px}
   .sched-cost-bar{padding:8px 10px;gap:8px}
 
@@ -1261,8 +1261,8 @@ function renderSchedItems(items, date) {
       return `<div class="sched-item">
         <div class="sched-time">${item.data.time||''}</div>
         <div class="sched-body">
-          <div class="sched-place">${item.data.place||''}</div>
-          <div class="sched-content">${item.data.content||''}</div>
+          <div class="sched-content">${item.data.content||item.data.place||''}</div>
+          ${(item.data.place&&item.data.content)?`<div class="sched-place">📍 ${item.data.place}</div>`:''}
           ${item.data.note?`<div class="sched-note">💡 ${item.data.note}</div>`:''}
           ${costStr?`<div class="sched-cost">💰 ${costStr}</div>`:''}
         </div>
