@@ -120,6 +120,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;background:rgba(13,15,26,.95
 .tab-btn:hover .tab-del{display:flex}
 .tab-add-btn{border:1px dashed var(--border);background:transparent;color:var(--sub);border-radius:16px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;margin-left:8px;transition:.2s}
 .tab-add-btn:hover{border-color:var(--accent);color:var(--accent2)}
+.tab-btn.dragging{opacity:.4}
+.tab-bar.tab-drag-active{overflow-x:hidden}
 
 /* ── TAB CONTENT ── */
 .tab-content{flex:1;overflow:auto}
@@ -953,11 +955,102 @@ async function loadTabs() {
 function renderTabBar() {
   const bar = document.getElementById('tabBar');
   const btnHtml = tabs.map(t => `
-    <button class="tab-btn" id="tab-btn-${t.id}" data-id="${t.id}" onclick="openTab('${t.id}')" ondblclick="startRenameTab(event,'${t.id}')">
+    <button class="tab-btn" id="tab-btn-${t.id}" data-id="${t.id}">
       <span class="tab-label">${TAB_ICONS[t.type]||'📄'} ${t.title}</span>
       <span class="tab-del" onclick="event.stopPropagation();deleteTab('${t.id}')">✕</span>
     </button>`).join('');
   bar.innerHTML = btnHtml + `<button class="tab-add-btn" onclick="openTabModal()">＋ 탭 추가</button>`;
+  initTabBarDrag();
+}
+
+// ── 탭 순서 드래그 재정렬 (Pointer Events — 마우스 + 터치 공용) ──
+function initTabBarDrag() {
+  const bar = document.getElementById('tabBar');
+  let dragBtn = null, activePointerId = null, longPressTimer = null;
+  let startX = 0, startY = 0, isTouch = false, moved = false;
+
+  function endDrag() {
+    if (!dragBtn) return;
+    dragBtn.classList.remove('dragging');
+    bar.classList.remove('tab-drag-active');
+    dragBtn.style.touchAction = 'pan-x';
+    dragBtn = null;
+    const order = [...bar.querySelectorAll('.tab-btn')].map(b => b.dataset.id);
+    const reordered = order.map(id => tabs.find(t => t.id === id)).filter(Boolean);
+    if (reordered.length === tabs.length) {
+      tabs = reordered;
+      tabs.forEach((t, i) => { if (t.sort_order !== i) { t.sort_order = i; sbPatch('tabs', t.id, { sort_order: i }); } });
+    }
+  }
+
+  bar.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.style.touchAction = 'pan-x';
+
+    btn.addEventListener('pointerdown', e => {
+      if (e.target.closest('.tab-del')) return;
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      isTouch = e.pointerType !== 'mouse';
+      startX = e.clientX; startY = e.clientY; moved = false;
+      activePointerId = e.pointerId;
+      clearTimeout(longPressTimer);
+      if (isTouch) {
+        longPressTimer = setTimeout(() => {
+          if (activePointerId !== e.pointerId) return;
+          moved = true;
+          dragBtn = btn;
+          btn.classList.add('dragging');
+          btn.style.touchAction = 'none';
+          bar.classList.add('tab-drag-active');
+          try { btn.setPointerCapture(e.pointerId); } catch (err) {}
+        }, 380);
+      }
+    });
+
+    btn.addEventListener('pointermove', e => {
+      if (activePointerId === null || e.pointerId !== activePointerId) return;
+      const dx = e.clientX - startX, dy = e.clientY - startY;
+      if (!dragBtn) {
+        if (!isTouch && Math.hypot(dx, dy) > 6) {
+          clearTimeout(longPressTimer);
+          moved = true;
+          dragBtn = btn;
+          btn.classList.add('dragging');
+          btn.style.touchAction = 'none';
+          bar.classList.add('tab-drag-active');
+          try { btn.setPointerCapture(e.pointerId); } catch (err) {}
+        } else if (isTouch && Math.hypot(dx, dy) > 10) {
+          clearTimeout(longPressTimer);
+        }
+        return;
+      }
+      e.preventDefault();
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const overBtn = el?.closest('.tab-btn');
+      if (overBtn && overBtn !== dragBtn && overBtn.parentElement === bar) {
+        const rect = overBtn.getBoundingClientRect();
+        const after = e.clientX > rect.left + rect.width / 2;
+        bar.insertBefore(dragBtn, after ? overBtn.nextSibling : overBtn);
+      }
+    });
+
+    ['pointerup', 'pointercancel'].forEach(evt => btn.addEventListener(evt, e => {
+      if (activePointerId === null || e.pointerId !== activePointerId) return;
+      clearTimeout(longPressTimer);
+      try { btn.releasePointerCapture(e.pointerId); } catch (err) {}
+      activePointerId = null;
+      if (dragBtn) endDrag();
+    }));
+
+    btn.addEventListener('click', e => {
+      if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; return; }
+      if (e.target.closest('.tab-del')) return;
+      openTab(btn.dataset.id);
+    });
+    btn.addEventListener('dblclick', e => {
+      if (e.target.closest('.tab-del')) return;
+      startRenameTab(e, btn.dataset.id);
+    });
+  });
 }
 
 function startRenameTab(e, id) {
