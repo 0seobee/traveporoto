@@ -1986,6 +1986,17 @@ async function saveBudgetCell(e, id, tabId, field) {
   }
 }
 
+async function editCardLink(id) {
+  const item = await sbGet('tab_items', `id=eq.${id}`);
+  if (!item[0]) return;
+  const next = prompt('링크 URL을 입력하세요', item[0].data.link || '');
+  if (next === null) return;
+  await sbPatch('tab_items', id, { data: { ...item[0].data, link: next.trim() } });
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tab.id}&order=sort_order.asc,created_at.asc`);
+  renderCards(document.getElementById('tabContent'), tab, items);
+}
+
 async function saveItemField(e, id, field) {
   const value = e.target.textContent.trim();
   const item = await sbGet('tab_items', `id=eq.${id}`);
@@ -2388,12 +2399,10 @@ function renderCards(container, tab, items) {
           data-placeholder="설명 추가"
         >${item.data.detail||''}</div>
         <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap;align-items:center">
-          <span style="font-size:11px;color:#7986cb;display:flex;align-items:center;gap:3px">🔗<span class="card-editable-link" contenteditable="true" spellcheck="false"
-            onclick="event.stopPropagation()"
-            onblur="saveItemField(event,'${item.id}','link')"
-            onkeydown="if(event.key==='Enter'){event.preventDefault();event.target.blur();}"
-            style="cursor:text;min-width:16px;display:inline-block" data-placeholder="링크 추가"
-          >${item.data.link||''}</span></span>
+          <span style="font-size:11px;color:#7986cb;display:flex;align-items:center;gap:3px">🔗${item.data.link
+            ? `<a href="${item.data.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" ondblclick="event.preventDefault();event.stopPropagation();editCardLink('${item.id}')" style="color:inherit;text-decoration:underline;cursor:pointer" title="더블클릭하면 수정">${item.data.link}</a>`
+            : `<span onclick="event.stopPropagation();editCardLink('${item.id}')" style="cursor:pointer;opacity:.6">링크 추가</span>`
+          }</span>
           ${item.data.lat&&item.data.lng?`<a href="https://maps.google.com/?q=${item.data.lat},${item.data.lng}" target="_blank" style="font-size:11px;color:#43a047;text-decoration:none">📍 지도 보기</a>`:''}
           <span style="font-size:11px;color:#7b80a0;display:flex;align-items:center;gap:3px">📍<span class="card-editable-place" contenteditable="true" spellcheck="false"
             onclick="event.stopPropagation()"
