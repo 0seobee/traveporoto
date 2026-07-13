@@ -3220,15 +3220,20 @@ function renderBudget(container, tab, items) {
   const sym = BUDGET_SYM;
   const metaItem = items.find(i => i.data.__meta);
   const peopleCount = Math.max(1, parseInt(metaItem?.data.peopleCount) || 1);
-  const curs = Array.from(new Set(['krw','eur', ...items.map(i=>i.data.currency).filter(Boolean)])).filter(c=>sym[c]);
+  const pinned = (metaItem?.data.pinned && metaItem.data.pinned.length) ? metaItem.data.pinned : ['krw','eur'];
+  const curs = Array.from(new Set([...pinned, ...items.map(i=>i.data.currency).filter(Boolean)])).filter(c=>sym[c]);
 
   const summaryHtml = curs.map(cur => {
     const { income, expense, balance } = calcBudget(items, cur);
     const label = BUDGET_LABEL[cur];
     const balColor = balance >= 0 ? '#a5d6a7' : '#ef9a9a';
     const perPerson = Math.round(expense / peopleCount);
+    const curCount = items.filter(i=>i.data.currency===cur).length;
+    const labelHtml = (curCount === 0 && pinned.includes(cur))
+      ? `<select class="f-sel" style="font-size:11px;font-weight:800;padding:3px 6px" onchange="changePinnedCurrency('${tab.id}','${cur}',this.value)">${BUDGET_CUR_OPTS.replace(`value="${cur}"`, `value="${cur}" selected`)}</select>`
+      : `<span style="font-size:12px;font-weight:800;color:var(--sub)">${label}</span>`;
     return `<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 20px;flex:1;min-width:220px">
-      <div style="font-size:12px;font-weight:800;color:var(--sub);margin-bottom:10px">${label}</div>
+      <div style="margin-bottom:10px">${labelHtml}</div>
       <div style="display:flex;gap:16px;font-size:13px;flex-wrap:wrap">
         <div><div style="color:var(--sub);font-size:11px">입금</div><div style="color:#a5d6a7;font-weight:700">${sym[cur]}${income.toLocaleString()}</div></div>
         <div><div style="color:var(--sub);font-size:11px">출금</div><div style="color:#ef9a9a;font-weight:700">${sym[cur]}${expense.toLocaleString()}</div></div>
@@ -3241,7 +3246,9 @@ function renderBudget(container, tab, items) {
   const rowsHtml = curs.map(cur => {
     const psId = `ps-bg-${tab.id}-${cur}`;
     const curItems = items.filter(i=>i.data.currency===cur);
-    const label = `${sym[cur]} ${BUDGET_LABEL[cur]}`;
+    const label = (curItems.length === 0 && pinned.includes(cur))
+      ? `<select class="f-sel" style="font-size:11px;font-weight:800;padding:3px 6px" onclick="event.stopPropagation()" onchange="event.stopPropagation();changePinnedCurrency('${tab.id}','${cur}',this.value)">${BUDGET_CUR_OPTS.replace(`value="${cur}"`, `value="${cur}" selected`)}</select>`
+      : `${sym[cur]} ${BUDGET_LABEL[cur]}`;
     const inRows = curItems.filter(i=>i.data.type==='in');
     const outRows = curItems.filter(i=>i.data.type==='out');
     const bEditTd = (item, field, style='') => `<td class="list-editable" style="${style}" contenteditable="true" spellcheck="false"
@@ -3317,6 +3324,23 @@ function renderBudget(container, tab, items) {
     ${rowsHtml}
   </div>`;
   initPS([`ps-bf-${tab.id}`, ...curs.map(c=>`ps-bg-${tab.id}-${c}`)]);
+}
+
+async function changePinnedCurrency(tabId, oldCur, newCur) {
+  if (oldCur === newCur) return;
+  const metas = await sbGet('tab_items', `tab_id=eq.${tabId}&data->>__meta=eq.true`);
+  const meta = metas[0];
+  const pinned = (meta?.data.pinned && meta.data.pinned.length) ? [...meta.data.pinned] : ['krw','eur'];
+  const idx = pinned.indexOf(oldCur);
+  if (idx >= 0) pinned[idx] = newCur; else pinned.push(newCur);
+  if (meta) {
+    await sbPatch('tab_items', meta.id, { data: { ...meta.data, pinned } });
+  } else {
+    await sbPost('tab_items', { tab_id: tabId, data: { __meta: true, pinned }, sort_order: -1 });
+  }
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderBudget(document.getElementById('tabContent'), tab, items);
 }
 
 async function saveBudgetCurrency(id, tabId, newCur) {
