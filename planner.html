@@ -3212,8 +3212,9 @@ window.slideGo = function(n) {
   if (activeThumb) activeThumb.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
 };
 
-const BUDGET_SYM = { krw:'₩', eur:'€', usd:'$', jpy:'¥' };
-const BUDGET_LABEL = { krw:'원화 (KRW)', eur:'유로 (EUR)', usd:'달러 (USD)', jpy:'엔화 (JPY)' };
+const BUDGET_SYM = { krw:'₩', eur:'€', usd:'$', jpy:'¥', cny:'CN¥' };
+const BUDGET_LABEL = { krw:'원화 (KRW)', eur:'유로 (EUR)', usd:'달러 (USD)', jpy:'엔화 (JPY)', cny:'위안화 (CNY)' };
+const BUDGET_CUR_OPTS = `<option value="krw">₩ 원화</option><option value="eur">€ 유로</option><option value="usd">$ 달러</option><option value="jpy">¥ 엔화</option><option value="cny">CN¥ 위안화</option>`;
 
 function renderBudget(container, tab, items) {
   const sym = BUDGET_SYM;
@@ -3249,6 +3250,7 @@ function renderBudget(container, tab, items) {
       >${item.data[field]||''}</td>`;
     const mkRows = arr => arr.map(item=>`
       <tr>
+        <td><select class="f-sel" style="font-size:11px;padding:4px 6px" onchange="saveBudgetCurrency('${item.id}','${tab.id}',this.value)">${BUDGET_CUR_OPTS.replace(`value="${cur}"`, `value="${cur}" selected`)}</select></td>
         ${bEditTd(item,'date')}
         ${bEditTd(item,'item')}
         <td style="color:${item.data.type==='in'?'#a5d6a7':'#ef9a9a'};font-weight:700">${sym[cur]}<span class="list-editable" contenteditable="true" spellcheck="false"
@@ -3268,11 +3270,11 @@ function renderBudget(container, tab, items) {
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 4px">
           <div>
             <div style="font-size:11px;font-weight:700;color:#a5d6a7;margin-bottom:6px">▶ 입금</div>
-            <div class="scroll-list"><table class="list-table"><thead><tr><th>날짜</th><th>항목</th><th>금액</th><th>비고</th><th></th></tr></thead><tbody>${mkRows(inRows)}</tbody></table></div>
+            <div class="scroll-list"><table class="list-table"><thead><tr><th>통화</th><th>날짜</th><th>항목</th><th>금액</th><th>비고</th><th></th></tr></thead><tbody>${mkRows(inRows)}</tbody></table></div>
           </div>
           <div>
             <div style="font-size:11px;font-weight:700;color:#ef9a9a;margin-bottom:6px">◀ 출금</div>
-            <div class="scroll-list"><table class="list-table"><thead><tr><th>날짜</th><th>항목</th><th>금액</th><th>비고</th><th></th></tr></thead><tbody>${mkRows(outRows)}</tbody></table></div>
+            <div class="scroll-list"><table class="list-table"><thead><tr><th>통화</th><th>날짜</th><th>항목</th><th>금액</th><th>비고</th><th></th></tr></thead><tbody>${mkRows(outRows)}</tbody></table></div>
           </div>
         </div>
       </div>
@@ -3299,7 +3301,7 @@ function renderBudget(container, tab, items) {
       <div class="ps-body">
         <div class="form-box" style="border:none;border-radius:0;margin:0">
           <div class="form-row">
-            <select class="f-sel" id="bCur"><option value="krw">₩ 원화</option><option value="eur">€ 유로</option><option value="usd">$ 달러</option><option value="jpy">¥ 엔화</option></select>
+            <select class="f-sel" id="bCur">${BUDGET_CUR_OPTS}</select>
             <select class="f-sel" id="bType"><option value="in">▶ 입금</option><option value="out">◀ 출금</option></select>
             <input class="f-inp" id="bDate" type="date">
             <input class="f-inp" id="bItem" placeholder="항목 *">
@@ -3315,6 +3317,15 @@ function renderBudget(container, tab, items) {
     ${rowsHtml}
   </div>`;
   initPS([`ps-bf-${tab.id}`, ...curs.map(c=>`ps-bg-${tab.id}-${c}`)]);
+}
+
+async function saveBudgetCurrency(id, tabId, newCur) {
+  const item = await sbGet('tab_items', `id=eq.${id}`);
+  if (!item[0]) return;
+  await sbPatch('tab_items', id, { data: { ...item[0].data, currency: newCur } });
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderBudget(document.getElementById('tabContent'), tab, items);
 }
 
 async function saveBudgetPeople(tabId, value) {
