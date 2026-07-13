@@ -224,6 +224,8 @@ textarea.f-inp{resize:vertical;min-height:60px}
 .list-table th{background:rgba(0,0,0,.25);padding:9px 12px;font-size:11px;color:var(--sub);text-align:left;border-bottom:1px solid var(--border)}
 .list-table td{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px;vertical-align:middle}
 .list-table tr:hover td{background:rgba(255,255,255,.02)}
+.budget-drag-handle{cursor:grab;color:var(--sub);text-align:center;width:20px;touch-action:none;user-select:none}
+.budget-row.dragging{opacity:.4}
 .list-table td.list-editable{cursor:text}
 .list-table td.list-editable:hover{background:rgba(92,107,192,.08)}
 .list-table td.list-editable:focus{outline:2px solid var(--accent);outline-offset:-2px;background:rgba(92,107,192,.12)}
@@ -3259,7 +3261,8 @@ function renderBudget(container, tab, items) {
         onkeydown="if(event.key==='Enter'){event.preventDefault();event.target.blur();}"
       >${item.data[field]||''}</td>`;
     const mkRows = arr => arr.map(item=>`
-      <tr>
+      <tr class="budget-row" data-id="${item.id}">
+        <td class="budget-drag-handle" title="드래그해서 이동">⠿</td>
         <td><select class="f-sel" style="font-size:11px;padding:4px 6px" onchange="saveBudgetCurrency('${item.id}','${tab.id}',this.value)">${BUDGET_CUR_OPTS.replace(`value="${cur}"`, `value="${cur}" selected`)}</select></td>
         ${bEditTd(item,'date')}
         ${bEditTd(item,'item')}
@@ -3280,11 +3283,11 @@ function renderBudget(container, tab, items) {
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 4px">
           <div>
             <div style="font-size:11px;font-weight:700;color:#a5d6a7;margin-bottom:6px">▶ 입금</div>
-            <div class="scroll-list"><table class="list-table"><thead><tr><th>통화</th><th>날짜</th><th>항목</th><th>금액</th><th>비고</th><th></th></tr></thead><tbody>${mkRows(inRows)}</tbody></table></div>
+            <div class="scroll-list"><table class="list-table"><thead><tr><th></th><th>통화</th><th>날짜</th><th>항목</th><th>금액</th><th>비고</th><th></th></tr></thead><tbody class="budget-tbody" data-tab="${tab.id}" data-cur="${cur}" data-type="in">${mkRows(inRows)}</tbody></table></div>
           </div>
           <div>
             <div style="font-size:11px;font-weight:700;color:#ef9a9a;margin-bottom:6px">◀ 출금</div>
-            <div class="scroll-list"><table class="list-table"><thead><tr><th>통화</th><th>날짜</th><th>항목</th><th>금액</th><th>비고</th><th></th></tr></thead><tbody>${mkRows(outRows)}</tbody></table></div>
+            <div class="scroll-list"><table class="list-table"><thead><tr><th></th><th>통화</th><th>날짜</th><th>항목</th><th>금액</th><th>비고</th><th></th></tr></thead><tbody class="budget-tbody" data-tab="${tab.id}" data-cur="${cur}" data-type="out">${mkRows(outRows)}</tbody></table></div>
           </div>
         </div>
       </div>
@@ -3327,6 +3330,84 @@ function renderBudget(container, tab, items) {
     ${rowsHtml}
   </div>`;
   initPS([`ps-bf-${tab.id}`, ...curs.map(c=>`ps-bg-${tab.id}-${c}`)]);
+  initBudgetDrag(container);
+}
+
+// ── 입금/출금 행 드래그 이동 (Pointer Events — 마우스 + 터치 공용) ──
+function initBudgetDrag(container) {
+  let dragRow = null, activePointerId = null, longPressTimer = null;
+  let startX = 0, startY = 0, isTouch = false, moved = false;
+
+  const rows = container.querySelectorAll('.budget-row');
+
+  function endDrag() {
+    if (!dragRow) return;
+    const tbody = dragRow.closest('.budget-tbody');
+    dragRow.classList.remove('dragging');
+    dragRow.style.touchAction = 'pan-y';
+    const newType = tbody.dataset.type;
+    const tabId = tbody.dataset.tab;
+    const itemId = dragRow.dataset.id;
+    dragRow = null;
+    saveBudgetRowMove(itemId, tabId, newType);
+  }
+
+  rows.forEach(row => {
+    row.style.touchAction = 'pan-y';
+
+    row.addEventListener('pointerdown', e => {
+      if (!e.target.closest('.budget-drag-handle')) return;
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      isTouch = e.pointerType !== 'mouse';
+      startX = e.clientX; startY = e.clientY; moved = false;
+      activePointerId = e.pointerId;
+      clearTimeout(longPressTimer);
+      const start = () => {
+        moved = true;
+        dragRow = row;
+        row.classList.add('dragging');
+        row.style.touchAction = 'none';
+        try { row.setPointerCapture(e.pointerId); } catch (err) {}
+      };
+      if (isTouch) longPressTimer = setTimeout(start, 150);
+      else start();
+    });
+
+    row.addEventListener('pointermove', e => {
+      if (activePointerId === null || e.pointerId !== activePointerId) return;
+      if (!dragRow) return;
+      e.preventDefault();
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const overRow = el?.closest('.budget-row');
+      const overTbody = el?.closest('.budget-tbody');
+      if (overRow && overRow !== dragRow) {
+        const rect = overRow.getBoundingClientRect();
+        const after = e.clientY > rect.top + rect.height / 2;
+        overRow.parentElement.insertBefore(dragRow, after ? overRow.nextSibling : overRow);
+      } else if (overTbody && !overTbody.contains(dragRow)) {
+        overTbody.appendChild(dragRow);
+      }
+    });
+
+    ['pointerup', 'pointercancel'].forEach(evt => row.addEventListener(evt, e => {
+      if (activePointerId === null || e.pointerId !== activePointerId) return;
+      clearTimeout(longPressTimer);
+      try { row.releasePointerCapture(e.pointerId); } catch (err) {}
+      activePointerId = null;
+      if (dragRow) endDrag();
+    }));
+  });
+}
+
+async function saveBudgetRowMove(itemId, tabId, newType) {
+  const item = await sbGet('tab_items', `id=eq.${itemId}`);
+  if (!item[0]) return;
+  if (item[0].data.type !== newType) {
+    await sbPatch('tab_items', itemId, { data: { ...item[0].data, type: newType } });
+  }
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderBudget(document.getElementById('tabContent'), tab, items);
 }
 
 async function changePinnedCurrency(tabId, oldCur, newCur) {
