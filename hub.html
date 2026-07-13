@@ -262,6 +262,8 @@ window.addEventListener('DOMContentLoaded', () => {
     </div>
     <label class="modal-label">메모</label>
     <textarea class="modal-inp" id="pMemo" placeholder="간단한 메모" rows="2" style="resize:vertical"></textarea>
+    <label class="modal-label">비밀번호 (4자리)</label>
+    <input class="modal-inp" id="pPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="예: 2236 · 비워두면 기본값 2236 (수정 시 비우면 기존 유지)">
     <label class="modal-label">아이콘</label>
     <div class="emoji-grid" id="emojiGrid"></div>
     <label class="modal-label">커버 색상</label>
@@ -425,7 +427,7 @@ function selColor(el,c){document.querySelectorAll('.color-opt').forEach(x=>x.cla
 
 function openModal() {
   editingId = null;
-  ['pName','pDest','pStart','pEnd','pMemo'].forEach(id=>document.getElementById(id).value='');
+  ['pName','pDest','pStart','pEnd','pMemo','pPin'].forEach(id=>document.getElementById(id).value='');
   selectedEmoji='✈️'; selectedColor='#1a237e';
   initEmojiGrid(); initColorGrid();
   document.getElementById('modalTitle').textContent = '새 여행 만들기';
@@ -442,6 +444,7 @@ function openEditModal(id, e) {
   document.getElementById('pStart').value = p.start_date || '';
   document.getElementById('pEnd').value = p.end_date || '';
   document.getElementById('pMemo').value = p.memo || '';
+  document.getElementById('pPin').value = '';
   selectedEmoji = p.cover_emoji || '✈️';
   selectedColor = p.cover_color || '#1a237e';
   initEmojiGrid(); initColorGrid();
@@ -451,9 +454,25 @@ function openEditModal(id, e) {
 }
 function closeModal() { document.getElementById('projectModal').classList.remove('open'); editingId = null; }
 
+async function sha256Hex(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function savePinForProject(projectId, pin) {
+  const hash = await sha256Hex(pin);
+  await fetch(`${SB_URL}/rest/v1/page_locks`, {
+    method: 'POST',
+    headers: { ...SB_H, 'Prefer': 'resolution=merge-duplicates,return=representation' },
+    body: JSON.stringify({ page_key: projectId, pin_hash: hash })
+  });
+}
+
 async function saveProject() {
   const name = document.getElementById('pName').value.trim();
   if (!name) { alert('여행 이름을 입력해 주세요'); return; }
+  const pin = document.getElementById('pPin').value.trim();
+  if (pin && !/^[0-9]{4}$/.test(pin)) { alert('비밀번호는 4자리 숫자로 입력해 주세요'); return; }
   const data = {
     name, destination: document.getElementById('pDest').value.trim(),
     start_date: document.getElementById('pStart').value || null,
@@ -468,12 +487,19 @@ async function saveProject() {
       start: data.start_date, end: data.end_date,
       memo: data.memo, emoji: selectedEmoji
     }));
+    if (pin) await savePinForProject('proto', pin);
     closeModal(); loadPtCard(); return;
   } else if (editingId) {
     r = await fetch(`${SB_URL}/rest/v1/projects?id=eq.${editingId}`, { method:'PATCH', headers:SB_H, body:JSON.stringify(data) });
+    if (r.ok && pin) await savePinForProject(editingId, pin);
   } else {
     data.sort_order = projects.length;
     r = await fetch(`${SB_URL}/rest/v1/projects`, { method:'POST', headers:SB_H, body:JSON.stringify(data) });
+    if (r.ok) {
+      const rows = await r.json();
+      const newId = rows[0]?.id;
+      if (newId) await savePinForProject(newId, pin || '2236');
+    }
   }
   if (r.ok) { closeModal(); location.reload(); }
 }
@@ -511,6 +537,7 @@ function openPtEditModal(e) {
   document.getElementById('pStart').value = d.start || '2026-07-31';
   document.getElementById('pEnd').value   = d.end   || '2026-08-07';
   document.getElementById('pMemo').value  = d.memo  || '';
+  document.getElementById('pPin').value = '';
   selectedEmoji = d.emoji || '🇵🇹';
   selectedColor = '#b71c1c';
   initEmojiGrid(); initColorGrid();
