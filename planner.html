@@ -571,6 +571,9 @@ window.addEventListener('DOMContentLoaded', () => {
       <div class="tab-type-card" data-type="gallery" onclick="selectTabType(this)">
         <div class="icon">📷</div><div class="label">갤러리형</div>
       </div>
+      <div class="tab-type-card" data-type="table" onclick="selectTabType(this)">
+        <div class="icon">🧮</div><div class="label">테이블형</div>
+      </div>
     </div>
     <label class="modal-label">탭 이름</label>
     <input class="modal-inp" id="tabTitle" placeholder="예: 도쿄 일정">
@@ -614,7 +617,7 @@ let selectedTabType = 'schedule';
 // ── Init ──
 const EMOJIS = ['✈️','🌍','🏝️','🗺️','🏔️','🎌','🏰','🌆','🌊','🍜','🎭','🚢','🚂','🏕️','🎒','📸'];
 const COLORS = ['#1a237e','#1b5e20','#4a148c','#b71c1c','#e65100','#006064','#37474f','#880e4f','#1565c0','#2e7d32','#6a1b9a','#c62828'];
-const TAB_ICONS = { schedule:'📅', checklist:'✅', list:'📋', card:'🃏', map:'🗺️', file:'📎', budget:'💰', gallery:'📷' };
+const TAB_ICONS = { schedule:'📅', checklist:'✅', list:'📋', card:'🃏', map:'🗺️', file:'📎', budget:'💰', gallery:'📷', table:'🧮' };
 
 // ── Cloudinary (사진 업로드) ──
 const CLD_NAME = 'ogjed1ag';
@@ -1133,6 +1136,7 @@ async function renderTabContent(tab) {
   else if (tab.type === 'file') renderFiles(container, tab, items);
   else if (tab.type === 'budget') renderBudget(container, tab, items);
   else if (tab.type === 'gallery') await renderGallery(container, tab);
+  else if (tab.type === 'table') renderTable(container, tab, items);
   else if (tab.type === 'slides') renderSlides(container, tab);
 }
 
@@ -1962,6 +1966,185 @@ async function saveItemField(e, id, field) {
   await sbPatch('tab_items', id, { data: { ...item[0].data, [field]: value } });
 }
 
+// ── TABLE (custom columns) ──
+function renderTable(container, tab, items) {
+  const metaItem = items.find(i => i.data.__meta);
+  if (!metaItem) {
+    container.innerHTML = `
+      <div class="pane-wrap" id="pw-table-${tab.id}">
+        <div class="pane-header"><div class="pane-title">🧮 ${tab.title}</div></div>
+        <div class="form-box">
+          <label class="modal-label">컬럼(열) 이름을 쉼표(,)로 구분해 입력하세요</label>
+          <input class="f-inp" id="tblColsInput" placeholder="예: 방 번호, 인원, 이름, 비고" style="width:100%;margin-bottom:10px">
+          <button class="f-btn" onclick="createTableColumns('${tab.id}')">테이블 만들기</button>
+        </div>
+      </div>`;
+    return;
+  }
+  const columns = metaItem.data.columns || [];
+  const rows = items.filter(i => !i.data.__meta);
+
+  const colMgrHtml = columns.map(c => `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+      <span contenteditable="true" spellcheck="false" style="flex:1;font-size:13px;padding:2px 4px;border-radius:4px;cursor:text"
+        onblur="renameTableColumn(event,'${tab.id}','${encodeURIComponent(c)}')"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();event.target.blur();}"
+      >${c}</span>
+      <button class="del-btn" onclick="deleteTableColumn('${tab.id}','${encodeURIComponent(c)}')">삭제</button>
+    </div>`).join('');
+
+  const rowsHtml = rows.map(item => `
+    <tr>
+      ${columns.map(c => `<td class="list-editable" contenteditable="true" spellcheck="false"
+          onblur="saveTableCell(event,'${item.id}','${encodeURIComponent(c)}')"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();event.target.blur();}"
+        >${(item.data.cells && item.data.cells[c]) || ''}</td>`).join('')}
+      <td><button class="del-btn" onclick="deleteItem('${item.id}','${tab.id}')">삭제</button></td>
+    </tr>`).join('');
+
+  const addRowInputs = columns.map(c => `<input class="f-inp tbl-new-input" data-col="${encodeURIComponent(c)}" placeholder="${c}">`).join('');
+
+  container.innerHTML = `<div class="pane-wrap" id="pw-table-${tab.id}">
+    <div class="pane-header">
+      <div class="pane-title">🧮 ${tab.title}</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="badge">${rows.length}개</span>
+        <button class="pane-collapse-btn" onclick="toggleAllPS('pw-table-${tab.id}',this)">접기 ▲</button>
+      </div>
+    </div>
+    <div class="ps" id="ps-tcm-${tab.id}">
+      <div class="ps-header" onclick="togglePS('ps-tcm-${tab.id}')">
+        <span class="ps-title">🔧 컬럼 관리</span>
+        <span class="ps-arrow">▼</span>
+      </div>
+      <div class="ps-body">
+        ${colMgrHtml}
+        <div class="form-row" style="margin-top:10px">
+          <input class="f-inp" id="tblNewColInput" placeholder="새 컬럼 이름">
+          <button class="f-btn" onclick="addTableColumn('${tab.id}')">컬럼 추가</button>
+        </div>
+      </div>
+    </div>
+    <div class="ps" id="ps-tf-${tab.id}">
+      <div class="ps-header" onclick="togglePS('ps-tf-${tab.id}')">
+        <span class="ps-title">＋ 항목 추가</span>
+        <span class="ps-arrow">▼</span>
+      </div>
+      <div class="ps-body">
+        <div class="form-box" style="border:none;border-radius:0;margin:0">
+          <div class="form-row" id="tblNewRow-${tab.id}">${addRowInputs}</div>
+          <div class="form-row">
+            <button class="f-btn" onclick="addTableRow('${tab.id}')">추가</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ps" id="ps-tt-${tab.id}">
+      <div class="ps-header" onclick="togglePS('ps-tt-${tab.id}')">
+        <span class="ps-title">📊 목록</span>
+        <span class="ps-count">${rows.length}개</span>
+        <span class="ps-arrow">▼</span>
+      </div>
+      <div class="ps-body">
+        <div class="scroll-list">
+          <table class="list-table">
+            <thead><tr>${columns.map(c=>`<th>${c}</th>`).join('')}<th></th></tr></thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        </div>
+        ${!rows.length ? `<div class="empty-state"><div class="icon">🧮</div><p>항목을 추가해 보세요</p></div>` : ''}
+      </div>
+    </div>
+  </div>`;
+  initPS([`ps-tcm-${tab.id}`, `ps-tf-${tab.id}`, `ps-tt-${tab.id}`]);
+}
+
+async function reloadTable(tabId) {
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderTable(document.getElementById('tabContent'), tab, items);
+}
+
+async function createTableColumns(tabId) {
+  const raw = document.getElementById('tblColsInput').value.trim();
+  const columns = raw.split(',').map(s=>s.trim()).filter(Boolean);
+  if (!columns.length) { alert('컬럼 이름을 입력하세요'); return; }
+  await sbPost('tab_items', { tab_id: tabId, data: { __meta: true, columns }, sort_order: -1 });
+  await reloadTable(tabId);
+}
+
+async function addTableRow(tabId) {
+  const inputs = document.querySelectorAll(`#tblNewRow-${tabId} .tbl-new-input`);
+  const cells = {};
+  let hasValue = false;
+  inputs.forEach(inp => {
+    const col = decodeURIComponent(inp.dataset.col);
+    const val = inp.value.trim();
+    if (val) hasValue = true;
+    cells[col] = val;
+  });
+  if (!hasValue) { alert('값을 하나 이상 입력하세요'); return; }
+  await sbPost('tab_items', { tab_id: tabId, data: { cells }, sort_order: 0 });
+  await reloadTable(tabId);
+}
+
+async function saveTableCell(e, id, encCol) {
+  const col = decodeURIComponent(encCol);
+  const value = e.target.textContent.trim();
+  const item = await sbGet('tab_items', `id=eq.${id}`);
+  if (!item[0]) return;
+  const cells = { ...(item[0].data.cells || {}) };
+  if (value === (cells[col] || '')) return;
+  cells[col] = value;
+  await sbPatch('tab_items', id, { data: { ...item[0].data, cells } });
+}
+
+async function addTableColumn(tabId) {
+  const input = document.getElementById('tblNewColInput');
+  const name = input.value.trim();
+  if (!name) { alert('컬럼 이름을 입력하세요'); return; }
+  const metas = await sbGet('tab_items', `tab_id=eq.${tabId}&data->>__meta=eq.true`);
+  const meta = metas[0];
+  if (!meta) return;
+  if ((meta.data.columns||[]).includes(name)) { alert('이미 있는 컬럼 이름입니다'); return; }
+  const columns = [...(meta.data.columns||[]), name];
+  await sbPatch('tab_items', meta.id, { data: { ...meta.data, columns } });
+  await reloadTable(tabId);
+}
+
+async function renameTableColumn(e, tabId, encOldName) {
+  const oldName = decodeURIComponent(encOldName);
+  const newName = e.target.textContent.trim();
+  if (!newName || newName === oldName) { e.target.textContent = oldName; return; }
+  const metas = await sbGet('tab_items', `tab_id=eq.${tabId}&data->>__meta=eq.true`);
+  const meta = metas[0];
+  if (!meta) return;
+  const columns = (meta.data.columns||[]).map(c => c === oldName ? newName : c);
+  await sbPatch('tab_items', meta.id, { data: { ...meta.data, columns } });
+  const rows = await sbGet('tab_items', `tab_id=eq.${tabId}`);
+  for (const r of rows) {
+    if (r.data.__meta) continue;
+    if (r.data.cells && Object.prototype.hasOwnProperty.call(r.data.cells, oldName)) {
+      const cells = { ...r.data.cells };
+      cells[newName] = cells[oldName];
+      delete cells[oldName];
+      await sbPatch('tab_items', r.id, { data: { ...r.data, cells } });
+    }
+  }
+  await reloadTable(tabId);
+}
+
+async function deleteTableColumn(tabId, encName) {
+  const name = decodeURIComponent(encName);
+  if (!confirm(`"${name}" 컬럼을 삭제하시겠습니까? (해당 컬럼의 데이터는 사라집니다)`)) return;
+  const metas = await sbGet('tab_items', `tab_id=eq.${tabId}&data->>__meta=eq.true`);
+  const meta = metas[0];
+  if (!meta) return;
+  const columns = (meta.data.columns||[]).filter(c => c !== name);
+  await sbPatch('tab_items', meta.id, { data: { ...meta.data, columns } });
+  await reloadTable(tabId);
+}
+
 async function toggleListItem(id, tabId, done) {
   const item = await sbGet('tab_items', `id=eq.${id}`);
   if (!item[0]) return;
@@ -2713,6 +2896,7 @@ async function deleteItem(id, tabId) {
   else if (tab.type === 'map') renderMap(container, tab, items);
   else if (tab.type === 'file') renderFiles(container, tab, items);
   else if (tab.type === 'budget') renderBudget(container, tab, items);
+  else if (tab.type === 'table') renderTable(container, tab, items);
   else if (tab.type === 'slides') renderSlides(container, tab);
 }
 
