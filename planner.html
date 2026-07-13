@@ -198,6 +198,9 @@ textarea.f-inp{resize:vertical;min-height:60px}
 .list-table th{background:rgba(0,0,0,.25);padding:9px 12px;font-size:11px;color:var(--sub);text-align:left;border-bottom:1px solid var(--border)}
 .list-table td{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px;vertical-align:middle}
 .list-table tr:hover td{background:rgba(255,255,255,.02)}
+.list-table td.list-editable{cursor:text}
+.list-table td.list-editable:hover{background:rgba(92,107,192,.08)}
+.list-table td.list-editable:focus{outline:2px solid var(--accent);outline-offset:-2px;background:rgba(92,107,192,.12)}
 .list-done-toggle{cursor:pointer;font-size:16px}
 .list-done{opacity:.45;text-decoration:line-through}
 
@@ -1861,13 +1864,17 @@ async function toggleClItem(id, tabId, done) {
 
 // ── LIST ──
 function renderList(container, tab, items) {
+  const editTd = (item, field) => `<td class="list-editable" contenteditable="true" spellcheck="false"
+      onblur="saveListCell(event,'${item.id}','${tab.id}','${field}')"
+      onkeydown="if(event.key==='Enter'){event.preventDefault();event.target.blur();}"
+    >${(item.data[field]||'')}</td>`;
   const rows = items.map(item=>`
     <tr class="${item.data.done?'list-done':''}">
       <td><span class="list-done-toggle" onclick="toggleListItem('${item.id}','${tab.id}',${!item.data.done})">${item.data.done?'✅':'⬜'}</span></td>
-      <td>${item.data.name||''}</td>
-      <td>${item.data.detail||''}</td>
-      <td>${item.data.budget||''}</td>
-      <td>${item.data.note||''}</td>
+      ${editTd(item,'name')}
+      ${editTd(item,'detail')}
+      ${editTd(item,'budget')}
+      ${editTd(item,'note')}
       <td><button class="del-btn" onclick="deleteItem('${item.id}','${tab.id}')">삭제</button></td>
     </tr>`).join('');
   container.innerHTML = `<div class="pane-wrap" id="pw-list-${tab.id}">
@@ -1930,6 +1937,14 @@ async function addListItem(tabId) {
   const tab = currentTab;
   const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
   renderList(document.getElementById('tabContent'), tab, items);
+}
+
+async function saveListCell(e, id, tabId, field) {
+  const value = e.target.textContent.trim();
+  const item = await sbGet('tab_items', `id=eq.${id}`);
+  if (!item[0]) return;
+  if (value === (item[0].data[field] || '')) return;
+  await sbPatch('tab_items', id, { data: { ...item[0].data, [field]: value } });
 }
 
 async function toggleListItem(id, tabId, done) {
