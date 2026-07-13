@@ -123,6 +123,24 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;background:rgba(13,15,26,.95
 .tab-btn.dragging{opacity:.4}
 .tab-bar.tab-drag-active{overflow-x:hidden}
 
+/* ── FLIGHT ── */
+.flight-leg{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px 20px}
+.flight-leg-head{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--sub);margin-bottom:14px}
+.flight-leg-actions{display:flex;gap:6px}
+.flight-route{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.flight-airport{text-align:center;flex:1}
+.flight-code{font-size:26px;font-weight:900}
+.flight-name{font-size:12px;color:var(--sub);margin-bottom:4px}
+.flight-time{font-size:15px;font-weight:800;color:var(--accent2)}
+.flight-mid{flex:0 0 auto;text-align:center;color:var(--sub);font-size:16px}
+.flight-duration{font-size:11px;color:var(--sub);white-space:nowrap;margin-top:2px}
+.flight-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.flight-badge{font-size:11px;background:rgba(92,107,192,.15);color:var(--accent2);border-radius:10px;padding:3px 10px;font-weight:600}
+@media(max-width:700px){
+  #tabContent [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
+  .flight-code{font-size:20px}
+}
+
 /* ── TAB CONTENT ── */
 .tab-content{flex:1;overflow:auto}
 .tab-pane{display:none;height:100%}
@@ -161,7 +179,13 @@ textarea.f-inp{resize:vertical;min-height:60px}
 .cl-item.done .cl-check{background:var(--accent);border-color:var(--accent);color:#fff}
 .cl-text{flex:1;font-size:13px;cursor:text}
 .cl-text:focus{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
-.card-editable-title:focus,.card-editable-detail:focus{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.card-editable-title:focus,.card-editable-detail:focus,.card-editable-link:focus,.card-editable-place:focus{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.card-editable-detail:empty:before,.card-editable-link:empty:before,.card-editable-place:empty:before,.card-badge-tag:empty:before,.card-price-tag:empty:before{content:attr(data-placeholder);color:var(--sub);opacity:.6}
+.card-badge-tag{font-size:10px;font-weight:700;background:rgba(92,107,192,.18);color:var(--accent2);border-radius:8px;padding:2px 8px;cursor:text;white-space:nowrap;flex-shrink:0}
+.card-price-tag{font-size:11px;font-weight:700;color:#ffb74d;cursor:text;white-space:nowrap;flex-shrink:0}
+.card-icon-btn{cursor:pointer;position:relative}
+.card-icon-picker{display:none;position:absolute;top:24px;left:0;z-index:60;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px;width:220px;flex-wrap:wrap;gap:4px;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.card-icon-picker span:hover{background:rgba(92,107,192,.3)}
 .cl-item.done .cl-text{text-decoration:line-through}
 .cl-cat-badge{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(92,107,192,.15);color:var(--accent2)}
 .cl-group{margin-bottom:8px;border:1px solid var(--border);border-radius:12px;overflow:hidden}
@@ -574,6 +598,9 @@ window.addEventListener('DOMContentLoaded', () => {
       <div class="tab-type-card" data-type="table" onclick="selectTabType(this)">
         <div class="icon">🧮</div><div class="label">테이블형</div>
       </div>
+      <div class="tab-type-card" data-type="flight" onclick="selectTabType(this)">
+        <div class="icon">✈️</div><div class="label">항공편 정보</div>
+      </div>
     </div>
     <label class="modal-label">탭 이름</label>
     <input class="modal-inp" id="tabTitle" placeholder="예: 도쿄 일정">
@@ -617,7 +644,7 @@ let selectedTabType = 'schedule';
 // ── Init ──
 const EMOJIS = ['✈️','🌍','🏝️','🗺️','🏔️','🎌','🏰','🌆','🌊','🍜','🎭','🚢','🚂','🏕️','🎒','📸'];
 const COLORS = ['#1a237e','#1b5e20','#4a148c','#b71c1c','#e65100','#006064','#37474f','#880e4f','#1565c0','#2e7d32','#6a1b9a','#c62828'];
-const TAB_ICONS = { schedule:'📅', checklist:'✅', list:'📋', card:'🃏', map:'🗺️', file:'📎', budget:'💰', gallery:'📷', table:'🧮' };
+const TAB_ICONS = { schedule:'📅', checklist:'✅', list:'📋', card:'🃏', map:'🗺️', file:'📎', budget:'💰', gallery:'📷', table:'🧮', flight:'✈️' };
 
 // ── Cloudinary (사진 업로드) ──
 const CLD_NAME = 'ogjed1ag';
@@ -1137,6 +1164,7 @@ async function renderTabContent(tab) {
   else if (tab.type === 'budget') renderBudget(container, tab, items);
   else if (tab.type === 'gallery') await renderGallery(container, tab);
   else if (tab.type === 'table') renderTable(container, tab, items);
+  else if (tab.type === 'flight') renderFlight(container, tab, items);
   else if (tab.type === 'slides') renderSlides(container, tab);
 }
 
@@ -2145,6 +2173,168 @@ async function deleteTableColumn(tabId, encName) {
   await reloadTable(tabId);
 }
 
+// ── FLIGHT (항공편 정보) ──
+let editingFlightId = null;
+
+function renderFlight(container, tab, items) {
+  const metaItem = items.find(i => i.data.__meta);
+  const legs = items.filter(i => !i.data.__meta).sort((a,b)=>(a.data.direction==='return'?1:0)-(b.data.direction==='return'?1:0));
+  const bookingNo = metaItem?.data.bookingNo || '';
+
+  const summaryParts = [];
+  const airlines = [...new Set(legs.map(l=>l.data.airline).filter(Boolean))];
+  if (airlines.length) summaryParts.push(airlines.join('/'));
+  const flightNos = legs.map(l=>l.data.flightNo).filter(Boolean);
+  if (flightNos.length) summaryParts.push(flightNos.join('/'));
+  const dep = legs.find(l=>l.data.direction!=='return'), ret = legs.find(l=>l.data.direction==='return');
+  if (dep) summaryParts.push(`${dep.data.fromCode||''} ↔ ${dep.data.toCode||''}`.trim());
+  if (bookingNo) summaryParts.push(`예약번호 ${bookingNo}`);
+
+  const legCard = item => {
+    const d = item.data;
+    const isReturn = d.direction === 'return';
+    const badges = (d.badges||[]).map(b=>`<span class="flight-badge">${b}</span>`).join('');
+    return `<div class="flight-leg">
+      <div class="flight-leg-head">
+        <span>${isReturn?'🛬 오는 편':'🛫 가는 편'} · ${d.date||''} · ${d.flightNo||''}</span>
+        <span class="flight-leg-actions">
+          <button class="del-btn" style="background:rgba(92,107,192,.15);color:#9fa8da" onclick="editFlightLeg('${item.id}','${tab.id}')">수정</button>
+          <button class="del-btn" onclick="deleteItem('${item.id}','${tab.id}')">삭제</button>
+        </span>
+      </div>
+      <div class="flight-route">
+        <div class="flight-airport">
+          <div class="flight-code">${d.fromCode||''}</div>
+          <div class="flight-name">${d.fromName||''}</div>
+          <div class="flight-time">${d.depTime||''}</div>
+        </div>
+        <div class="flight-mid">✈️<div class="flight-duration">${d.duration||''}${(d.duration&&(d.stops||'직항'))?' · ':''}${d.stops||'직항'}</div></div>
+        <div class="flight-airport">
+          <div class="flight-code">${d.toCode||''}</div>
+          <div class="flight-name">${d.toName||''}</div>
+          <div class="flight-time">${d.arrTime||''}</div>
+        </div>
+      </div>
+      ${badges?`<div class="flight-badges">${badges}</div>`:''}
+    </div>`;
+  };
+
+  container.innerHTML = `<div class="pane-wrap" id="pw-flight-${tab.id}">
+    <div class="pane-header">
+      <div>
+        <div class="pane-title">✈️ ${tab.title}</div>
+        ${summaryParts.length?`<div style="font-size:12px;color:var(--sub);margin-top:4px">${summaryParts.join(' · ')}</div>`:''}
+      </div>
+      <button class="pane-collapse-btn" onclick="toggleAllPS('pw-flight-${tab.id}',this)">접기 ▲</button>
+    </div>
+    <div style="display:grid;grid-template-columns:${legs.length>1?'1fr 1fr':'1fr'};gap:16px;margin-bottom:16px">
+      ${legs.map(legCard).join('') || `<div class="empty-state"><div class="icon">✈️</div><p>항공편을 추가해 보세요</p></div>`}
+    </div>
+    <div class="ps" id="ps-ff-${tab.id}">
+      <div class="ps-header" onclick="togglePS('ps-ff-${tab.id}')">
+        <span class="ps-title">＋ 항공편 추가</span>
+        <span class="ps-arrow">▼</span>
+      </div>
+      <div class="ps-body">
+        <div class="form-box" style="border:none;border-radius:0;margin:0">
+          <div class="form-row">
+            <select class="f-sel" id="flDirection"><option value="depart">🛫 가는 편</option><option value="return">🛬 오는 편</option></select>
+            <input class="f-inp" id="flDate" type="date">
+            <input class="f-inp" id="flFlightNo" placeholder="편명 (예: KE0921)">
+          </div>
+          <div class="form-row">
+            <input class="f-inp" id="flAirline" placeholder="항공사 (예: 대한항공)">
+            <input class="f-inp" id="flBookingNo" placeholder="예약번호" value="${bookingNo}">
+          </div>
+          <div class="form-row">
+            <input class="f-inp" id="flFromCode" placeholder="출발 공항코드 (예: ICN)" style="max-width:140px">
+            <input class="f-inp" id="flFromName" placeholder="출발 도시명 (예: 인천)">
+            <input class="f-inp" id="flDepTime" placeholder="출발시간 (예: 12:45)" style="max-width:140px">
+          </div>
+          <div class="form-row">
+            <input class="f-inp" id="flToCode" placeholder="도착 공항코드 (예: LIS)" style="max-width:140px">
+            <input class="f-inp" id="flToName" placeholder="도착 도시명 (예: 리스본)">
+            <input class="f-inp" id="flArrTime" placeholder="도착시간 (예: 20:15)" style="max-width:140px">
+          </div>
+          <div class="form-row">
+            <input class="f-inp" id="flDuration" placeholder="소요시간 (예: 15시간 30분)">
+            <input class="f-inp" id="flStops" placeholder="직항/경유 (예: 직항)" style="max-width:140px">
+            <input class="f-inp" id="flBadges" placeholder="배지 (쉼표로 구분, 예: 수하물 포함, 연차 1일 필요)">
+          </div>
+          <div class="form-row">
+            <button class="f-btn" id="flSaveBtn" onclick="saveFlightLeg('${tab.id}')">추가</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  initPS([`ps-ff-${tab.id}`]);
+}
+
+function editFlightLeg(id, tabId) {
+  sbGet('tab_items', `id=eq.${id}`).then(rows => {
+    const item = rows[0];
+    if (!item) return;
+    editingFlightId = id;
+    const d = item.data;
+    document.getElementById('flDirection').value = d.direction || 'depart';
+    document.getElementById('flDate').value = d.date || '';
+    document.getElementById('flFlightNo').value = d.flightNo || '';
+    document.getElementById('flAirline').value = d.airline || '';
+    document.getElementById('flFromCode').value = d.fromCode || '';
+    document.getElementById('flFromName').value = d.fromName || '';
+    document.getElementById('flDepTime').value = d.depTime || '';
+    document.getElementById('flToCode').value = d.toCode || '';
+    document.getElementById('flToName').value = d.toName || '';
+    document.getElementById('flArrTime').value = d.arrTime || '';
+    document.getElementById('flDuration').value = d.duration || '';
+    document.getElementById('flStops').value = d.stops || '';
+    document.getElementById('flBadges').value = (d.badges||[]).join(', ');
+    document.getElementById('flSaveBtn').textContent = '수정 완료';
+    document.getElementById(`ps-ff-${tabId}`)?.querySelector('.ps-body')?.classList.remove('collapsed');
+    document.getElementById('flDirection').scrollIntoView({ behavior:'smooth', block:'center' });
+  });
+}
+
+async function saveFlightLeg(tabId) {
+  const flightNo = document.getElementById('flFlightNo').value.trim();
+  const fromCode = document.getElementById('flFromCode').value.trim();
+  const toCode = document.getElementById('flToCode').value.trim();
+  if (!fromCode || !toCode) { alert('출발/도착 공항코드를 입력하세요'); return; }
+  const data = {
+    direction: document.getElementById('flDirection').value,
+    date: document.getElementById('flDate').value,
+    flightNo, airline: document.getElementById('flAirline').value.trim(),
+    fromCode, fromName: document.getElementById('flFromName').value.trim(),
+    toCode, toName: document.getElementById('flToName').value.trim(),
+    depTime: document.getElementById('flDepTime').value.trim(),
+    arrTime: document.getElementById('flArrTime').value.trim(),
+    duration: document.getElementById('flDuration').value.trim(),
+    stops: document.getElementById('flStops').value.trim(),
+    badges: document.getElementById('flBadges').value.split(',').map(s=>s.trim()).filter(Boolean)
+  };
+  const bookingNo = document.getElementById('flBookingNo').value.trim();
+
+  if (editingFlightId) {
+    await sbPatch('tab_items', editingFlightId, { data });
+    editingFlightId = null;
+    document.getElementById('flSaveBtn').textContent = '추가';
+  } else {
+    await sbPost('tab_items', { tab_id: tabId, data, sort_order: 0 });
+  }
+
+  const metas = await sbGet('tab_items', `tab_id=eq.${tabId}&data->>__meta=eq.true`);
+  if (metas[0]) {
+    if (bookingNo !== (metas[0].data.bookingNo||'')) await sbPatch('tab_items', metas[0].id, { data: { ...metas[0].data, bookingNo } });
+  } else if (bookingNo) {
+    await sbPost('tab_items', { tab_id: tabId, data: { __meta: true, bookingNo }, sort_order: -1 });
+  }
+
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderFlight(document.getElementById('tabContent'), tab, items);
+}
+
 async function toggleListItem(id, tabId, done) {
   const item = await sbGet('tab_items', `id=eq.${id}`);
   if (!item[0]) return;
@@ -2168,23 +2358,49 @@ function renderCards(container, tab, items) {
 
   const renderGroupItems = arr => arr.map(item=>`
     <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)">
-      <span style="font-size:20px;flex-shrink:0;margin-top:1px">${item.data.icon||'📌'}</span>
+      <span class="card-icon-btn" style="font-size:20px;flex-shrink:0;margin-top:1px" onclick="event.stopPropagation();toggleCardIconPicker('${item.id}')" title="아이콘 변경">${item.data.icon||'📌'}<div class="card-icon-picker" id="cip-${item.id}" data-item="${item.id}">${CAT_EMOJIS.concat(['🏨','🍽️','☕','🍷','🚇','🚕','🚶','🧭','💰','📞','🎵','🎨','⛪','🏛️','🌸','🌊','🏔️','🗼','🎡','🛒','💈','🎪']).map(e=>`<span onclick="event.stopPropagation();setItemIcon('${item.id}','${e}')" style="font-size:18px;cursor:pointer;padding:3px;border-radius:6px">${e}</span>`).join('')}</div></span>
       <div style="flex:1;min-width:0">
-        <div class="card-editable-title" contenteditable="true" spellcheck="false"
-          onblur="saveItemField(event,'${item.id}','title')"
-          onkeydown="if(event.key==='Enter'){event.preventDefault();event.target.blur();}"
-          style="font-size:13px;font-weight:700;color:#e8eaf6;margin-bottom:3px;cursor:text"
-        >${item.data.title||''}</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+          <span class="card-badge-tag" contenteditable="true" spellcheck="false"
+            onclick="event.stopPropagation()"
+            onblur="saveItemField(event,'${item.id}','badge')"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();event.target.blur();}"
+            data-placeholder="배지"
+          >${item.data.badge||''}</span>
+          <div class="card-editable-title" contenteditable="true" spellcheck="false"
+            onclick="event.stopPropagation()"
+            onblur="saveItemField(event,'${item.id}','title')"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();event.target.blur();}"
+            style="font-size:13px;font-weight:700;color:#e8eaf6;cursor:text;flex:1"
+          >${item.data.title||''}</div>
+          <span class="card-price-tag" contenteditable="true" spellcheck="false"
+            onclick="event.stopPropagation()"
+            onblur="saveItemField(event,'${item.id}','price')"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();event.target.blur();}"
+            data-placeholder="가격"
+          >${item.data.price||''}</span>
+        </div>
         <div class="card-editable-detail" contenteditable="true" spellcheck="false"
+          onclick="event.stopPropagation()"
           onblur="saveItemField(event,'${item.id}','detail')"
           onkeydown="if(event.key==='Enter'){event.preventDefault();event.target.blur();}"
-          style="font-size:12px;color:#9fa8da;line-height:1.55;cursor:text;min-height:14px"
+          style="font-size:12px;color:#9fa8da;line-height:1.55;cursor:text;min-height:14px;white-space:pre-wrap"
           data-placeholder="설명 추가"
         >${item.data.detail||''}</div>
-        <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
-          ${item.data.link?`<a href="${item.data.link}" target="_blank" style="font-size:11px;color:#7986cb;text-decoration:none">🔗 링크</a>`:''}
+        <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap;align-items:center">
+          <span style="font-size:11px;color:#7986cb;display:flex;align-items:center;gap:3px">🔗<span class="card-editable-link" contenteditable="true" spellcheck="false"
+            onclick="event.stopPropagation()"
+            onblur="saveItemField(event,'${item.id}','link')"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();event.target.blur();}"
+            style="cursor:text;min-width:16px;display:inline-block" data-placeholder="링크 추가"
+          >${item.data.link||''}</span></span>
           ${item.data.lat&&item.data.lng?`<a href="https://maps.google.com/?q=${item.data.lat},${item.data.lng}" target="_blank" style="font-size:11px;color:#43a047;text-decoration:none">📍 지도 보기</a>`:''}
-          ${item.data.place?`<span style="font-size:11px;color:#7b80a0">📍 ${item.data.place}</span>`:''}
+          <span style="font-size:11px;color:#7b80a0;display:flex;align-items:center;gap:3px">📍<span class="card-editable-place" contenteditable="true" spellcheck="false"
+            onclick="event.stopPropagation()"
+            onblur="saveItemField(event,'${item.id}','place')"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();event.target.blur();}"
+            style="cursor:text;min-width:16px;display:inline-block" data-placeholder="장소 추가"
+          >${item.data.place||''}</span></span>
         </div>
       </div>
       <button class="del-btn" onclick="event.stopPropagation();deleteItem('${item.id}','${tab.id}')">삭제</button>
@@ -2238,6 +2454,10 @@ function renderCards(container, tab, items) {
             <input class="f-inp" id="cPlace" placeholder="📍 장소 검색" oninput="cardPlaceSearch(this)" autocomplete="off">
             <div id="cPlaceSuggest" style="display:none;position:absolute;top:42px;left:0;right:0;background:#1e2240;border:1px solid #3a3f6b;border-radius:8px;z-index:50;max-height:160px;overflow-y:auto"></div>
             <input class="f-inp" id="cLink" placeholder="링크 URL (선택)">
+          </div>
+          <div class="form-row">
+            <input class="f-inp" id="cBadge" placeholder="배지 (예: 현지 1위, 저렴)" style="max-width:200px">
+            <input class="f-inp" id="cPrice" placeholder="가격 (예: €12~18)" style="max-width:160px">
           </div>
           <div class="form-row">
             <input class="f-inp" id="cGroup" placeholder="카드 그룹" list="cGroupList">
@@ -2301,17 +2521,33 @@ async function addCard(tabId) {
     title,
     detail: document.getElementById('cDetail').value.trim(),
     link: document.getElementById('cLink').value.trim(),
+    badge: document.getElementById('cBadge').value.trim(),
+    price: document.getElementById('cPrice').value.trim(),
     group: document.getElementById('cGroup').value.trim(),
     place: cardPlaceName || document.getElementById('cPlace').value.trim(),
     lat: cardPlaceLat, lng: cardPlaceLng
   };
   await sbPost('tab_items', { tab_id: tabId, data, sort_order: 0 });
-  ['cTitle','cDetail','cLink','cPlace'].forEach(id=>document.getElementById(id).value='');
+  ['cTitle','cDetail','cLink','cBadge','cPrice','cPlace'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('cIcon').value = '📌';
   document.getElementById('cIconBtn').textContent = '📌';
   cardPlaceLat = null; cardPlaceLng = null; cardPlaceName = '';
   const tab = currentTab;
   const newItems = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderCards(document.getElementById('tabContent'), tab, newItems);
+}
+
+function toggleCardIconPicker(id) {
+  document.querySelectorAll('.card-icon-picker').forEach(el => { if (el.dataset.item !== id) el.style.display = 'none'; });
+  const p = document.getElementById(`cip-${id}`);
+  if (p) p.style.display = p.style.display === 'flex' ? 'none' : 'flex';
+}
+async function setItemIcon(id, emoji) {
+  const item = await sbGet('tab_items', `id=eq.${id}`);
+  if (!item[0]) return;
+  await sbPatch('tab_items', id, { data: { ...item[0].data, icon: emoji } });
+  const tab = currentTab;
+  const newItems = await sbGet('tab_items', `tab_id=eq.${tab.id}&order=sort_order.asc,created_at.asc`);
   renderCards(document.getElementById('tabContent'), tab, newItems);
 }
 
@@ -2897,6 +3133,7 @@ async function deleteItem(id, tabId) {
   else if (tab.type === 'file') renderFiles(container, tab, items);
   else if (tab.type === 'budget') renderBudget(container, tab, items);
   else if (tab.type === 'table') renderTable(container, tab, items);
+  else if (tab.type === 'flight') renderFlight(container, tab, items);
   else if (tab.type === 'slides') renderSlides(container, tab);
 }
 
