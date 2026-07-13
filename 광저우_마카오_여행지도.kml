@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document>
+  <name>광저우·마카오 가족여행 2027</name>
+  <Folder><name>D1 · 1/7 인천 출발·광저우 도착</name>
+    <Placemark>
+      <name>인천국제공항 (ICN)</name>
+      <description>KE867 출발</description>
+      <Point><coordinates>126.4417093,37.4634593,0</coordinates></Point>
+    </Placemark>
+    <Placemark>
+      <name>광저우 바이윈 국제공항 (CAN)</name>
+      <description>KE867 도착</description>
+      <Point><coordinates>113.3022655,23.3862983,0</coordinates></Point>
+    </Placemark>
+  </Folder>
+  <Folder><name>D2 · 1/8 마카오 당일치기</name>
+    <Placemark>
+      <name>관자 국경 (Portas do Cerco)</name>
+      <description>중국 측 출경 · 마카오 측 입경</description>
+      <Point><coordinates>113.5489334,22.214667,0</coordinates></Point>
+    </Placemark>
+    <Placemark>
+      <name>성 바오로 성당 폐허</name>
+      <description>大三巴牌坊</description>
+      <Point><coordinates>113.5412582,22.1975219,0</coordinates></Point>
+    </Placemark>
+    <Placemark>
+      <name>세나도 광장</name>
+      <description>議事亭前地</description>
+      <Point><coordinates>113.5399903,22.1938271,0</coordinates></Point>
+    </Placemark>
+    <Placemark>
+      <name>콜로안 빌리지 (로드스토우 베이커리)</name>
+      <description>점심 · 에그타르트</description>
+      <Point><coordinates>113.5513332,22.1182036,0</coordinates></Point>
+    </Placemark>
+    <Placemark>
+      <name>윈 팰리스</name>
+      <description>분수쇼</description>
+      <Point><coordinates>113.571403,22.1480986,0</coordinates></Point>
+    </Placemark>
+    <Placemark>
+      <name>파리지앵</name>
+      <description>에펠탑 전망대</description>
+      <Point><coordinates>113.5616812,22.1436317,0</coordinates></Point>
+    </Placemark>
+    <Placemark>
+      <name>MGM 코타이 (The Spectacle)</name>
+      <description>Sea Odyssey 드론쇼 17:00</description>
+      <Point><coordinates>113.5680093,22.1458804,0</coordinates></Point>
+    </Placemark>
+    <Placemark>
+      <name>더 런더너 마카오</name>
+      <description>근위병 교대식 금 19:30</description>
+      <Point><coordinates>113.5653355,22.1458115,0</coordinates></Point>
+    </Placemark>
+  </Folder>
+  <Folder><name>D3 · 1/9 광저우 관광</name>
+    <Placemark>
+      <name>진가사</name>
+      <description>陳家祠</description>
+      <Point><coordinates>113.2412203,23.1292556,0</coordinates></Point>
+    </Placemark>
+    <Placemark>
+      <name>영경방</name>
+      <description>永慶坊</description>
+      <Point><coordinates>113.2329007,23.1175027,0</coordinates></Point>
+    </Placemark>
+    <Placemark>
+      <name>사면도</name>
+      <description>沙面島</description>
+      <Point><coordinates>113.2393216,23.10947,0</coordinates></Point>
+    </Placemark>
+    <Placemark>
+      <name>석실성심대성당</name>
+      <description>石室聖心大教堂</description>
+      <Point><coordinates>113.2547256,23.1173975,0</coordinates></Point>
+    </Placemark>
+    <Placemark>
+      <name>베이징로</name>
+      <description>北京路</description>
+      <Point><coordinates>113.2638627,23.1235043,0</coordinates></Point>
+    </Placemark>
+    <Placemark>
+      <name>대불고사</name>
+      <description>大佛寺</description>
+      <Point><coordinates>113.2626468,23.1249328,0</coordinates></Point>
+    </Placemark>
+    <Placemark>
+      <name>캔톤타워</name>
+      <description>广州塔 야경</description>
+      <Point><coordinates>113.3191477,23.1090145,0</coordinates></Point>
+    </Placemark>
+  </Folder>
+  <Folder><name>D4 · 1/10 쇼핑·귀국</name>
+    <Placemark>
+      <name>정자광장</name>
+      <description>쇼핑</description>
+      <Point><coordinates>113.3216015,23.1346415,0</coordinates></Point>
+    </Placemark>
+    <Placemark>
+      <name>광저우 바이윈 국제공항 (CAN)</name>
+      <description>KE868 출발 13:15</description>
+      <Point><coordinates>113.3022655,23.3862983,0</coordinates></Point>
+    </Placemark>
+    <Placemark>
+      <name>인천국제공항 (ICN)</name>
+      <description>KE868 도착 17:25</description>
+      <Point><coordinates>126.4417093,37.4634593,0</coordinates></Point>
+    </Placemark>
+  </Folder>
+  <Folder><name>국경 이동 참고</name>
+    <Placemark>
+      <name>궁베이 통관구</name>
+      <description>拱北口岸</description>
+      <Point><coordinates>113.5326939,22.2111309,0</coordinates></Point>
+    </Placemark>
+    <Placemark>
+      <name>헝친 통관구</name>
+      <description>橫琴口岸</description>
+      <Point><coordinates>113.5429628,22.1405453,0</coordinates></Point>
+    </Placemark>
+    <Placemark>
+      <name>광저우남역</name>
+      <description>广州南站</description>
+      <Point><coordinates>113.2640375,22.9914143,0</coordinates></Point>
+    </Placemark>
+    <Placemark>
+      <name>주하이역</name>
+      <description>珠海站</description>
+      <Point><coordinates>113.5439406,22.2180959,0</coordinates></Point>
+    </Placemark>
+  </Folder>
+</Document>
+</kml>
