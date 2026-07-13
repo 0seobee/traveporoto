@@ -187,6 +187,7 @@ window.addEventListener('DOMContentLoaded', () => {
         <a class="pt-card" id="ptCard" href="proto.html">
           <div class="pt-card-actions" onclick="event.preventDefault()">
             <span class="card-act-btn edit" title="편집" onclick="openPtEditModal(event)">✏️</span>
+            <span class="card-act-btn" title="삭제" onclick="deleteFixedCard('pt', event)">🗑️</span>
           </div>
           <div class="pt-badge" id="ptBadge">진행중 D-32</div>
           <div class="pt-card-cover" id="ptEmoji">🇵🇹</div>
@@ -214,7 +215,10 @@ window.addEventListener('DOMContentLoaded', () => {
     <div class="hub-sec-body" id="hs-planning-body">
       <div class="project-grid" id="grid-planning">
         <!-- 광저우·마카오 고정 카드 -->
-        <a class="project-card" href="guangzhou.html" style="background:linear-gradient(135deg,#1a237e,#880e4f,#b71c1c)">
+        <a class="project-card" id="guangzhouCard" href="guangzhou.html" style="background:linear-gradient(135deg,#1a237e,#880e4f,#b71c1c)">
+          <div class="project-card-actions" onclick="event.preventDefault()">
+            <span class="card-act-btn" title="삭제" onclick="deleteFixedCard('guangzhou', event)">🗑️</span>
+          </div>
           <div class="project-card-cover" style="background:transparent;height:110px">🇨🇳🎰</div>
           <div class="project-card-body">
             <div class="project-card-name" style="color:#fff">광저우·마카오 가족여행</div>
@@ -375,7 +379,14 @@ function renderProjects(list) {
       activeGrid.appendChild(el.firstElementChild);
     });
   }
-  document.getElementById('cnt-active').textContent = (1 + active.length) + '개';
+  const ptShown = document.getElementById('ptCard') ? 1 : 0;
+  document.getElementById('cnt-active').textContent = (ptShown + active.length) + '개';
+  if (ptShown === 0 && active.length === 0 && !activeGrid.querySelector('.hub-empty')) {
+    const empty = document.createElement('div');
+    empty.className = 'hub-empty';
+    empty.textContent = '진행 중인 여행이 없습니다';
+    activeGrid.appendChild(empty);
+  }
 
   // 계획 중
   const planGrid = document.getElementById('grid-planning');
@@ -385,9 +396,10 @@ function renderProjects(list) {
     el.innerHTML = cardHTML(p);
     planGrid.insertBefore(el.firstElementChild, newCard);
   });
-  document.getElementById('cnt-planning').textContent = planning.length + '개';
+  const guangzhouShown = document.getElementById('guangzhouCard') ? 1 : 0;
+  document.getElementById('cnt-planning').textContent = (guangzhouShown + planning.length) + '개';
   // 계획 중이 없으면 안내 텍스트
-  if (planning.length === 0) {
+  if (planning.length === 0 && guangzhouShown === 0) {
     const empty = document.createElement('div');
     empty.className = 'hub-empty';
     empty.textContent = '계획 중인 여행이 없습니다';
@@ -482,6 +494,30 @@ async function deleteProject(id, e) {
   e.stopPropagation();
   if (!confirm('이 여행을 삭제하시겠습니까?')) return;
   await fetch(`${SB_URL}/rest/v1/projects?id=eq.${id}`, { method:'DELETE', headers:SB_H });
+  location.reload();
+}
+
+// ── 고정 카드 삭제(숨김) ──
+const HIDE_KEY = 'hub-hidden-fixed-cards';
+const FIXED_CARD_LABELS = { pt: '포르투갈 7박 8일', guangzhou: '광저우·마카오 가족여행' };
+const FIXED_CARD_ELS = { pt: 'ptCard', guangzhou: 'guangzhouCard' };
+
+function getHiddenFixedCards() {
+  return JSON.parse(localStorage.getItem(HIDE_KEY) || '[]');
+}
+function applyHiddenFixedCards() {
+  const hidden = getHiddenFixedCards();
+  hidden.forEach(key => {
+    document.getElementById(FIXED_CARD_ELS[key])?.remove();
+  });
+  updateSectionCounts();
+}
+function deleteFixedCard(key, e) {
+  e.preventDefault(); e.stopPropagation();
+  if (!confirm(`"${FIXED_CARD_LABELS[key]}" 카드를 목록에서 삭제하시겠습니까?\n(페이지 데이터는 그대로 남아있고, 이 브라우저의 허브 목록에서만 사라집니다)`)) return;
+  const hidden = getHiddenFixedCards();
+  if (!hidden.includes(key)) hidden.push(key);
+  localStorage.setItem(HIDE_KEY, JSON.stringify(hidden));
   location.reload();
 }
 
@@ -740,6 +776,7 @@ function updateSectionCounts() {
 }
 
 restoreCollapseStates();
+applyHiddenFixedCards();
 loadPtCard();
 loadProjects().then(() => {
   applyHubOrder();
