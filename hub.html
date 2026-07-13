@@ -519,87 +519,143 @@ function openPtEditModal(e) {
   document.getElementById('projectModal').classList.add('open');
 }
 
-// ── 드래그 앤 드롭 ──
+// ── 드래그 앤 드롭 (Pointer Events — 마우스 + 터치 공용) ──
 const ORDER_KEY = 'pt-hub-order';
-let dragSrc = null;
 
 function initDraggable() {
   const GRIDS = ['grid-active', 'grid-planning', 'grid-done'].map(id => document.getElementById(id));
 
-  // 카드에 드래그 이벤트 부착
-  function attachCard(card) {
-    if (card.dataset.dragInit) return;
-    card.dataset.dragInit = '1';
-    card.draggable = true;
+  let dragCard = null;
+  let activePointerId = null;
+  let longPressTimer = null;
+  let startX = 0, startY = 0;
+  let isTouch = false;
 
-    card.addEventListener('dragstart', e => {
-      dragSrc = card;
-      e.dataTransfer.effectAllowed = 'move';
-      setTimeout(() => card.classList.add('dragging'), 0);
-      GRIDS.forEach(g => {
-        if (!g) return;
-        g.classList.add('drag-active');
-        // 접힌 섹션 펼치기 — 드롭 가능하도록
-        const body = g.closest('.hub-sec-body');
-        if (body && body.classList.contains('collapsed')) {
-          body.classList.remove('collapsed');
-          const header = document.querySelector(`[onclick*="${body.id}"]`);
-          const btn = header?.querySelector('.hub-sec-toggle');
-          if (btn) btn.textContent = '▼';
-        }
-        // 빈 안내 문구 제거 — 드롭 방해 방지
-        g.querySelectorAll('.hub-empty').forEach(el => el.remove());
-      });
+  function clearEmptyNotices() {
+    GRIDS.forEach(g => { if (g) g.querySelectorAll('.hub-empty').forEach(el => el.remove()); });
+  }
+  function restoreEmptyNotices() {
+    GRIDS.forEach(g => {
+      if (!g) return;
+      const hasCard = g.querySelector('.project-card, .pt-card');
+      if (!hasCard && !g.querySelector('.hub-empty')) {
+        const empty = document.createElement('div');
+        empty.className = 'hub-empty';
+        empty.textContent = g.id === 'grid-done' ? '완료된 여행이 없습니다'
+                          : g.id === 'grid-active' ? '진행 중인 여행이 없습니다'
+                          : '계획 중인 여행이 없습니다';
+        const newCard = g.querySelector('.new-card');
+        if (newCard) g.insertBefore(empty, newCard);
+        else g.appendChild(empty);
+      }
     });
-
-    card.addEventListener('dragend', () => {
-      card.classList.remove('dragging');
-      GRIDS.forEach(g => {
-        if (!g) return;
-        g.classList.remove('drag-active');
-        // 빈 그리드에 안내 문구 복원
-        const hasCard = g.querySelector('.project-card, .pt-card');
-        if (!hasCard && !g.querySelector('.hub-empty')) {
-          const empty = document.createElement('div');
-          empty.className = 'hub-empty';
-          empty.textContent = g.id === 'grid-done' ? '완료된 여행이 없습니다'
-                            : g.id === 'grid-active' ? '진행 중인 여행이 없습니다'
-                            : '계획 중인 여행이 없습니다';
-          const newCard = g.querySelector('.new-card');
-          if (newCard) g.insertBefore(empty, newCard);
-          else g.appendChild(empty);
-        }
-      });
-      dragSrc = null;
-      saveHubOrder();
-    });
-
-    card.addEventListener('dragover', e => {
-      e.preventDefault();
-      if (!dragSrc || dragSrc === card) return;
-      const rect = card.getBoundingClientRect();
-      const after = e.clientY > rect.top + rect.height / 2;
-      const grid = card.closest('.project-grid');
-      if (after) grid.insertBefore(dragSrc, card.nextSibling);
-      else        grid.insertBefore(dragSrc, card);
+  }
+  function expandCollapsedSections() {
+    GRIDS.forEach(g => {
+      if (!g) return;
+      const body = g.closest('.hub-sec-body');
+      if (body && body.classList.contains('collapsed')) {
+        body.classList.remove('collapsed');
+        const header = document.querySelector(`[onclick*="${body.id}"]`);
+        const btn = header?.querySelector('.hub-sec-toggle');
+        if (btn) btn.textContent = '▼';
+      }
     });
   }
 
-  // 그리드에도 dragover — 빈 영역에 드롭 가능
-  GRIDS.forEach(grid => {
-    if (!grid) return;
-    grid.addEventListener('dragover', e => {
-      e.preventDefault();
-      if (!dragSrc) return;
-      const target = e.target.closest('.project-card, .pt-card');
-      if (target) return; // 카드 위면 카드의 dragover가 처리
-      // 그리드 빈 공간: new-card 앞에 삽입
-      const newCard = grid.querySelector('.new-card');
-      if (newCard) grid.insertBefore(dragSrc, newCard);
-      else         grid.appendChild(dragSrc);
+  function startDrag(card) {
+    dragCard = card;
+    card.classList.add('dragging');
+    card.style.touchAction = 'none';
+    GRIDS.forEach(g => g && g.classList.add('drag-active'));
+    expandCollapsedSections();
+    clearEmptyNotices();
+  }
+  function moveDrag(clientX, clientY) {
+    if (!dragCard) return;
+    const el = document.elementFromPoint(clientX, clientY);
+    if (!el) return;
+    const overCard = el.closest('.project-card, .pt-card');
+    if (overCard && overCard !== dragCard) {
+      const rect = overCard.getBoundingClientRect();
+      const after = clientY > rect.top + rect.height / 2;
+      const grid = overCard.closest('.project-grid');
+      if (grid) {
+        if (after) grid.insertBefore(dragCard, overCard.nextSibling);
+        else        grid.insertBefore(dragCard, overCard);
+      }
+      return;
+    }
+    const overGrid = el.closest('.project-grid');
+    if (overGrid && !overCard) {
+      const newCard = overGrid.querySelector('.new-card');
+      if (newCard) overGrid.insertBefore(dragCard, newCard);
+      else         overGrid.appendChild(dragCard);
+    }
+  }
+  function endDrag() {
+    if (!dragCard) return;
+    dragCard.classList.remove('dragging');
+    dragCard.style.touchAction = 'pan-y';
+    GRIDS.forEach(g => g && g.classList.remove('drag-active'));
+    restoreEmptyNotices();
+    saveHubOrder();
+    dragCard = null;
+  }
+
+  function attachCard(card) {
+    if (card.dataset.dragInit) return;
+    card.dataset.dragInit = '1';
+    card.style.touchAction = 'pan-y';
+
+    let moved = false;
+
+    card.addEventListener('pointerdown', e => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      isTouch = e.pointerType !== 'mouse';
+      startX = e.clientX; startY = e.clientY; moved = false;
+      activePointerId = e.pointerId;
+      clearTimeout(longPressTimer);
+      // 터치: 롱프레스로 드래그 시작(스크롤과 구분) · 마우스: 이동량으로 즉시 판단
+      longPressTimer = setTimeout(() => {
+        if (activePointerId !== e.pointerId) return;
+        moved = true;
+        startDrag(card);
+        try { card.setPointerCapture(e.pointerId); } catch (err) {}
+      }, isTouch ? 380 : 0);
     });
-    grid.addEventListener('drop', e => e.preventDefault());
-  });
+
+    card.addEventListener('pointermove', e => {
+      if (activePointerId === null || e.pointerId !== activePointerId) return;
+      const dx = e.clientX - startX, dy = e.clientY - startY;
+      if (!dragCard) {
+        if (!isTouch && Math.hypot(dx, dy) > 6) {
+          clearTimeout(longPressTimer);
+          moved = true;
+          startDrag(card);
+          try { card.setPointerCapture(e.pointerId); } catch (err) {}
+        } else if (isTouch && Math.hypot(dx, dy) > 10) {
+          clearTimeout(longPressTimer); // 롱프레스 전 이동 = 스크롤 의도로 판단, 드래그 취소
+        }
+        return;
+      }
+      e.preventDefault();
+      moveDrag(e.clientX, e.clientY);
+    });
+
+    ['pointerup', 'pointercancel'].forEach(evt => card.addEventListener(evt, e => {
+      if (activePointerId === null || e.pointerId !== activePointerId) return;
+      clearTimeout(longPressTimer);
+      try { card.releasePointerCapture(e.pointerId); } catch (err) {}
+      activePointerId = null;
+      if (dragCard) endDrag();
+    }));
+
+    card.addEventListener('click', e => {
+      if (moved) { e.preventDefault(); e.stopPropagation(); }
+      moved = false;
+    });
+  }
 
   // 현재 DOM의 모든 카드에 부착
   document.querySelectorAll('.project-card, .pt-card').forEach(attachCard);
