@@ -1978,6 +1978,9 @@ async function addListItem(tabId) {
 }
 
 async function saveBudgetCell(e, id, tabId, field) {
+  if (field === 'amount') {
+    e.target.textContent = e.target.textContent.replace(/[^0-9.]/g, '').trim();
+  }
   await saveItemField(e, id, field);
   if (field === 'amount') {
     const tab = currentTab;
@@ -3263,7 +3266,7 @@ function renderBudget(container, tab, items) {
         <td style="color:${item.data.type==='in'?'#a5d6a7':'#ef9a9a'};font-weight:700">${sym[cur]}<span class="list-editable" contenteditable="true" spellcheck="false"
             onblur="saveBudgetCell(event,'${item.id}','${tab.id}','amount')"
             onkeydown="if(event.key==='Enter'){event.preventDefault();event.target.blur();}"
-          >${item.data.amount||''}</span></td>
+          >${item.data.amount ? Number(String(item.data.amount).replace(/,/g,'')).toLocaleString() : ''}</span></td>
         ${bEditTd(item,'note','color:var(--sub)')}
         <td><button class="del-btn" onclick="deleteItem('${item.id}','${tab.id}')">삭제</button></td>
       </tr>`).join('');
@@ -3367,7 +3370,7 @@ async function saveBudgetPeople(tabId, value) {
 
 async function addBudgetItem(tabId) {
   const item = document.getElementById('bItem').value.trim();
-  const amount = document.getElementById('bAmount').value.trim();
+  const amount = document.getElementById('bAmount').value.replace(/[^0-9.]/g, '').trim();
   if (!item || !amount) { alert('항목과 금액을 입력하세요'); return; }
   const data = {
     currency: document.getElementById('bCur').value,
