@@ -1402,12 +1402,25 @@ function renderSchedItems(items, date) {
           ${costStr?`<div class="sched-cost">💰 ${costStr}</div>`:''}
         </div>
         <div class="sched-item-actions">
+          <select class="del-btn" style="background:rgba(92,107,192,.15);color:#9fa8da;cursor:pointer" onchange="if(this.value)moveSchedItem('${item.id}',this.value)">
+            <option value="">📅 이동</option>
+            ${schedDates.filter(d=>d!==item.data.date).map(d=>`<option value="${d}">${d}</option>`).join('')}
+          </select>
           <button class="del-btn" style="background:rgba(92,107,192,.15);color:#9fa8da" onclick="editSchedItem('${item.id}')">수정</button>
           <button class="del-btn" onclick="deleteItem('${item.id}','${currentTab.id}')">삭제</button>
         </div>
       </div>`;
     }).join('')
   }</div>`;
+}
+
+async function moveSchedItem(id, newDate) {
+  const item = schedItemsCache.find(i => i.id === id);
+  if (!item) return;
+  await sbPatch('tab_items', id, { data: { ...item.data, date: newDate } });
+  const items = await sbGet('tab_items', `tab_id=eq.${currentTab.id}&order=sort_order.asc,created_at.asc`);
+  renderSchedDates(items);
+  renderSchedItems(items, currentSchedDate);
 }
 
 function setPayMethod(method) {
