@@ -1523,6 +1523,9 @@ function editSchedItem(id) {
   } else {
     delete placeInp.dataset.lat; delete placeInp.dataset.lng;
     hideSchedMiniMap();
+    // 좌표가 없는 기존 일정: 저장된 장소/내용 텍스트로 자동 검색해 후보를 바로 보여줌
+    const autoQuery = (d.place || d.content || '').trim();
+    if (autoQuery.length >= 2) searchPlace(autoQuery);
   }
   document.getElementById('sContent').value = d.content || '';
   document.getElementById('sCost').value = d.cost || '';
