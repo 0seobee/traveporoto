@@ -1,0 +1,18 @@
+{
+  "name": "내 여행 플래너",
+  "short_name": "여행플래너",
+  "description": "포르투갈 등 여행 일정, 예산, 체크리스트를 관리하는 개인 여행 플래너",
+  "start_url": "/hub.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0d0f1a",
+  "theme_color": "#0d0f1a",
+  "lang": "ko",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

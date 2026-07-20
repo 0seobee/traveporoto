@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>✈️ 내 여행 플래너</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0d0f1a">
+<link rel="icon" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="여행플래너">
+<meta name="mobile-web-app-capable" content="yes">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -224,6 +232,13 @@ window.addEventListener('DOMContentLoaded', () => {
             <div class="project-card-name" style="color:#fff">광저우·마카오 가족여행</div>
             <div class="project-card-dest" style="color:rgba(255,255,255,.65)">🌏 광저우 · 마카오 · 코타이</div>
             <div class="project-card-dates" style="background:rgba(255,255,255,.15);color:rgba(255,255,255,.9)">2027.01 예정 · 3박4일 · 13~15명</div>
+          </div>
+        </a>
+        <a class="project-card" href="planner-local.html" style="background:linear-gradient(135deg,#37474f,#546e7a)">
+          <div class="project-card-cover" style="background:transparent;height:100px">🧳</div>
+          <div class="project-card-body">
+            <div class="project-card-name" style="color:#fff">내 여행 만들기 (로그인 불필요)</div>
+            <div class="project-card-dest" style="color:rgba(255,255,255,.7)">브라우저에만 저장 · 지인과 공유 가능</div>
           </div>
         </a>
         <div class="new-card" onclick="openModal()">
@@ -786,6 +801,12 @@ loadProjects().then(() => {
 window.addEventListener('scroll', () => {
   document.getElementById('topBtn')?.classList.toggle('show', window.scrollY > 500);
 }, { passive: true });
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch((err) => console.warn('SW 등록 실패', err));
+  });
+}
 </script>
 </body>
 </html>
