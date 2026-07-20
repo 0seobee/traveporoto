@@ -236,6 +236,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.92
 .edit-field input:focus,.edit-field textarea:focus{border-color:var(--accent);background:rgba(92,107,192,.08)}
 .edit-field textarea{resize:vertical;min-height:70px;line-height:1.5}
 .edit-modal-btns{display:flex;gap:8px;margin-top:18px}
+.em-suggest{display:none;position:absolute;left:0;right:0;top:100%;margin-top:2px;background:#1e2240;border:1px solid var(--border);border-radius:10px;overflow:hidden;z-index:50;max-height:180px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.em-suggest-item{padding:9px 12px;font-size:12px;color:#e0e2f5;cursor:pointer;border-bottom:1px solid #2a2f50;transition:.15s}
+.em-suggest-item:last-child{border-bottom:none}
+.em-suggest-item:hover{background:rgba(92,107,192,.2)}
 .edit-save-btn{flex:1;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
 .edit-save-btn:hover{background:#7986cb}
 .edit-cancel-btn{background:rgba(255,255,255,.06);color:var(--sub);border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
@@ -787,8 +791,8 @@ body.readonly .add-day-btn{display:none!important}
       </div>
       <div class="tl-item">
         <div class="tl-time"><div class="t">13:30</div><div class="dur">1.5h</div></div>
-        <div class="tl-body"><div class="tl-cats"><span class="cat cat-meal">🍽️ 점심</span></div><div class="tl-place">🍽️ Canalha (카날랴) ✅ 확정 — 미슐랭 모던 비스트로</div><div class="tl-desc">해산물 타파스 · 오징어 오믈렛 · 벨렝 최고 점심 <span class="cost-badge">€50~70/2인</span><div class="tl-note">⚠️ 예약 필수 canalha.pt · R. da Junqueira 207 · 식후 트램 15E → 코메르시우</div></div></div>
-        <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=Canalha+Lisboa" target="_blank">📍 구글맵</a></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-meal">🍽️ 점심</span></div><div class="tl-place">🦐 O Rio Marisqueira ✅ 예약 확정 — 해산물 전문</div><div class="tl-desc">벨렝 지구 해산물 맛집 <span class="cost-badge">2인 예약</span><div class="tl-note">📍 Rua Bartolomeu Dias 112, Lisboa 1400-224 · 토 13:30 (WEST) · 식후 트램 15E → 코메르시우</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=Rua+Bartolomeu+Dias+112+Lisboa" target="_blank">📍 구글맵</a></div>
       </div>
       <div class="tl-item">
         <div class="tl-time"><div class="t">15:00</div><div class="dur">1h</div></div>
@@ -849,9 +853,9 @@ body.readonly .add-day-btn{display:none!important}
         <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=38.7119253,-9.1299568" target="_blank">📍 구글맵</a></div>
       </div>
       <div class="tl-item">
-        <div class="tl-time"><div class="t">13:00</div><div class="dur">1.5h</div></div>
-        <div class="tl-body"><div class="tl-cats"><span class="cat cat-meal">🍽️ 점심</span></div><div class="tl-place">🦆 O Frade (오 프라드) ✅ 확정 — 미슐랭 빕구르망</div><div class="tl-desc">오리밥(Arroz de Pato) · 레이저 클램 · 오픈 키친 바 <span class="cost-badge">€40~50/2인</span><div class="tl-note">예약 권장: TheFork · Calçada da Ajuda 14 (벨렝 방향) · 평일 14시 이후 워크인 가능</div></div></div>
-        <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=O+Frade+Lisboa" target="_blank">📍 구글맵</a></div>
+        <div class="tl-time"><div class="t">12:30</div><div class="dur">1.5h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-meal">🍽️ 점심</span></div><div class="tl-place">🐟 Maria Catita ✅ 예약 확정 — 전통 포르투갈 해산물</div><div class="tl-desc">2인 예약 <span class="cost-badge">2인</span><div class="tl-note">📍 R. dos Bacalhoeiros 30, 1100-389 Lisboa · +351 211 331 313 · 일 12:30</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=R.+dos+Bacalhoeiros+30+Lisboa" target="_blank">📍 구글맵</a></div>
       </div>
       <div class="tl-item">
         <div class="tl-time"><div class="t">13:00</div><div class="dur">1h</div></div>
@@ -874,12 +878,12 @@ body.readonly .add-day-btn{display:none!important}
         <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=38.6935973,-9.2057115" target="_blank">📍 구글맵</a></div>
       </div>
       <div class="tl-item">
-        <div class="tl-time"><div class="t">20:00</div><div class="dur">1.5h</div></div>
-        <div class="tl-body"><div class="tl-cats"><span class="cat cat-meal">🐙 저녁</span></div><div class="tl-place">🐙 Taberna Sal Grosso ✅ 확정 — 현지 타스카 4.7점</div><div class="tl-desc">문어 · 감바스 · 소꼬리 타파스 · 2025년 이전 후 55석 확장 <span class="cost-badge">€40~50/2인</span><div class="tl-note">예약 권장: tabernasalgrosso.pt · ⚠️ 포르투갈 식사 시간 20시 이후</div></div></div>
-        <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=Taberna+Sal+Grosso+Lisboa" target="_blank">📍 구글맵</a></div>
+        <div class="tl-time"><div class="t">19:00</div><div class="dur">1.5h</div></div>
+        <div class="tl-body"><div class="tl-cats"><span class="cat cat-meal">🐙 저녁</span></div><div class="tl-place">🐙 Taberna Sal Grosso S. Bento ✅ 예약 확정 (50% 할인 프로모션)</div><div class="tl-desc">문어 · 감바스 · 소꼬리 타파스 <span class="cost-badge">2인 · 50% off</span><div class="tl-note">일 19:00 · 프로모션 상세는 예약 확인 이메일 참고</div></div></div>
+        <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=Taberna+Sal+Grosso+S.+Bento+Lisboa" target="_blank">📍 구글맵</a></div>
       </div>
       <div class="tl-item">
-        <div class="tl-time"><div class="t">19:00</div><div class="dur">1h</div></div>
+        <div class="tl-time"><div class="t">20:30</div><div class="dur">1h</div></div>
         <div class="tl-body"><div class="tl-cats"><span class="cat cat-free">🌙 야경</span></div><div class="tl-place">테주 강변 야경 감상</div><div class="tl-desc">4월 25일 다리 야경 조망 · 빵 베르드(Vinho Verde) 한 잔 <span class="cost-badge">€10~15</span></div></div>
         <div class="tl-actions"><a class="gmap-btn" href="https://www.google.com/maps?q=38.6924,-9.1949" target="_blank">📍 구글맵</a></div>
       </div>
@@ -3459,6 +3463,46 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const SB_H  = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
 const SB_HR = { ...SB_H, 'Prefer': 'return=representation' };
 
+// ── 로컬 편집 데이터(pt-*, trip-*) Supabase 동기화 ──
+// 기존 코드는 그대로 localStorage.setItem/getItem/removeItem을 쓰지만,
+// setItem/removeItem을 가로채서 같은 내용을 site_kv 테이블에도 반영한다.
+// 페이지 로드 시 site_kv → localStorage로 먼저 내려받아 다른 기기의 수정사항을 반영한다.
+const _lsSetItem = localStorage.setItem.bind(localStorage);
+const _lsRemoveItem = localStorage.removeItem.bind(localStorage);
+const KV_SYNC_PREFIXES = ['pt-', 'trip-'];
+function isSyncedKey(key) { return KV_SYNC_PREFIXES.some(p => key.startsWith(p)); }
+
+function kvPush(key, value) {
+  fetch(`${SB_URL}/rest/v1/site_kv`, {
+    method: 'POST',
+    headers: { ...SB_H, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify({ key, value, updated_at: new Date().toISOString() })
+  }).catch(() => {});
+}
+
+function kvDelete(key) {
+  fetch(`${SB_URL}/rest/v1/site_kv?key=eq.${encodeURIComponent(key)}`, { method: 'DELETE', headers: SB_H }).catch(() => {});
+}
+
+localStorage.setItem = function(key, value) {
+  _lsSetItem(key, value);
+  if (isSyncedKey(key)) kvPush(key, value);
+};
+localStorage.removeItem = function(key) {
+  _lsRemoveItem(key);
+  if (isSyncedKey(key)) kvDelete(key);
+};
+
+// 페이지 로드 시작과 동시에 서버 값을 내려받기 시작 (DOMContentLoaded 핸들러들이 await로 대기)
+const kvReadyPromise = (async function kvHydrateAll() {
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/site_kv?select=key,value`, { headers: SB_H });
+    if (!res.ok) return;
+    const rows = await res.json();
+    rows.forEach(r => { if (r.value != null) _lsSetItem(r.key, r.value); });
+  } catch (e) { /* 오프라인/실패 시 기존 localStorage 값으로 계속 진행 */ }
+})();
+
 function setStatus(msg, color) {
   const el = document.getElementById('budget-status');
   if (!el) return;
@@ -3704,7 +3748,7 @@ function clFilter(cat, btn) {
   renderCL();
 }
 
-document.addEventListener('DOMContentLoaded', () => { loadLedger(); loadGsDay(0); loadGifts(); loadCL(); });
+document.addEventListener('DOMContentLoaded', async () => { await kvReadyPromise; loadLedger(); loadGsDay(0); loadGifts(); loadCL(); });
 
 // ── PDF 미리보기 토글 ──
 function togglePdf(btn, src) {
@@ -3782,7 +3826,124 @@ function applyEdit(item, data) {
   if (data.place !== undefined) { const p = item.querySelector('.tl-place'); if (p) p.childNodes[0] && (p.childNodes[0].textContent = data.place); }
   if (data.desc !== undefined) { const d = item.querySelector('.tl-desc'); if (d) { const first = d.firstChild; if (first && first.nodeType === 3) first.textContent = data.desc; else if (first) d.insertBefore(document.createTextNode(data.desc), first); } }
   if (data.cost !== undefined) { const c = item.querySelector('.cost-badge'); if (c) c.textContent = data.cost; }
+  if (data.gmap !== undefined) applyGmapLink(item, data.gmap);
   item.classList.add('edited');
+}
+
+// 구글맵 URL 또는 "위도,경도" 문자열 → 실제 열 수 있는 링크로 변환
+function toGmapHref(raw) {
+  const v = (raw || '').trim();
+  if (!v) return '';
+  if (/^https?:\/\//i.test(v)) return v;
+  const m = v.match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
+  if (m) return `https://www.google.com/maps?q=${m[1]},${m[2]}`;
+  return `https://maps.google.com/?q=${encodeURIComponent(v)}`;
+}
+
+function applyGmapLink(item, rawGmap) {
+  const actions = item.querySelector('.tl-actions');
+  if (!actions) return;
+  let a = actions.querySelector('.gmap-btn');
+  const href = toGmapHref(rawGmap);
+  if (!href) { if (a) a.remove(); return; }
+  if (!a) {
+    a = document.createElement('a');
+    a.className = 'gmap-btn';
+    a.target = '_blank';
+    a.textContent = '📍 구글맵';
+    actions.insertBefore(a, actions.firstChild);
+  }
+  a.href = href;
+}
+
+// 저장된 문자열(위도,경도 또는 구글맵 URL)에서 좌표를 추출
+function extractLatLng(raw) {
+  const v = (raw || '').trim();
+  if (!v) return null;
+  let m = v.match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
+  if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+  m = v.match(/[?&]q=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
+  if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+  return null;
+}
+
+function escEmText(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+// ── 장소 검색 (한국어는 Kakao, 그 외는 Nominatim) ──
+const EM_HANGUL_RE = /[가-힣]/;
+async function geocodeSearchProto(q) {
+  if (EM_HANGUL_RE.test(q)) {
+    const r = await fetch(`/api/kakao-search?q=${encodeURIComponent(q)}`);
+    const j = await r.json();
+    if (!r.ok || j.error) throw new Error(j.error || 'kakao search failed');
+    return (j.documents || []).map(d => ({
+      display_name: d.road_address_name ? `${d.place_name}, ${d.road_address_name}` : `${d.place_name}, ${d.address_name}`,
+      lat: parseFloat(d.y), lon: parseFloat(d.x)
+    }));
+  }
+  const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=6&accept-language=ko`, {
+    headers: { 'Accept-Language': 'ko' }
+  });
+  const list = await res.json();
+  return list.map(p => ({ display_name: p.display_name, lat: parseFloat(p.lat), lon: parseFloat(p.lon) }));
+}
+
+let emSelectedLat = null, emSelectedLng = null;
+let emSearchTimer = null, emSearchResultsCache = [];
+
+function emSearchPlace(q) {
+  clearTimeout(emSearchTimer);
+  const dd = document.getElementById('emPlaceDropdown');
+  emSelectedLat = null; emSelectedLng = null;
+  if (/^https?:\/\//i.test(q.trim())) { dd.style.display = 'none'; dd.innerHTML = ''; hideEmMiniMap(); return; }
+  if (!q || q.trim().length < 2) { dd.style.display = 'none'; dd.innerHTML = ''; hideEmMiniMap(); return; }
+  emSearchTimer = setTimeout(async () => {
+    try {
+      const list = await geocodeSearchProto(q.trim());
+      if (!list.length) { dd.innerHTML = `<div class="em-suggest-item" style="cursor:default;color:var(--sub)">검색 결과 없음</div>`; dd.style.display = 'block'; return; }
+      emSearchResultsCache = list;
+      dd.innerHTML = list.map((p, i) => `<div class="em-suggest-item" onclick="emSelectPlaceIdx(${i})">📍 ${escEmText(p.display_name.split(',').slice(0,3).join(', '))}</div>`).join('');
+      dd.style.display = 'block';
+    } catch(e) { dd.style.display = 'none'; }
+  }, 350);
+}
+
+function emSelectPlaceIdx(i) {
+  const p = emSearchResultsCache[i];
+  if (!p) return;
+  const short = p.display_name.split(',').slice(0,2).join(', ');
+  document.getElementById('emGmap').value = short;
+  document.getElementById('emPlaceDropdown').style.display = 'none';
+  emSelectedLat = p.lat; emSelectedLng = p.lon;
+  ensureEmMiniMap(p.lat, p.lon);
+}
+
+let emMiniLeaflet = null, emMiniMarker = null;
+function ensureEmMiniMap(lat, lng) {
+  document.getElementById('emMiniMapWrap').style.display = 'block';
+  if (!emMiniLeaflet) {
+    emMiniLeaflet = L.map('emMiniMap', { zoomControl: false, attributionControl: false }).setView([lat, lng], 15);
+    L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&hl=ko&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains: ['0','1','2','3'] }).addTo(emMiniLeaflet);
+    emMiniMarker = L.marker([lat, lng], { draggable: true }).addTo(emMiniLeaflet);
+    emMiniMarker.on('dragend', () => {
+      const p = emMiniMarker.getLatLng();
+      emSelectedLat = p.lat; emSelectedLng = p.lng;
+    });
+    emMiniLeaflet.on('click', e => {
+      emMiniMarker.setLatLng(e.latlng);
+      emSelectedLat = e.latlng.lat; emSelectedLng = e.latlng.lng;
+    });
+  } else {
+    emMiniLeaflet.setView([lat, lng], 15);
+    emMiniMarker.setLatLng([lat, lng]);
+  }
+  setTimeout(() => emMiniLeaflet && emMiniLeaflet.invalidateSize(), 60);
+}
+
+function hideEmMiniMap() {
+  document.getElementById('emMiniMapWrap').style.display = 'none';
 }
 
 function renderAdds(dayN, container) {
@@ -3800,6 +3961,7 @@ function renderAdds(dayN, container) {
         <div class="tl-desc">${a.desc||''}${a.cost?`<span class="cost-badge">${a.cost}</span>`:''}</div>
       </div>
       <div class="tl-actions">
+        ${a.gmap ? `<a class="gmap-btn" href="${toGmapHref(a.gmap)}" target="_blank">📍 구글맵</a>` : ''}
         <button class="edit-btn" onclick="openEditModal('${a.id}')">✏️ 수정</button>
         <button class="delete-btn" onclick="deleteAddItem('${a.id}',${dayN})">🗑️</button>
       </div>`;
@@ -3824,6 +3986,14 @@ function openEditModal(eid) {
   document.getElementById('emDesc').value  = saved.desc  ?? (descEl?.firstChild?.nodeType === 3 ? descEl.firstChild.textContent.trim() : descEl?.textContent?.trim() ?? '');
   const costEl = item.querySelector('.cost-badge');
   document.getElementById('emCost').value  = saved.cost  ?? costEl?.textContent ?? '';
+  const gmapEl = item.querySelector('.gmap-btn');
+  const gmapRaw = saved.gmap ?? gmapEl?.href ?? '';
+  document.getElementById('emGmap').value = gmapRaw;
+  document.getElementById('emPlaceDropdown').style.display = 'none';
+  emSelectedLat = null; emSelectedLng = null;
+  const coords = extractLatLng(gmapRaw);
+  if (coords) { emSelectedLat = coords.lat; emSelectedLng = coords.lng; ensureEmMiniMap(coords.lat, coords.lng); }
+  else hideEmMiniMap();
   document.getElementById('editModalBg').classList.add('open');
 }
 
@@ -3838,7 +4008,16 @@ function openAddModal(dayN) {
   document.getElementById('emPlace').value = '';
   document.getElementById('emDesc').value = '';
   document.getElementById('emCost').value = '';
+  document.getElementById('emGmap').value = '';
+  document.getElementById('emPlaceDropdown').style.display = 'none';
+  emSelectedLat = null; emSelectedLng = null;
+  hideEmMiniMap();
   document.getElementById('editModalBg').classList.add('open');
+}
+
+function emCurrentGmapValue() {
+  if (emSelectedLat != null && emSelectedLng != null) return `${emSelectedLat},${emSelectedLng}`;
+  return document.getElementById('emGmap').value.trim();
 }
 
 function saveEdit() {
@@ -3850,6 +4029,7 @@ function saveEdit() {
     place: document.getElementById('emPlace').value.trim(),
     desc:  document.getElementById('emDesc').value.trim(),
     cost:  document.getElementById('emCost').value.trim(),
+    gmap:  emCurrentGmapValue(),
   };
   const all = JSON.parse(localStorage.getItem(EDIT_KEY) || '{}');
   all[eid] = data;
@@ -3867,6 +4047,7 @@ function saveAdd() {
     place: document.getElementById('emPlace').value.trim(),
     desc:  document.getElementById('emDesc').value.trim(),
     cost:  document.getElementById('emCost').value.trim(),
+    gmap:  emCurrentGmapValue(),
   };
   const all = JSON.parse(localStorage.getItem(ADD_KEY) || '{}');
   if (!all[dayN]) all[dayN] = [];
@@ -4000,7 +4181,8 @@ function showToast(msg) {
 }
 
 // ── 초기화 ──
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  await kvReadyPromise;
   // 읽기전용 모드 확인
   if (new URLSearchParams(location.search).get('readonly')) {
     document.body.classList.add('readonly');
@@ -6286,6 +6468,15 @@ document.addEventListener('transitionend', e => {
     <div class="edit-field"><label>장소 / 제목</label><input id="emPlace" placeholder="장소 이름" /></div>
     <div class="edit-field"><label>설명</label><textarea id="emDesc" placeholder="상세 내용"></textarea></div>
     <div class="edit-field"><label>비용</label><input id="emCost" placeholder="예: €15/인" /></div>
+    <div class="edit-field" style="position:relative">
+      <label>구글맵 위치</label>
+      <input id="emGmap" placeholder="📍 장소 검색 (또는 구글맵 URL 붙여넣기)" oninput="emSearchPlace(this.value)" autocomplete="off" />
+      <div id="emPlaceDropdown" class="em-suggest"></div>
+      <div id="emMiniMapWrap" style="display:none;margin-top:8px">
+        <div id="emMiniMap" style="height:160px;border-radius:10px;overflow:hidden"></div>
+        <div style="font-size:11px;color:var(--sub);margin-top:5px">📌 지도를 클릭하면 위치를 미세 조정할 수 있어요</div>
+      </div>
+    </div>
     <div class="edit-modal-btns">
       <button id="emDeleteBtn" class="delete-btn" style="display:none;padding:10px 14px;font-size:12px" onclick="deleteItem(editTarget)">🗑️ 삭제</button>
       <button class="edit-reset-btn" onclick="resetEdit()" style="display:none" id="emResetBtn">초기화</button>

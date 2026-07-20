@@ -1234,6 +1234,10 @@ async function renderSchedule(container, tab, items) {
               <div id="placeDropdown" style="position:absolute;top:100%;left:0;right:0;z-index:500;background:#1e2240;border:1px solid #3a3f6b;border-radius:10px;overflow:hidden;margin-top:4px;box-shadow:0 8px 24px rgba(0,0,0,.5)"></div>
             </div>
           </div>
+          <div id="schedMiniMapWrap" style="display:none;margin:2px 0 10px">
+            <div id="schedMiniMap" style="height:160px;border-radius:10px;overflow:hidden"></div>
+            <div style="font-size:11px;color:var(--sub);margin-top:5px">📌 지도를 클릭하면 위치를 미세 조정할 수 있어요</div>
+          </div>
           <div class="form-row">
             <input class="f-inp" id="sContent" placeholder="내용">
           </div>
@@ -1393,6 +1397,7 @@ function renderSchedItems(items, date) {
       const pay = item.data.payMethod || '';
       const payBadge = pay==='cash'?'<span style="color:#66bb6a;font-size:10px;font-weight:700">현금</span>':pay==='card'?'<span style="color:#42a5f5;font-size:10px;font-weight:700">카드</span>':'';
       const costStr = costVal ? `${sym[cur]||cur}${costVal.toLocaleString()} ${payBadge}` : '';
+      const hasGeo = item.data.lat != null && item.data.lng != null;
       return `<div class="sched-item">
         <div class="sched-time">${item.data.time||''}</div>
         <div class="sched-body">
@@ -1402,6 +1407,7 @@ function renderSchedItems(items, date) {
           ${costStr?`<div class="sched-cost">💰 ${costStr}</div>`:''}
         </div>
         <div class="sched-item-actions">
+          ${hasGeo?`<a class="del-btn" style="background:rgba(67,160,71,.15);color:#66bb6a;text-decoration:none;display:inline-flex;align-items:center" href="https://www.google.com/maps?q=${item.data.lat},${item.data.lng}" target="_blank" rel="noopener noreferrer">📍 구글맵</a>`:''}
           <select class="del-btn" style="background:rgba(92,107,192,.15);color:#9fa8da;cursor:pointer" onchange="if(this.value)moveSchedItem('${item.id}',this.value)">
             <option value="">📅 이동</option>
             ${schedDates.filter(d=>d!==item.data.date).map(d=>`<option value="${d}">${d}</option>`).join('')}
@@ -1473,23 +1479,28 @@ async function addSchedItem(tabId) {
   const h = document.getElementById('sTimeH').value.padStart(2,'0');
   const mn = document.getElementById('sTimeM').value.padStart(2,'0');
   const time = (h !== '00' || mn !== '00') ? `${h}:${mn}` : '';
-  const place = document.getElementById('sPlace').value.trim();
+  const placeInp = document.getElementById('sPlace');
+  const place = placeInp.value.trim();
   const content = document.getElementById('sContent').value.trim();
   const cost = document.getElementById('sCost').value.trim();
   const currency = document.getElementById('sCurrency').value;
   const payMethod = currentPayMethod;
   const note = document.getElementById('sNote').value.trim();
+  const lat = placeInp.dataset.lat ? parseFloat(placeInp.dataset.lat) : null;
+  const lng = placeInp.dataset.lng ? parseFloat(placeInp.dataset.lng) : null;
   if (!place && !content) { alert('장소 또는 내용을 입력하세요'); return; }
   if (schedEditingId) {
     // 수정 모드: 기존 날짜 유지하며 PATCH
     const orig = schedItemsCache.find(i => i.id === schedEditingId);
     const keepDate = orig?.data?.date || date;
-    await sbPatch('tab_items', schedEditingId, { data: { date: keepDate, time, place, content, cost, currency, payMethod, note } });
+    await sbPatch('tab_items', schedEditingId, { data: { date: keepDate, time, place, content, cost, currency, payMethod, note, lat, lng } });
     cancelSchedEdit();
   } else {
-    await sbPost('tab_items', { tab_id: tabId, data: { date, time, place, content, cost, currency, payMethod, note }, sort_order: 0 });
+    await sbPost('tab_items', { tab_id: tabId, data: { date, time, place, content, cost, currency, payMethod, note, lat, lng }, sort_order: 0 });
   }
   ['sTimeH','sTimeM','sPlace','sContent','sCost','sNote'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  delete placeInp.dataset.lat; delete placeInp.dataset.lng;
+  hideSchedMiniMap();
   const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
   renderSchedDates(items);
   if (date) currentSchedDate = date;
@@ -1504,7 +1515,15 @@ function editSchedItem(id) {
   const [h, mn] = (d.time || ':').split(':');
   document.getElementById('sTimeH').value = h || '';
   document.getElementById('sTimeM').value = mn || '';
-  document.getElementById('sPlace').value = d.place || '';
+  const placeInp = document.getElementById('sPlace');
+  placeInp.value = d.place || '';
+  if (d.lat != null && d.lng != null) {
+    placeInp.dataset.lat = d.lat; placeInp.dataset.lng = d.lng;
+    ensureSchedMiniMap(d.lat, d.lng);
+  } else {
+    delete placeInp.dataset.lat; delete placeInp.dataset.lng;
+    hideSchedMiniMap();
+  }
   document.getElementById('sContent').value = d.content || '';
   document.getElementById('sCost').value = d.cost || '';
   document.getElementById('sCurrency').value = d.currency || 'KRW';
@@ -1528,6 +1547,9 @@ function cancelSchedEdit() {
   const cancel = document.getElementById('sCancelEdit');
   if (cancel) cancel.style.display = 'none';
   ['sTimeH','sTimeM','sPlace','sContent','sCost','sNote'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const placeInp = document.getElementById('sPlace');
+  if (placeInp) { delete placeInp.dataset.lat; delete placeInp.dataset.lng; }
+  hideSchedMiniMap();
   setPayMethod('cash');
 }
 
@@ -1629,6 +1651,9 @@ let placeSearchTimer = null;
 async function searchPlace(q) {
   clearTimeout(placeSearchTimer);
   const dd = document.getElementById('placeDropdown');
+  const inp = document.getElementById('sPlace');
+  delete inp.dataset.lat; delete inp.dataset.lng;
+  hideSchedMiniMap();
   if (!q || q.length < 2) { dd.innerHTML = ''; return; }
   placeSearchTimer = setTimeout(async () => {
     try {
@@ -1652,6 +1677,42 @@ function selectPlace(name, lat, lng) {
   // 좌표도 저장 (일정 저장 시 활용)
   document.getElementById('sPlace').dataset.lat = lat;
   document.getElementById('sPlace').dataset.lng = lng;
+  ensureSchedMiniMap(lat, lng);
+}
+
+let schedMiniLeaflet = null, schedMiniMarker = null;
+function ensureSchedMiniMap(lat, lng) {
+  lat = parseFloat(lat); lng = parseFloat(lng);
+  if (isNaN(lat) || isNaN(lng)) return;
+  const wrap = document.getElementById('schedMiniMapWrap');
+  if (wrap) wrap.style.display = 'block';
+  if (!schedMiniLeaflet) {
+    schedMiniLeaflet = L.map('schedMiniMap', { zoomControl: false, attributionControl: false }).setView([lat, lng], 15);
+    L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&hl=ko&x={x}&y={y}&z={z}', {
+      maxZoom: 20, subdomains: ['0','1','2','3']
+    }).addTo(schedMiniLeaflet);
+    schedMiniMarker = L.marker([lat, lng], { draggable: true }).addTo(schedMiniLeaflet);
+    const applyDrag = () => {
+      const p = schedMiniMarker.getLatLng();
+      const inp = document.getElementById('sPlace');
+      inp.dataset.lat = p.lat; inp.dataset.lng = p.lng;
+    };
+    schedMiniMarker.on('dragend', applyDrag);
+    schedMiniLeaflet.on('click', e => {
+      schedMiniMarker.setLatLng(e.latlng);
+      const inp = document.getElementById('sPlace');
+      inp.dataset.lat = e.latlng.lat; inp.dataset.lng = e.latlng.lng;
+    });
+  } else {
+    schedMiniLeaflet.setView([lat, lng], 15);
+    schedMiniMarker.setLatLng([lat, lng]);
+  }
+  setTimeout(() => schedMiniLeaflet && schedMiniLeaflet.invalidateSize(), 60);
+}
+
+function hideSchedMiniMap() {
+  const wrap = document.getElementById('schedMiniMapWrap');
+  if (wrap) wrap.style.display = 'none';
 }
 
 async function batchInsertSchedItems(items, tabId) {
