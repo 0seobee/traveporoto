@@ -540,7 +540,12 @@ async function handleImportBackup(input) {
 }
 </script>
 
-<!-- DASHBOARD (removed) -->
+<!-- DASHBOARD (로컬 전용 버전에서는 hub.html 대신 이 페이지 자체가 대시보드 역할을 한다) -->
+<div class="view" id="dashboard-view">
+  <div id="dashboard">
+    <div class="project-grid" id="projectGrid"></div>
+  </div>
+</div>
 
 <!-- PROJECT VIEW -->
 <div class="view" id="project-view">
@@ -674,7 +679,11 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
 
 // ── Dashboard ──
 function goHome() {
-  location.href = 'hub.html';
+  history.replaceState(null, '', location.pathname);
+  document.getElementById('project-view').classList.remove('active');
+  document.getElementById('dashboard-view').classList.add('active');
+  document.getElementById('navBack').style.display = 'none';
+  document.getElementById('navProjectName').style.display = 'none';
   document.getElementById('navMainBtn').textContent = '+ 새 여행';
   document.getElementById('navMainBtn').onclick = openProjectModal;
   currentProject = null;
@@ -769,6 +778,7 @@ async function deleteProject(id) {
 async function openProject(id) {
   currentProject = projects.find(p => p.id === id);
   if (!currentProject) return;
+  document.getElementById('dashboard-view').classList.remove('active');
   document.getElementById('project-view').classList.add('active');
   document.getElementById('navBack').style.display = 'block';
   document.getElementById('navProjectName').style.display = 'block';
@@ -3572,14 +3582,13 @@ async function addBudgetItem(tabId) {
   const params = new URLSearchParams(location.search);
   const pid = params.get('project');
   const isNew = params.get('new');
-  if (!pid && !isNew) { location.href = 'hub.html'; return; }
   await loadProjects();
   if (pid) {
     const p = projects.find(x => x.id === pid);
-    if (p) openProject(pid);
-  } else if (isNew) {
-    openProjectModal();
+    if (p) { openProject(pid); return; }
   }
+  document.getElementById('dashboard-view').classList.add('active');
+  if (isNew) openProjectModal();
 })();
 
 window.addEventListener('scroll', () => {
