@@ -1677,6 +1677,19 @@ const HANGUL_RE = /[가-힣]/;
 
 // 반환 형식을 { display_name, lat, lon } 배열로 통일
 async function geocodeSearch(q) {
+  // 1순위: Google Places (전세계 커버리지 + 한국식 표기 인식 우수). 키 미설정/실패 시 아래로 폴백.
+  try {
+    const gr = await fetch(`/api/google-places-search?q=${encodeURIComponent(q)}`);
+    const gj = await gr.json();
+    if (gr.ok && !gj.error && (gj.results || []).length) {
+      return gj.results.map(p => ({
+        display_name: p.formatted_address ? `${p.name}, ${p.formatted_address}` : p.name,
+        lat: p.geometry?.location?.lat,
+        lon: p.geometry?.location?.lng
+      }));
+    }
+  } catch (e) { /* Google Places 실패 시 아래 폴백으로 진행 */ }
+
   if (HANGUL_RE.test(q)) {
     const r = await fetch(`/api/kakao-search?q=${encodeURIComponent(q)}`);
     const j = await r.json();
