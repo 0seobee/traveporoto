@@ -4029,6 +4029,21 @@ function hideEmMiniMap() {
   document.getElementById('emMiniMapWrap').style.display = 'none';
 }
 
+// 타임라인 내 .tl-item들을 시간(HH:MM) 순서로 재정렬 ("+" 버튼은 항상 맨 아래 유지)
+function sortTimelineItems(container) {
+  if (!container) return;
+  const addBtn = container.querySelector('.add-tl-btn');
+  const timeVal = (item) => {
+    const t = item.querySelector('.tl-time .t')?.textContent.trim() || '';
+    const m = t.match(/^(\d{1,2}):(\d{2})/);
+    return m ? parseInt(m[1], 10) * 60 + parseInt(m[2], 10) : 99999;
+  };
+  const items = [...container.querySelectorAll('.tl-item')]
+    .filter(item => item.style.display !== 'none')
+    .sort((a, b) => timeVal(a) - timeVal(b));
+  items.forEach(item => container.insertBefore(item, addBtn || null));
+}
+
 function renderAdds(dayN, container) {
   container.querySelectorAll('.tl-item[data-added]').forEach(el => el.remove());
   const adds = (JSON.parse(localStorage.getItem(ADD_KEY) || '{}')[dayN] || []);
@@ -4052,6 +4067,7 @@ function renderAdds(dayN, container) {
     else container.appendChild(div);
     markPlaceClickable(div);
   });
+  sortTimelineItems(container);
 }
 
 function openEditModal(eid) {
@@ -4118,7 +4134,7 @@ function saveEdit() {
   const all = JSON.parse(localStorage.getItem(EDIT_KEY) || '{}');
   all[eid] = data;
   localStorage.setItem(EDIT_KEY, JSON.stringify(all));
-  if (item) applyEdit(item, data);
+  if (item) { applyEdit(item, data); sortTimelineItems(item.closest('.timeline')); }
   closeEditModal();
 }
 
@@ -4314,6 +4330,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 저장된 편집/삭제 내용 반영
   loadEdits();
+  // 시간 수정으로 순서가 바뀌었을 수 있으니 다시 정렬
+  document.querySelectorAll('.day-panel .timeline').forEach(sortTimelineItems);
 
   // 맛집 섹션 저장 내용 반영
   loadDiningEdits();
