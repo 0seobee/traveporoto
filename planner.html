@@ -1681,11 +1681,11 @@ async function geocodeSearch(q) {
   try {
     const gr = await fetch(`/api/google-places-search?q=${encodeURIComponent(q)}`);
     const gj = await gr.json();
-    if (gr.ok && !gj.error && (gj.results || []).length) {
-      return gj.results.map(p => ({
-        display_name: p.formatted_address ? `${p.name}, ${p.formatted_address}` : p.name,
-        lat: p.geometry?.location?.lat,
-        lon: p.geometry?.location?.lng
+    if (gr.ok && !gj.error && (gj.places || []).length) {
+      return gj.places.map(p => ({
+        display_name: p.formattedAddress ? `${p.displayName?.text}, ${p.formattedAddress}` : p.displayName?.text,
+        lat: p.location?.latitude,
+        lon: p.location?.longitude
       }));
     }
   } catch (e) { /* Google Places 실패 시 아래 폴백으로 진행 */ }

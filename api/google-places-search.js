@@ -10,11 +10,17 @@ export default async function handler(req, res) {
     return;
   }
   try {
-    const r = await fetch(
-      `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(q)}&language=ko&key=${key}`
-    );
+    const r = await fetch('https://places.googleapis.com/v1/places:searchText', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': key,
+        'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.location',
+      },
+      body: JSON.stringify({ textQuery: q, languageCode: 'ko' }),
+    });
     const data = await r.json();
-    res.status(200).json(data);
+    res.status(r.ok ? 200 : 500).json(data);
   } catch (e) {
     res.status(500).json({ error: 'google places request failed' });
   }
