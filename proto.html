@@ -3845,7 +3845,7 @@ function applyGmapLink(item, rawGmap) {
   if (!actions) return;
   let a = actions.querySelector('.gmap-btn');
   const href = toGmapHref(rawGmap);
-  if (!href) { if (a) a.remove(); return; }
+  if (!href) { if (a) a.remove(); markPlaceClickable(item); return; }
   if (!a) {
     a = document.createElement('a');
     a.className = 'gmap-btn';
@@ -3854,7 +3854,77 @@ function applyGmapLink(item, rawGmap) {
     actions.insertBefore(a, actions.firstChild);
   }
   a.href = href;
+  markPlaceClickable(item);
 }
+
+// tl-place에 좌표가 있는 gmap-btn이 있으면 클릭 가능하다는 시각적 표시 부여
+function markPlaceClickable(item) {
+  const place = item.querySelector('.tl-place');
+  if (!place) return;
+  const gmapBtn = item.querySelector('.gmap-btn');
+  const coords = gmapBtn ? extractLatLng(gmapBtn.getAttribute('href')) : null;
+  if (coords) {
+    place.style.cursor = 'pointer';
+    place.style.textDecoration = 'underline dotted';
+    place.title = '클릭하면 지도로 보기';
+  } else {
+    place.style.cursor = '';
+    place.style.textDecoration = '';
+    place.title = '';
+  }
+}
+
+let placePopupLeaflet = null, placePopupMarker = null;
+function showPlaceMapPopup(lat, lng, title) {
+  let bg = document.getElementById('placeMapPopupBg');
+  if (!bg) {
+    bg = document.createElement('div');
+    bg.id = 'placeMapPopupBg';
+    bg.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:2000;align-items:center;justify-content:center;padding:20px';
+    bg.innerHTML = `<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;max-width:420px;width:100%">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div id="placeMapPopupTitle" style="font-size:14px;font-weight:800;color:var(--text)"></div>
+        <button onclick="closePlaceMapPopup()" style="background:none;border:none;color:var(--sub);font-size:18px;cursor:pointer;line-height:1">✕</button>
+      </div>
+      <div id="placeMapPopupMap" style="height:220px;border-radius:10px;overflow:hidden"></div>
+      <a id="placeMapPopupLink" href="#" target="_blank" rel="noopener noreferrer" style="display:block;text-align:center;margin-top:10px;font-size:12px;color:var(--accent2)">구글맵에서 열기 →</a>
+    </div>`;
+    bg.addEventListener('click', e => { if (e.target === bg) closePlaceMapPopup(); });
+    document.body.appendChild(bg);
+  }
+  document.getElementById('placeMapPopupTitle').textContent = '📍 ' + (title || '');
+  document.getElementById('placeMapPopupLink').href = `https://www.google.com/maps?q=${lat},${lng}`;
+  bg.style.display = 'flex';
+  if (!placePopupLeaflet) {
+    placePopupLeaflet = L.map('placeMapPopupMap', { zoomControl: false, attributionControl: false }).setView([lat, lng], 16);
+    L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&hl=ko&x={x}&y={y}&z={z}', {
+      maxZoom: 20, subdomains: ['0','1','2','3']
+    }).addTo(placePopupLeaflet);
+    placePopupMarker = L.marker([lat, lng]).addTo(placePopupLeaflet);
+  } else {
+    placePopupLeaflet.setView([lat, lng], 16);
+    placePopupMarker.setLatLng([lat, lng]);
+  }
+  setTimeout(() => placePopupLeaflet && placePopupLeaflet.invalidateSize(), 60);
+}
+
+function closePlaceMapPopup() {
+  const bg = document.getElementById('placeMapPopupBg');
+  if (bg) bg.style.display = 'none';
+}
+
+document.addEventListener('click', (e) => {
+  const placeEl = e.target.closest('.tl-place');
+  if (!placeEl) return;
+  const item = placeEl.closest('.tl-item');
+  const gmapBtn = item?.querySelector('.gmap-btn');
+  if (!gmapBtn) return;
+  const coords = extractLatLng(gmapBtn.getAttribute('href'));
+  if (!coords) return;
+  const nameNode = placeEl.childNodes[0];
+  const name = nameNode && nameNode.nodeType === 3 ? nameNode.textContent.trim() : placeEl.textContent.trim();
+  showPlaceMapPopup(coords.lat, coords.lng, name);
+});
 
 // 저장된 문자열(위도,경도 또는 구글맵 URL)에서 좌표를 추출
 function extractLatLng(raw) {
@@ -3980,6 +4050,7 @@ function renderAdds(dayN, container) {
       </div>`;
     if (addBtn) container.insertBefore(div, addBtn);
     else container.appendChild(div);
+    markPlaceClickable(div);
   });
 }
 
@@ -4226,6 +4297,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       delBtn.onclick = () => deleteItem(eid);
       actions.appendChild(delBtn);
     }
+    markPlaceClickable(item);
   });
 
   // 모든 날짜 패널 타임라인 하단에 "+" 버튼 추가
