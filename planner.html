@@ -1402,7 +1402,7 @@ function renderSchedItems(items, date) {
         <div class="sched-time">${item.data.time||''}</div>
         <div class="sched-body">
           <div class="sched-content">${item.data.content||item.data.place||''}</div>
-          ${(item.data.place&&item.data.content)?`<div class="sched-place">📍 ${item.data.place}</div>`:''}
+          ${(item.data.place&&item.data.content)?`<div class="sched-place"${hasGeo?` style="cursor:pointer;text-decoration:underline dotted" onclick="showPlaceMapPopup('${item.id}')" title="클릭하면 지도로 보기"`:''}>📍 ${item.data.place}</div>`:''}
           ${item.data.note?`<div class="sched-note">💡 ${item.data.note}</div>`:''}
           ${costStr?`<div class="sched-cost">💰 ${costStr}</div>`:''}
         </div>
@@ -1418,6 +1418,48 @@ function renderSchedItems(items, date) {
       </div>`;
     }).join('')
   }</div>`;
+}
+
+let placePopupLeaflet = null, placePopupMarker = null;
+function showPlaceMapPopup(itemId) {
+  const item = schedItemsCache.find(i => i.id === itemId);
+  if (!item || item.data.lat == null || item.data.lng == null) return;
+  const lat = parseFloat(item.data.lat), lng = parseFloat(item.data.lng);
+  let bg = document.getElementById('placeMapPopupBg');
+  if (!bg) {
+    bg = document.createElement('div');
+    bg.id = 'placeMapPopupBg';
+    bg.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:2000;align-items:center;justify-content:center;padding:20px';
+    bg.innerHTML = `<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;max-width:420px;width:100%">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div id="placeMapPopupTitle" style="font-size:14px;font-weight:800;color:var(--text)"></div>
+        <button onclick="closePlaceMapPopup()" style="background:none;border:none;color:var(--sub);font-size:18px;cursor:pointer;line-height:1">✕</button>
+      </div>
+      <div id="placeMapPopupMap" style="height:220px;border-radius:10px;overflow:hidden"></div>
+      <a id="placeMapPopupLink" href="#" target="_blank" rel="noopener noreferrer" style="display:block;text-align:center;margin-top:10px;font-size:12px;color:var(--accent2)">구글맵에서 열기 →</a>
+    </div>`;
+    bg.addEventListener('click', e => { if (e.target === bg) closePlaceMapPopup(); });
+    document.body.appendChild(bg);
+  }
+  document.getElementById('placeMapPopupTitle').textContent = '📍 ' + (item.data.place || '');
+  document.getElementById('placeMapPopupLink').href = `https://www.google.com/maps?q=${lat},${lng}`;
+  bg.style.display = 'flex';
+  if (!placePopupLeaflet) {
+    placePopupLeaflet = L.map('placeMapPopupMap', { zoomControl: false, attributionControl: false }).setView([lat, lng], 16);
+    L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&hl=ko&x={x}&y={y}&z={z}', {
+      maxZoom: 20, subdomains: ['0','1','2','3']
+    }).addTo(placePopupLeaflet);
+    placePopupMarker = L.marker([lat, lng]).addTo(placePopupLeaflet);
+  } else {
+    placePopupLeaflet.setView([lat, lng], 16);
+    placePopupMarker.setLatLng([lat, lng]);
+  }
+  setTimeout(() => placePopupLeaflet && placePopupLeaflet.invalidateSize(), 60);
+}
+
+function closePlaceMapPopup() {
+  const bg = document.getElementById('placeMapPopupBg');
+  if (bg) bg.style.display = 'none';
 }
 
 async function moveSchedItem(id, newDate) {
