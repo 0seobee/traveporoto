@@ -1,0 +1,3592 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🗺️ 여행 플래너 (내 브라우저 저장)</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0f1a;--surface:#13162a;--card:#181c30;--border:#252940;
+  --text:#e8eaf6;--sub:#7b80a0;--accent:#5c6bc0;--accent2:#7986cb;
+}
+body.light{
+  --bg:#eef1f9;--surface:#ffffff;--card:#ffffff;--border:#d5daee;
+  --text:#22283f;--sub:#6b7290;--accent:#5c6bc0;--accent2:#3f51b5;
+}
+body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;min-height:100vh}
+/* ── 라이트 테마 보정 ── */
+body.light nav{background:rgba(255,255,255,.92)}
+body.light .nav-back{background:rgba(0,0,0,.05);color:var(--text)}
+body.light .nav-back:hover{background:rgba(0,0,0,.1)}
+body.light .nav-project-name{color:#3f51b5}
+body.light .f-inp,body.light .f-sel,body.light .modal-inp{background:rgba(0,0,0,.04);color:var(--text)}
+body.light .f-inp::placeholder,body.light .modal-inp::placeholder{color:#9aa0bd}
+body.light .modal-btn.cancel{background:rgba(0,0,0,.05);color:var(--text)}
+body.light .ps-header{background:rgba(0,0,0,.025)}
+body.light .ps-header:hover{background:rgba(0,0,0,.05)}
+body.light .list-table th{background:rgba(0,0,0,.05)}
+body.light .list-table tr:hover td{background:rgba(0,0,0,.02)}
+body.light .tab-type-card{background:#f4f6fc}
+body.light .pay-toggle{color:var(--sub)}
+body.light .sched-item,body.light .file-item{box-shadow:0 1px 6px rgba(30,40,90,.06)}
+body.light .icard-group{box-shadow:0 1px 6px rgba(30,40,90,.06)}
+body.light .modal-inp[type="date"]{color-scheme:light;color:var(--text)}
+body.light .scroll-list::-webkit-scrollbar-track{background:rgba(0,0,0,.05)}
+body.light .day-hero,body.light .project-card-cover{color:#fff}
+body.light nav a[href="hub.html"]{background:rgba(0,0,0,.05)!important;color:var(--text)!important}
+body.light .f-inp option{background:#fff;color:var(--text)}
+body.light .cl-check{border-color:#b8bedd}
+body.light .tab-del{color:var(--sub)}
+body.light .map-sidebar-header .badge{background:rgba(92,107,192,.15)}
+body.light .slide-nav,body.light .slide-counter{color:#fff}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:300;background:rgba(13,15,26,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);height:52px;display:flex;align-items:center;padding:0 20px;gap:12px}
+.nav-logo{font-size:17px;font-weight:800;cursor:pointer;white-space:nowrap}
+.nav-back{background:rgba(255,255,255,.08);border:1px solid var(--border);color:var(--text);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;display:none;font-family:inherit}
+.nav-back:hover{background:rgba(255,255,255,.14)}
+.nav-project-name{font-size:14px;font-weight:700;color:#9fa8da;display:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}
+.nav-spacer{flex:1}
+.nav-btn{background:var(--accent);color:#fff;border:none;border-radius:20px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
+.nav-btn:hover{background:#7986cb}
+
+/* ── VIEWS ── */
+.view{display:none;padding-top:52px;min-height:100vh}
+.view.active{display:flex;flex-direction:column;height:100vh}
+.tab-content{-webkit-overflow-scrolling:touch;min-height:0}
+
+/* ── DASHBOARD ── */
+#dashboard{padding:32px 24px;max-width:1100px;margin:0 auto}
+.dash-header{margin-bottom:28px}
+.dash-title{font-size:28px;font-weight:900;margin-bottom:6px}
+.dash-sub{color:var(--sub);font-size:14px}
+.project-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.project-card{background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden;cursor:pointer;transition:.2s;position:relative}
+.project-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.project-card-cover{height:90px;display:flex;align-items:center;justify-content:center;font-size:40px;position:relative}
+.project-card-actions{position:absolute;top:8px;right:8px;display:flex;gap:4px;opacity:0;transition:.2s}
+.project-card:hover .project-card-actions{opacity:1}
+.card-action-btn{background:rgba(0,0,0,.5);border:none;color:#fff;border-radius:8px;width:26px;height:26px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:.2s}
+.card-action-btn:hover{background:rgba(229,57,53,.7)}
+.project-card-body{padding:14px 16px}
+.project-card-name{font-size:15px;font-weight:800;margin-bottom:4px}
+.project-card-dest{font-size:12px;color:var(--sub);margin-bottom:6px}
+.project-card-dates{font-size:11px;color:var(--accent2);background:rgba(92,107,192,.12);border-radius:10px;padding:3px 10px;display:inline-block}
+.project-card-new{border:2px dashed var(--border);background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:180px;color:var(--sub);font-size:14px;font-weight:600}
+.project-card-new:hover{border-color:var(--accent);color:var(--accent2)}
+.project-card-new .plus{font-size:32px}
+
+/* ── PROJECT VIEW ── */
+#project-view{display:none;flex-direction:column}
+#project-view.active{display:flex}
+.project-header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:16px}
+.project-header-emoji{font-size:28px}
+.project-header-info{flex:1}
+.project-header-name{font-size:18px;font-weight:800}
+.project-header-meta{font-size:12px;color:var(--sub);margin-top:2px}
+
+/* ── HERO ── */
+.project-hero{position:relative;min-height:70vh;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;flex-shrink:0}
+.hero-bg{position:absolute;inset:0;background-size:cover;background-position:center;background-color:#1a237e;transition:.5s}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.15) 0%,rgba(0,0,0,.65) 60%,rgba(0,0,0,.85) 100%)}
+.hero-body{position:relative;z-index:1;padding:40px 48px;color:#fff}
+.hero-emoji{font-size:56px;margin-bottom:16px;filter:drop-shadow(0 4px 12px rgba(0,0,0,.4))}
+.hero-title{font-size:clamp(32px,6vw,64px);font-weight:900;line-height:1.1;margin-bottom:10px;text-shadow:0 2px 16px rgba(0,0,0,.5)}
+.hero-sub{font-size:15px;color:rgba(255,255,255,.75);margin-bottom:24px}
+.hero-stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px}
+.hero-stat{background:rgba(255,255,255,.12);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:10px 18px;text-align:center}
+.hero-stat-val{font-size:22px;font-weight:900;display:block}
+.hero-stat-label{font-size:11px;color:rgba(255,255,255,.7);margin-top:2px;display:block}
+.hero-btns{display:flex;gap:10px;flex-wrap:wrap}
+.hero-btn{border:none;border-radius:24px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;display:flex;align-items:center;gap:6px}
+.hero-btn.primary{background:#e53935;color:#fff}
+.hero-btn.primary:hover{background:#ef5350}
+.hero-btn.secondary{background:rgba(255,255,255,.15);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.3);color:#fff}
+.hero-btn.secondary:hover{background:rgba(255,255,255,.25)}
+.hero-bg-btn{position:absolute;top:16px;right:16px;z-index:2;background:rgba(0,0,0,.4);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:.2s}
+.hero-bg-btn:hover{background:rgba(0,0,0,.6)}
+
+/* ── TAB BAR ── */
+.tab-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;gap:4px;overflow-x:auto;min-height:46px}
+.tab-bar::-webkit-scrollbar{display:none}
+.tab-btn{border:none;background:transparent;color:var(--sub);padding:12px 14px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;border-bottom:2px solid transparent;transition:.2s;display:flex;align-items:center;gap:5px;position:relative}
+.tab-btn.on{color:var(--text);border-bottom-color:var(--accent)}
+.tab-btn:hover:not(.on){color:var(--text)}
+.tab-del{background:rgba(229,57,53,.15);border:none;color:#ef9a9a;border-radius:50%;width:16px;height:16px;font-size:10px;cursor:pointer;display:none;align-items:center;justify-content:center;margin-left:2px;font-family:inherit}
+.tab-btn:hover .tab-del{display:flex}
+.tab-add-btn{border:1px dashed var(--border);background:transparent;color:var(--sub);border-radius:16px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;margin-left:8px;transition:.2s}
+.tab-add-btn:hover{border-color:var(--accent);color:var(--accent2)}
+.tab-btn.dragging{opacity:.4}
+.tab-bar.tab-drag-active{overflow-x:hidden}
+
+/* ── FLIGHT ── */
+.flight-leg{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px 20px}
+.flight-leg-head{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--sub);margin-bottom:14px}
+.flight-leg-actions{display:flex;gap:6px}
+.flight-route{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.flight-airport{text-align:center;flex:1}
+.flight-code{font-size:26px;font-weight:900}
+.flight-name{font-size:12px;color:var(--sub);margin-bottom:4px}
+.flight-time{font-size:15px;font-weight:800;color:var(--accent2)}
+.flight-mid{flex:0 0 auto;text-align:center;color:var(--sub);font-size:16px}
+.flight-duration{font-size:11px;color:var(--sub);white-space:nowrap;margin-top:2px}
+.flight-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.flight-badge{font-size:11px;background:rgba(92,107,192,.15);color:var(--accent2);border-radius:10px;padding:3px 10px;font-weight:600}
+@media(max-width:700px){
+  #tabContent [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
+  .flight-code{font-size:20px}
+}
+
+/* ── TAB CONTENT ── */
+.tab-content{flex:1;overflow:auto}
+.tab-pane{display:none;height:100%}
+.tab-pane.active{display:block}
+
+/* ── COMMON SECTION ── */
+.pane-wrap{padding:24px;max-width:1000px;margin:0 auto}
+.pane-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.pane-title{font-size:18px;font-weight:800}
+.add-btn{background:var(--accent);color:#fff;border:none;border-radius:20px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
+.add-btn:hover{background:#7986cb}
+.del-btn{background:rgba(229,57,53,.12);border:1px solid rgba(229,57,53,.25);color:#ef9a9a;border-radius:8px;padding:3px 8px;font-size:11px;cursor:pointer;font-family:inherit;transition:.2s}
+.del-btn:hover{background:rgba(229,57,53,.25)}
+
+/* ── FORM ── */
+.form-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:20px}
+.form-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.form-row:last-child{margin-bottom:0}
+.f-inp{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:8px 12px;font-family:inherit;outline:none;flex:1;min-width:120px}
+.f-inp:focus{border-color:var(--accent)}
+.f-inp::placeholder{color:var(--sub)}
+.f-inp option{background:#1e2240;color:#e8eaf6;font-size:14px;padding:6px}
+.f-sel{background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:8px 12px;font-family:inherit;cursor:pointer}
+.f-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+.f-btn:hover{background:#7986cb}
+.f-btn.secondary{background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--text)}
+.f-btn.secondary:hover{background:rgba(255,255,255,.1)}
+textarea.f-inp{resize:vertical;min-height:60px}
+
+/* ── CHECKLIST ── */
+.cl-list{display:flex;flex-direction:column;gap:6px}
+.cl-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:.2s}
+.cl-item:hover{border-color:var(--accent)}
+.cl-item.done{opacity:.5}
+.cl-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;transition:.2s}
+.cl-item.done .cl-check{background:var(--accent);border-color:var(--accent);color:#fff}
+.cl-text{flex:1;font-size:13px;cursor:text}
+.cl-text:focus{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.card-editable-title:focus,.card-editable-detail:focus,.card-editable-link:focus,.card-editable-place:focus{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.card-editable-detail:empty:before,.card-editable-link:empty:before,.card-editable-place:empty:before,.card-badge-tag:empty:before,.card-price-tag:empty:before{content:attr(data-placeholder);color:var(--sub);opacity:.6}
+.card-badge-tag{font-size:10px;font-weight:700;background:rgba(92,107,192,.18);color:var(--accent2);border-radius:8px;padding:2px 8px;cursor:text;white-space:nowrap;flex-shrink:0}
+.card-price-tag{font-size:11px;font-weight:700;color:#ffb74d;cursor:text;white-space:nowrap;flex-shrink:0}
+.card-icon-btn{cursor:pointer;position:relative}
+.card-icon-picker{display:none;position:absolute;top:24px;left:0;z-index:60;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px;width:220px;flex-wrap:wrap;gap:4px;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.card-icon-picker span:hover{background:rgba(92,107,192,.3)}
+.cl-item.done .cl-text{text-decoration:line-through}
+.cl-cat-badge{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(92,107,192,.15);color:var(--accent2)}
+.cl-group{margin-bottom:8px;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.cl-group-label{font-size:12px;font-weight:800;letter-spacing:.5px;color:var(--text);padding:10px 14px;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;background:rgba(128,128,160,.08);transition:.15s}
+.cl-group-label:hover{background:rgba(255,255,255,.06)}
+.cl-group-label .cl-group-arrow{margin-left:auto;font-size:11px;color:#7b80a0;transition:transform .2s}
+.cl-group.collapsed .cl-group-arrow{transform:rotate(-90deg)}
+.cl-group-body{padding:6px 8px 8px}
+.cl-group-body{overflow:hidden;transition:max-height .32s cubic-bezier(.4,0,.2,1);max-height:3000px}
+.cl-group.collapsed .cl-group-body{max-height:0!important}
+
+/* ── PANE SECTION COLLAPSE ── */
+.ps{border:1px solid var(--border);border-radius:12px;margin-bottom:12px;overflow:hidden}
+.ps-header{display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;user-select:none;background:rgba(255,255,255,.03);transition:.15s}
+.ps-header:hover{background:rgba(255,255,255,.06)}
+.ps-title{font-size:13px;font-weight:800;color:var(--accent2);flex:1}
+.ps-count{font-size:11px;color:var(--sub)}
+.ps-arrow{font-size:12px;color:var(--sub);transition:transform .25s}
+.ps.collapsed .ps-arrow{transform:rotate(-90deg)}
+.ps-body{overflow:hidden;transition:max-height .35s cubic-bezier(.4,0,.2,1);max-height:4000px}
+.ps:not(.collapsed) .ps-body{overflow-x:auto;overflow-y:visible}
+.ps.collapsed .ps-body{max-height:0!important;overflow:hidden}
+
+/* ── 목록 내부 스크롤 ── */
+.scroll-list{max-height:62vh;overflow-y:auto;overflow-x:auto;padding-right:4px}
+.list-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scroll-list{scrollbar-width:thin;scrollbar-color:rgba(92,107,192,.7) rgba(128,128,160,.15)}
+.scroll-list::-webkit-scrollbar{width:11px;height:11px}
+.scroll-list::-webkit-scrollbar-track{background:rgba(128,128,160,.12);border-radius:6px}
+.scroll-list::-webkit-scrollbar-thumb{background:rgba(92,107,192,.65);border-radius:6px;border:2px solid transparent;background-clip:padding-box}
+.scroll-list::-webkit-scrollbar-thumb:hover{background:rgba(92,107,192,.95);background-clip:padding-box}
+.pane-collapse-btn{background:transparent;border:1px solid var(--border);border-radius:20px;color:var(--sub);font-size:12px;font-weight:700;padding:4px 12px;cursor:pointer;font-family:inherit;transition:.2s;white-space:nowrap}
+.pane-collapse-btn:hover{border-color:var(--accent);color:var(--accent2)}
+
+/* ── LIST (TABLE) ── */
+.list-table{width:100%;border-collapse:collapse;margin-top:8px}
+.list-table th{background:rgba(0,0,0,.25);padding:9px 12px;font-size:11px;color:var(--sub);text-align:left;border-bottom:1px solid var(--border)}
+.list-table td{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px;vertical-align:middle}
+.list-table tr:hover td{background:rgba(255,255,255,.02)}
+.budget-drag-handle{cursor:grab;color:var(--sub);text-align:center;width:20px;touch-action:none;user-select:none}
+.budget-row.dragging{opacity:.4}
+.list-table td.list-editable{cursor:text}
+.list-table td.list-editable:hover{background:rgba(92,107,192,.08)}
+.list-table td.list-editable:focus{outline:2px solid var(--accent);outline-offset:-2px;background:rgba(92,107,192,.12)}
+.list-done-toggle{cursor:pointer;font-size:16px}
+.list-done{opacity:.45;text-decoration:line-through}
+
+/* ── CARD ── */
+.icard-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.icard-group{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px 18px}
+.icard-group-title{font-size:13px;font-weight:800;color:#7986cb;letter-spacing:.5px;padding-bottom:8px;margin-bottom:4px;border-bottom:1px solid var(--border)}
+
+#schedSheetBox.open{display:flex!important}
+.pay-toggle{background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--sub);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;white-space:nowrap}
+.pay-toggle.on{background:rgba(92,107,192,.25);border-color:var(--accent);color:var(--text)}
+.sched-cost-bar{background:rgba(92,107,192,.08);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:12px}
+.sched-cost-item{display:flex;align-items:center;gap:5px}
+.sched-cost-label{color:var(--sub);font-weight:600}
+.sched-cost-val{font-weight:800;color:var(--text)}
+.sched-cost-cash{color:#66bb6a}
+.sched-cost-card{color:#42a5f5}
+/* ── SCHEDULE ── */
+.sched-dates{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+.date-tab{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:6px}
+.date-tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.date-tab-del{background:none;border:none;color:inherit;cursor:pointer;font-size:11px;opacity:.6;padding:0}
+.date-tab-del:hover{opacity:1}
+.sched-timeline{display:flex;flex-direction:column;gap:10px}
+.sched-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;gap:14px;align-items:flex-start}
+.sched-time{font-size:13px;font-weight:800;color:var(--accent2);min-width:50px;text-align:center;padding-top:2px}
+.sched-body{flex:1}
+.sched-place{font-size:12px;color:var(--sub);line-height:1.5;margin-top:3px}
+.sched-content{font-size:14px;font-weight:700;margin-bottom:0}
+.sched-note{font-size:11px;color:#7986cb;margin-top:4px;background:rgba(92,107,192,.08);border-radius:6px;padding:4px 8px;display:inline-block}
+.sched-cost{font-size:11px;color:#a5d6a7;margin-top:4px}
+.sched-item-actions{display:flex;gap:4px;flex-shrink:0}
+
+/* ── MAP ── */
+.map-wrap{display:flex;flex-direction:column;height:calc(100vh - 160px)}
+.map-layer-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.map-layer-btn{border:none;border-radius:16px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;opacity:.45;color:#fff}
+.map-layer-btn.on{opacity:1}
+.map-layout{display:grid;grid-template-columns:1fr 300px;gap:0;flex:1;overflow:hidden}
+@media(max-width:768px){.map-layout{grid-template-columns:1fr}}
+#tab-map-el{width:100%;height:100%;min-height:400px}
+.map-sidebar{background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.map-sidebar-header{padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px}
+.map-sidebar-header .badge{font-size:11px;background:rgba(92,107,192,.2);color:var(--accent2);border-radius:10px;padding:1px 8px}
+.map-kml-btn{margin-left:auto;background:rgba(92,107,192,.15);border:1px solid var(--accent);color:var(--accent2);border-radius:12px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:.2s}
+.map-kml-btn:hover{background:rgba(92,107,192,.3)}
+.map-place-list{flex:1;overflow-y:auto;padding:8px}
+.map-place-list::-webkit-scrollbar{width:4px}
+.map-place-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.map-place-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:6px;cursor:pointer;transition:.2s}
+.map-place-item:hover{border-color:var(--accent)}
+.map-place-name{font-size:13px;font-weight:700;margin-bottom:2px}
+.map-place-desc{font-size:11px;color:var(--sub)}
+.map-place-layer{display:inline-block;font-size:10px;font-weight:700;border-radius:8px;padding:1px 7px;color:#fff;margin-top:4px}
+.map-add-form{padding:12px;border-top:1px solid var(--border)}
+.map-add-form .f-inp{margin-bottom:6px;width:100%}
+.map-coord-row{display:flex;gap:6px;margin-bottom:6px}
+.map-coord-hint{font-size:10px;color:var(--sub);margin-bottom:6px}
+
+/* ── SLIDES ── */
+.slide-viewer{display:flex;flex-direction:column;gap:12px;padding:8px 0}
+.slide-stage{position:relative;background:#111;border-radius:14px;overflow:hidden;aspect-ratio:16/9;cursor:pointer}
+.slide-stage img{width:100%;height:100%;object-fit:contain;display:block;transition:opacity .2s}
+.slide-nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:none;background:rgba(0,0,0,.5);color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;z-index:2}
+.slide-nav:hover{background:var(--accent)}
+.slide-prev{left:12px}.slide-next{right:12px}
+.slide-counter{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;font-size:13px;font-weight:700;padding:4px 14px;border-radius:20px;z-index:2;pointer-events:none}
+.slide-thumbs{display:flex;gap:8px;overflow-x:auto;padding:4px 2px}
+.slide-thumbs::-webkit-scrollbar{height:4px}
+.slide-thumbs::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.slide-thumb{height:52px;border-radius:6px;cursor:pointer;border:2px solid transparent;opacity:.5;transition:.15s;flex-shrink:0;object-fit:cover}
+.slide-thumb.on{border-color:var(--accent);opacity:1}
+.slide-thumb:hover{opacity:.85}
+
+/* ── FILE ── */
+.file-list{display:flex;flex-direction:column;gap:8px}
+.file-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px}
+.file-icon{font-size:28px;flex-shrink:0}
+.file-info{flex:1}
+.file-name{font-size:14px;font-weight:700;margin-bottom:2px}
+.file-meta{font-size:11px;color:var(--sub)}
+.file-link{font-size:12px;color:var(--accent2);text-decoration:none;display:block;margin-top:4px;word-break:break-all}
+.file-link:hover{text-decoration:underline}
+
+/* ── GALLERY ── */
+.gal-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.gal-upload-btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
+.gal-upload-btn:hover{background:#7986cb}
+.gal-upload-btn:disabled{opacity:.5;cursor:wait}
+.gal-nick{font-size:12px;color:var(--sub)}
+.gal-nick b{color:var(--accent2)}
+.gal-nick-change{background:none;border:none;color:var(--sub);font-size:11px;cursor:pointer;text-decoration:underline;font-family:inherit}
+.gal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.gal-item{position:relative;border-radius:12px;overflow:hidden;background:var(--card);border:1px solid var(--border);cursor:pointer;aspect-ratio:1}
+.gal-item img{width:100%;height:100%;object-fit:cover;display:block;transition:.2s}
+.gal-item:hover img{transform:scale(1.05)}
+.gal-item-info{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(0,0,0,.75));padding:18px 8px 6px;font-size:11px;color:#fff;display:flex;justify-content:space-between;align-items:flex-end;gap:4px}
+.gal-item-nick{font-weight:700}
+.gal-item-del{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);border:none;color:#fff;border-radius:8px;width:24px;height:24px;cursor:pointer;font-size:12px;opacity:0;transition:.2s}
+.gal-item:hover .gal-item-del{opacity:1}
+.gal-item-del:hover{background:rgba(229,57,53,.8)}
+.gal-progress{font-size:12px;color:var(--accent2)}
+/* 라이트박스 */
+.gal-lightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:900;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:20px}
+.gal-lightbox.open{display:flex}
+.gal-lightbox img{max-width:92vw;max-height:80vh;object-fit:contain;border-radius:8px}
+.gal-lb-meta{color:#fff;font-size:13px;text-align:center}
+.gal-lb-meta .nick{font-weight:800;color:#9fa8da}
+.gal-lb-close{position:absolute;top:16px;right:20px;background:rgba(255,255,255,.12);border:none;color:#fff;border-radius:50%;width:40px;height:40px;font-size:18px;cursor:pointer}
+.gal-lb-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.1);border:none;color:#fff;border-radius:50%;width:44px;height:44px;font-size:20px;cursor:pointer}
+.gal-lb-nav:hover{background:rgba(255,255,255,.25)}
+.gal-lb-nav.prev{left:14px}
+.gal-lb-nav.next{right:14px}
+@media(max-width:600px){.gal-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}}
+
+/* ── MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-bg.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:18px;font-weight:800;margin-bottom:20px}
+.modal-label{font-size:12px;color:var(--sub);margin-bottom:6px;display:block;font-weight:600}
+.modal-inp{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;padding:10px 14px;font-family:inherit;outline:none;margin-bottom:14px}
+.modal-inp[type="date"]{color-scheme:dark;color:#e8eaf6}
+.modal-inp:focus{border-color:var(--accent)}
+.modal-btns{display:flex;gap:10px;margin-top:4px}
+.modal-btn{flex:1;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
+.modal-btn.primary{background:var(--accent);color:#fff}
+.modal-btn.primary:hover{background:#7986cb}
+.modal-btn.cancel{background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--text)}
+.modal-btn.cancel:hover{background:rgba(255,255,255,.1)}
+
+/* ── TAB TYPE SELECTOR ── */
+.tab-type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.tab-type-card{background:var(--surface);border:2px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:.2s}
+.tab-type-card:hover,.tab-type-card.on{border-color:var(--accent);background:rgba(92,107,192,.1)}
+.tab-type-card .icon{font-size:24px;margin-bottom:6px}
+.tab-type-card .label{font-size:12px;font-weight:700}
+
+/* ── EMOJI PICKER ── */
+.emoji-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.emoji-opt{font-size:24px;cursor:pointer;padding:4px;border-radius:8px;transition:.2s}
+.emoji-opt:hover,.emoji-opt.on{background:rgba(92,107,192,.2)}
+
+/* ── COLOR PICKER ── */
+.color-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.color-opt{width:32px;height:32px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:.2s}
+.color-opt:hover,.color-opt.on{border-color:#fff}
+
+/* ── PROGRESS BAR ── */
+.progress-bar-wrap{background:var(--surface);border-radius:20px;height:6px;margin-bottom:16px;overflow:hidden}
+.progress-bar{background:var(--accent);height:100%;border-radius:20px;transition:.4s}
+
+/* ── EMPTY STATE ── */
+.empty-state{text-align:center;padding:60px 24px;color:var(--sub)}
+.empty-state .icon{font-size:48px;margin-bottom:12px}
+.empty-state p{font-size:14px}
+
+/* ── MISC ── */
+.badge{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(92,107,192,.15);color:var(--accent2);font-weight:700}
+
+/* ── RESPONSIVE (mobile) ── */
+@media(max-width:600px){
+  /* NAV */
+  nav{padding:0 10px;gap:6px}
+  .nav-logo{font-size:0}/* 아이콘만 표시 */
+  .nav-logo::before{content:'🗺️';font-size:20px}
+  .nav-project-name{max-width:120px;font-size:12px}
+  .nav-btn{padding:6px 12px;font-size:12px}
+  .nav-back{padding:5px 10px;font-size:11px}
+
+  /* HERO */
+  .project-hero{min-height:55vh}
+  .hero-body{padding:20px 16px 24px}
+  .hero-emoji{font-size:36px;margin-bottom:10px}
+  .hero-title{font-size:clamp(22px,7vw,36px);margin-bottom:6px}
+  .hero-sub{font-size:13px;margin-bottom:16px}
+  .hero-stats{gap:8px;margin-bottom:20px}
+  .hero-stat{padding:8px 12px}
+  .hero-stat-val{font-size:18px}
+  .hero-stat-label{font-size:10px}
+  .hero-btns{gap:8px}
+  .hero-btn{padding:9px 16px;font-size:13px}
+  .hero-bg-btn{font-size:11px;padding:5px 10px;top:10px;right:10px}
+
+  /* PROJECT HEADER */
+  .project-header{padding:10px 14px;gap:10px}
+  .project-header-emoji{font-size:22px}
+  .project-header-name{font-size:15px}
+
+  /* TAB BAR */
+  .tab-bar{padding:0 8px;min-height:40px}
+  .tab-btn{padding:10px 10px;font-size:12px;gap:3px}
+  .tab-add-btn{padding:4px 10px;font-size:11px;margin-left:4px}
+
+  /* PANE */
+  .pane-wrap{padding:14px 12px}
+  .pane-header{margin-bottom:14px}
+  .pane-title{font-size:16px}
+
+  /* FORM */
+  .form-box{padding:14px 12px}
+  .form-row{gap:8px}
+  .f-inp,.f-sel{font-size:16px}/* iOS 자동 확대 방지 */
+  .f-btn{padding:9px 14px;font-size:13px}
+
+  /* SCHEDULE */
+  .sched-item{padding:10px 12px;gap:10px}
+  .sched-time{min-width:42px;font-size:12px}
+  .sched-place{font-size:11px}
+  .sched-content{font-size:13px}
+  .date-tab{padding:5px 10px;font-size:11px}
+  .sched-cost-bar{padding:8px 10px;gap:8px}
+
+  /* CHECKLIST */
+  .cl-item{padding:9px 12px;gap:8px}
+  .cl-text{font-size:12px}
+  .cl-group-label{padding:9px 12px;font-size:11px}
+
+  /* LIST TABLE */
+  .list-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .list-table{min-width:520px}
+
+  /* CARD */
+  .icard-grid{grid-template-columns:1fr}
+
+  /* MAP */
+  .map-wrap{height:calc(100vh - 140px)}
+  .map-add-form .f-inp{font-size:16px}
+
+  /* SLIDES */
+  .slide-thumb{height:40px}
+  .slide-nav{width:36px;height:36px;font-size:18px}
+  .slide-counter{font-size:11px;padding:3px 10px}
+
+  /* MODAL */
+  .modal-bg{padding:10px}
+  .modal{padding:20px 16px;border-radius:16px;max-height:95vh}
+  .modal-title{font-size:16px;margin-bottom:16px}
+  .modal-inp{font-size:16px}/* iOS 자동 확대 방지 */
+  .tab-type-grid{grid-template-columns:repeat(3,1fr);gap:6px}
+  .tab-type-card{padding:10px 6px}
+  .tab-type-card .icon{font-size:20px}
+  .tab-type-card .label{font-size:10px}
+
+  /* 카드 액션 — 터치에서 항상 표시 */
+  .project-card-actions{opacity:1}
+
+  /* EMPTY STATE */
+  .empty-state{padding:40px 16px}
+}
+
+@media(max-width:380px){
+  .hero-title{font-size:20px}
+  .nav-project-name{max-width:80px}
+  .tab-btn{padding:10px 8px;font-size:11px}
+}
+
+/* ── 맨 위로 버튼 (공통) ── */
+.top-btn{position:fixed;right:16px;bottom:20px;z-index:400;width:44px;height:44px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--accent2);font-size:18px;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+.top-btn.show{display:flex}
+
+/* ── 목록 내부 스크롤 높이: 모바일에서 화면 낭비 줄이기 ── */
+@media(max-width:600px){
+  .scroll-list{max-height:52vh}
+}
+</style>
+</head>
+<body>
+<script src="local-store.js"></script>
+
+<!-- NAV -->
+<nav>
+  <a href="hub.html" style="background:rgba(255,255,255,.08);border:1px solid var(--border);color:var(--text);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap">← 허브</a>
+  <div class="nav-logo" onclick="goHome()">🗺️ 여행 플래너</div>
+  <button class="nav-back" id="navBack" onclick="goHome()">← 목록</button>
+  <div class="nav-project-name" id="navProjectName"></div>
+  <div class="nav-spacer"></div>
+  <button id="themeBtn" onclick="toggleTheme()" title="테마 전환" style="background:none;border:none;font-size:18px;cursor:pointer;padding:4px">☀️</button>
+  <input type="file" id="backupImportInput" accept="application/json" style="display:none" onchange="handleImportBackup(this)">
+  <button class="nav-btn" style="background:transparent;border:1px solid var(--border)" onclick="lsExportBackup()" title="내 여행 데이터를 파일로 저장">⬇ 백업</button>
+  <button class="nav-btn" style="background:transparent;border:1px solid var(--border)" onclick="document.getElementById('backupImportInput').click()" title="백업 파일에서 복원">⬆ 복원</button>
+  <button class="nav-btn" id="navMainBtn" onclick="openProjectModal()">+ 새 여행</button>
+</nav>
+<script>
+(function(){
+  const t = localStorage.getItem('trip-theme') || 'light';
+  if (t === 'light') document.body.classList.add('light');
+})();
+function toggleTheme() {
+  const light = document.body.classList.toggle('light');
+  localStorage.setItem('trip-theme', light ? 'light' : 'dark');
+  const btn = document.getElementById('themeBtn');
+  if (btn) btn.textContent = light ? '☀️' : '🌙';
+}
+window.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('themeBtn');
+  if (btn) btn.textContent = document.body.classList.contains('light') ? '☀️' : '🌙';
+});
+async function handleImportBackup(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (!confirm('백업 파일을 가져오면 같은 id를 가진 기존 데이터가 덮어써집니다. 계속할까요?')) { input.value = ''; return; }
+  await lsImportBackup(file);
+  input.value = '';
+  alert('가져오기가 완료됐습니다. 페이지를 새로고침합니다.');
+  location.reload();
+}
+</script>
+
+<!-- DASHBOARD (removed) -->
+
+<!-- PROJECT VIEW -->
+<div class="view" id="project-view">
+  <div class="project-header" id="projectHeader"></div>
+  <div class="tab-bar" id="tabBar">
+    <button class="tab-add-btn" onclick="openTabModal()">＋ 탭 추가</button>
+  </div>
+  <input type="file" id="heroBgInput" accept="image/*" style="display:none" onchange="uploadHeroBg(this)">
+  <div class="tab-content" id="tabContent"></div>
+</div>
+
+<!-- ── MODALS ── -->
+
+<!-- 프로젝트 생성/수정 -->
+<div class="modal-bg" id="projectModal">
+  <div class="modal">
+    <div class="modal-title" id="projectModalTitle">새 여행 만들기</div>
+    <label class="modal-label">여행 이름 *</label>
+    <input class="modal-inp" id="pName" placeholder="예: 도쿄 봄 여행">
+    <label class="modal-label">목적지</label>
+    <input class="modal-inp" id="pDest" placeholder="예: 일본 도쿄">
+    <label class="modal-label">여행 기간</label>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <input class="modal-inp" id="pStart" type="date" style="margin:0;flex:1">
+      <span style="color:var(--sub);line-height:40px">~</span>
+      <input class="modal-inp" id="pEnd" type="date" style="margin:0;flex:1">
+    </div>
+    <label class="modal-label">메모</label>
+    <textarea class="modal-inp" id="pMemo" rows="2" placeholder="간단한 메모" style="resize:vertical"></textarea>
+    <label class="modal-label">아이콘</label>
+    <div class="emoji-grid" id="emojiGrid"></div>
+    <label class="modal-label">커버 색상</label>
+    <div class="color-grid" id="colorGrid"></div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="closeModal('projectModal')">취소</button>
+      <button class="modal-btn primary" onclick="saveProject()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 탭 추가 -->
+<div class="modal-bg" id="tabModal">
+  <div class="modal">
+    <div class="modal-title">탭 추가</div>
+    <label class="modal-label">탭 종류 선택</label>
+    <div class="tab-type-grid" id="tabTypeGrid">
+      <div class="tab-type-card on" data-type="schedule" onclick="selectTabType(this)">
+        <div class="icon">📅</div><div class="label">일정형</div>
+      </div>
+      <div class="tab-type-card" data-type="checklist" onclick="selectTabType(this)">
+        <div class="icon">✅</div><div class="label">체크리스트</div>
+      </div>
+      <div class="tab-type-card" data-type="list" onclick="selectTabType(this)">
+        <div class="icon">📋</div><div class="label">리스트형</div>
+      </div>
+      <div class="tab-type-card" data-type="card" onclick="selectTabType(this)">
+        <div class="icon">🃏</div><div class="label">카드형</div>
+      </div>
+      <div class="tab-type-card" data-type="map" onclick="selectTabType(this)">
+        <div class="icon">🗺️</div><div class="label">지도형</div>
+      </div>
+      <div class="tab-type-card" data-type="file" onclick="selectTabType(this)">
+        <div class="icon">📎</div><div class="label">파일/링크</div>
+      </div>
+      <div class="tab-type-card" data-type="budget" onclick="selectTabType(this)">
+        <div class="icon">💰</div><div class="label">경비형</div>
+      </div>
+      <div class="tab-type-card" data-type="gallery" onclick="selectTabType(this)">
+        <div class="icon">📷</div><div class="label">갤러리형</div>
+      </div>
+      <div class="tab-type-card" data-type="table" onclick="selectTabType(this)">
+        <div class="icon">🧮</div><div class="label">테이블형</div>
+      </div>
+      <div class="tab-type-card" data-type="flight" onclick="selectTabType(this)">
+        <div class="icon">✈️</div><div class="label">항공편 정보</div>
+      </div>
+    </div>
+    <label class="modal-label">탭 이름</label>
+    <input class="modal-inp" id="tabTitle" placeholder="예: 도쿄 일정">
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="closeModal('tabModal')">취소</button>
+      <button class="modal-btn primary" onclick="saveTab()">추가</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── 저장소: local-store.js가 sbGet/sbPost/sbPatch/sbDelete/sbPostMany를 전역으로 제공 ──
+
+// ── State ──
+let projects = [], tabs = [], currentProject = null, currentTab = null;
+let leafletMap = null, lMarkers = {};
+let editingProjectId = null;
+let selectedEmoji = '✈️';
+let selectedColor = '#1a237e';
+let selectedTabType = 'schedule';
+
+// ── Init ──
+const EMOJIS = ['✈️','🌍','🏝️','🗺️','🏔️','🎌','🏰','🌆','🌊','🍜','🎭','🚢','🚂','🏕️','🎒','📸'];
+const COLORS = ['#1a237e','#1b5e20','#4a148c','#b71c1c','#e65100','#006064','#37474f','#880e4f','#1565c0','#2e7d32','#6a1b9a','#c62828'];
+const TAB_ICONS = { schedule:'📅', checklist:'✅', list:'📋', card:'🃏', map:'🗺️', file:'📎', budget:'💰', gallery:'📷', table:'🧮', flight:'✈️' };
+
+function initEmojiGrid() {
+  const g = document.getElementById('emojiGrid');
+  g.innerHTML = EMOJIS.map(e =>
+    `<span class="emoji-opt${e===selectedEmoji?' on':''}" onclick="selectEmoji(this,'${e}')">${e}</span>`
+  ).join('');
+}
+function initColorGrid() {
+  const g = document.getElementById('colorGrid');
+  g.innerHTML = COLORS.map(c =>
+    `<div class="color-opt${c===selectedColor?' on':''}" style="background:${c}" onclick="selectColor(this,'${c}')"></div>`
+  ).join('');
+}
+function selectEmoji(el, e) {
+  document.querySelectorAll('.emoji-opt').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on'); selectedEmoji = e;
+}
+function selectColor(el, c) {
+  document.querySelectorAll('.color-opt').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on'); selectedColor = c;
+}
+function selectTabType(el) {
+  document.querySelectorAll('.tab-type-card').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on'); selectedTabType = el.dataset.type;
+}
+
+// ── Modal ──
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ── Dashboard ──
+function goHome() {
+  location.href = 'hub.html';
+  document.getElementById('navMainBtn').textContent = '+ 새 여행';
+  document.getElementById('navMainBtn').onclick = openProjectModal;
+  currentProject = null;
+  if (leafletMap) { leafletMap.remove(); leafletMap = null; }
+  loadProjects();
+}
+
+async function loadProjects() {
+  projects = await sbGet('projects', 'order=sort_order.asc,created_at.asc');
+  renderProjects();
+}
+
+function renderProjects() {
+  const grid = document.getElementById('projectGrid');
+  if (!grid) return;
+  const cards = projects.map(p => {
+    const start = p.start_date || '';
+    const end = p.end_date || '';
+    const dates = start ? (end ? `${start} ~ ${end}` : start) : '';
+    return `<div class="project-card" onclick="openProject('${p.id}')">
+      <div class="project-card-cover" style="background:${p.cover_color||'#1a237e'}">
+        <span>${p.cover_emoji||'✈️'}</span>
+        <div class="project-card-actions" onclick="event.stopPropagation()">
+          <button class="card-action-btn" title="수정" onclick="editProject('${p.id}')">✏️</button>
+          <button class="card-action-btn" title="삭제" onclick="deleteProject('${p.id}')">🗑️</button>
+        </div>
+      </div>
+      <div class="project-card-body">
+        <div class="project-card-name">${p.name}</div>
+        <div class="project-card-dest">${p.destination||''}</div>
+        ${dates ? `<div class="project-card-dates">${dates}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+  grid.innerHTML = cards + `<div class="project-card project-card-new" onclick="openProjectModal()">
+    <div class="plus">＋</div><span>새 여행 추가</span>
+  </div>`;
+}
+
+// ── Project CRUD ──
+function openProjectModal() {
+  editingProjectId = null;
+  document.getElementById('projectModalTitle').textContent = '새 여행 만들기';
+  ['pName','pDest','pStart','pEnd','pMemo'].forEach(id => document.getElementById(id).value = '');
+  selectedEmoji = '✈️'; selectedColor = '#1a237e';
+  initEmojiGrid(); initColorGrid();
+  openModal('projectModal');
+}
+
+function editProject(id) {
+  const p = projects.find(x => x.id === id);
+  if (!p) return;
+  editingProjectId = id;
+  document.getElementById('projectModalTitle').textContent = '여행 수정';
+  document.getElementById('pName').value = p.name || '';
+  document.getElementById('pDest').value = p.destination || '';
+  document.getElementById('pStart').value = p.start_date || '';
+  document.getElementById('pEnd').value = p.end_date || '';
+  document.getElementById('pMemo').value = p.memo || '';
+  selectedEmoji = p.cover_emoji || '✈️';
+  selectedColor = p.cover_color || '#1a237e';
+  initEmojiGrid(); initColorGrid();
+  openModal('projectModal');
+}
+
+async function saveProject() {
+  const name = document.getElementById('pName').value.trim();
+  if (!name) { alert('여행 이름을 입력해 주세요'); return; }
+  const data = {
+    name, destination: document.getElementById('pDest').value.trim(),
+    start_date: document.getElementById('pStart').value,
+    end_date: document.getElementById('pEnd').value,
+    memo: document.getElementById('pMemo').value.trim(),
+    cover_emoji: selectedEmoji, cover_color: selectedColor
+  };
+  if (editingProjectId) {
+    await sbPatch('projects', editingProjectId, data);
+  } else {
+    await sbPost('projects', { ...data, sort_order: projects.length });
+  }
+  closeModal('projectModal');
+  await loadProjects();
+}
+
+async function deleteProject(id) {
+  if (!confirm('이 여행을 삭제하시겠습니까? 모든 탭과 데이터가 삭제됩니다.')) return;
+  await sbDelete('projects', id);
+  await loadProjects();
+}
+
+// ── Open Project ──
+async function openProject(id) {
+  currentProject = projects.find(p => p.id === id);
+  if (!currentProject) return;
+  document.getElementById('project-view').classList.add('active');
+  document.getElementById('navBack').style.display = 'block';
+  document.getElementById('navProjectName').style.display = 'block';
+  document.getElementById('navProjectName').textContent = currentProject.name;
+  document.getElementById('navMainBtn').textContent = '+ 탭 추가';
+  document.getElementById('navMainBtn').onclick = openTabModal;
+  renderProjectHeader();
+  await loadTabs();
+  // 탭 없으면 히어로, 있으면 히어로 먼저 표시
+  showProjectHero();
+}
+
+function renderProjectHeader() {
+  const p = currentProject;
+  const dates = (p.start_date && p.end_date) ? `${p.start_date} ~ ${p.end_date}` : (p.start_date || '');
+  const el = document.getElementById('projectHeader');
+  el.style.cursor = 'pointer';
+  el.title = '프로젝트 홈';
+  el.onclick = () => showProjectHero();
+  el.innerHTML = `
+    <div class="project-header-emoji">${p.cover_emoji||'✈️'}</div>
+    <div class="project-header-info">
+      <div class="project-header-name">${p.name}</div>
+      <div class="project-header-meta">${p.destination||''}${dates?' · '+dates:''}</div>
+    </div>`;
+}
+
+async function showProjectHero() {
+  const p = currentProject;
+  const allItems = await sbGet('tab_items', `tab_id=in.(${tabs.map(t=>t.id).join(',') || 'null'})`);
+  const days = (p.start_date && p.end_date)
+    ? Math.ceil((new Date(p.end_date)-new Date(p.start_date))/86400000)+1 : null;
+  const mapTab = tabs.find(t=>t.type==='map');
+  const schedTab = tabs.find(t=>t.type==='schedule');
+  const placeCount = mapTab ? allItems.filter(i=>i.tab_id===mapTab.id).length : 0;
+  const schedCount = schedTab ? allItems.filter(i=>i.tab_id===schedTab.id).length : 0;
+  const dates = (p.start_date && p.end_date) ? `${p.start_date} ~ ${p.end_date}` : (p.start_date||'');
+
+  const stats = [
+    days ? {val: days, label:'총 일수'} : null,
+    schedCount ? {val: schedCount, label:'일정'} : null,
+    placeCount ? {val: placeCount, label:'장소'} : null,
+    tabs.length ? {val: tabs.length, label:'탭'} : null,
+  ].filter(Boolean);
+
+  const bgStyle = p.cover_bg
+    ? `background-image:url('${p.cover_bg}');background-color:${p.cover_color||'#1a237e'}`
+    : `background-color:${p.cover_color||'#1a237e'}`;
+
+  const heroHtml = `<div class="project-hero" id="projectHero">
+    <div class="hero-bg" id="heroBgEl" style="${bgStyle}"></div>
+    <div class="hero-overlay"></div>
+    <button class="hero-bg-btn" onclick="openBgPicker()">🖼️ 배경 변경</button>
+    <div class="hero-body">
+      <div class="hero-emoji">${p.cover_emoji||'✈️'}</div>
+      <div class="hero-title">${p.name}</div>
+      <div class="hero-sub">${[p.destination, dates].filter(Boolean).join(' · ')}</div>
+      ${stats.length ? `<div class="hero-stats">${stats.map(s=>`
+        <div class="hero-stat"><span class="hero-stat-val">${s.val}</span><span class="hero-stat-label">${s.label}</span></div>`).join('')}
+      </div>` : ''}
+      <div class="hero-btns">
+        ${schedTab ? `<button class="hero-btn primary" onclick="openTab('${schedTab.id}')">📅 일정 보기</button>` : ''}
+        ${mapTab ? `<button class="hero-btn secondary" onclick="openTab('${mapTab.id}')">🗺️ 지도 보기</button>` : ''}
+        ${tabs.filter(t=>t.type!=='schedule'&&t.type!=='map').slice(0,3).map(t=>
+          `<button class="hero-btn secondary" onclick="openTab('${t.id}')">${t.title}</button>`).join('')}
+      </div>
+    </div>
+  </div>`;
+
+  const tabContent = document.getElementById('tabContent');
+  tabContent.innerHTML = heroHtml;
+  // 탭 바에서 선택 해제
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('on'));
+}
+
+function openBgPicker() {
+  document.getElementById('bgPickerModal')?.remove();
+  const menu = document.createElement('div');
+  menu.id = 'bgPickerModal';
+  menu.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:999;background:#1e2240;border:1px solid #3a3f6b;border-radius:16px;padding:20px;width:360px;box-shadow:0 8px 40px rgba(0,0,0,.6)';
+  const dest = currentProject.destination || currentProject.name || '';
+  menu.innerHTML = `
+    <div style="font-size:15px;font-weight:800;color:#e8eaf6;margin-bottom:16px">🖼️ 배경 이미지 설정</div>
+    ${dest ? `
+    <div style="font-size:12px;color:#7b80a0;margin-bottom:6px">목적지 자동 추천</div>
+    <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap" id="bgAutoPreview"></div>
+    <button class="f-btn" id="bgAutoBtn" style="width:100%;margin-bottom:14px;background:linear-gradient(135deg,#5c6bc0,#7986cb)" onclick="autoSetBg()">✨ '${dest}' 대표 이미지로 자동 설정</button>
+    <div style="border-top:1px solid #2a2f52;margin-bottom:14px"></div>` : ''}
+    <div style="font-size:12px;color:#7b80a0;margin-bottom:6px">이미지 URL 직접 입력</div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <input id="bgUrlInput" class="f-inp" placeholder="https://..." value="${currentProject.cover_bg||''}" style="flex:1">
+      <button class="f-btn" onclick="saveBgUrl()">적용</button>
+    </div>
+    <button class="f-btn" style="width:100%;margin-bottom:10px;background:rgba(255,255,255,.06);border:1px solid #3a3f6b;color:#e8eaf6" onclick="document.getElementById('heroBgInput').click();closeBgPicker()">📁 파일에서 업로드</button>
+    ${currentProject.cover_bg ? `<button style="width:100%;background:rgba(229,57,53,.1);border:1px solid rgba(229,57,53,.3);color:#ef9a9a;border-radius:8px;padding:8px;font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:6px" onclick="removeBg()">배경 제거</button>` : ''}
+    <div style="text-align:right;margin-top:8px"><button onclick="closeBgPicker()" style="background:none;border:none;color:#7b80a0;cursor:pointer;font-family:inherit;font-size:13px">닫기</button></div>
+  `;
+  // Wikipedia API로 목적지 이미지 검색
+  if (dest) {
+    const preview = menu.querySelector('#bgAutoPreview');
+    loadWikiImages(dest, preview);
+  }
+  document.body.appendChild(menu);
+}
+function closeBgPicker() { document.getElementById('bgPickerModal')?.remove(); }
+
+async function loadWikiImages(dest, preview) {
+  // 로딩 표시
+  preview.innerHTML = `<div style="color:#7b80a0;font-size:12px;padding:8px 0">🔍 이미지 검색 중...</div>`;
+  try {
+    // Wikipedia 검색으로 관련 페이지 찾기
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(dest)}&srlimit=3&format=json&origin=*`;
+    const searchRes = await fetch(searchUrl);
+    const searchData = await searchRes.json();
+    const pages = searchData.query?.search || [];
+    if (!pages.length) { preview.innerHTML = `<div style="color:#7b80a0;font-size:12px">이미지를 찾을 수 없습니다</div>`; return; }
+
+    const titles = pages.map(p => encodeURIComponent(p.title)).join('|');
+    const imgUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${titles}&prop=pageimages&format=json&pithumbsize=1200&piprop=thumbnail&origin=*`;
+    const imgRes = await fetch(imgUrl);
+    const imgData = await imgRes.json();
+    const pageObjs = Object.values(imgData.query?.pages || {});
+    const images = pageObjs.filter(p => p.thumbnail?.source).map(p => ({
+      thumb: p.thumbnail.source.replace(/\/\d+px-/, '/200px-'),
+      full: p.thumbnail.source  // 1200px 요청했으므로 그대로 사용
+    }));
+
+    preview.innerHTML = '';
+    if (!images.length) { preview.innerHTML = `<div style="color:#7b80a0;font-size:12px">이미지를 찾을 수 없습니다</div>`; return; }
+
+    images.forEach(img => {
+      const el = document.createElement('img');
+      el.src = img.thumb;
+      el.style.cssText = 'width:calc(33% - 4px);height:64px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:.15s';
+      el.title = '이 이미지로 설정';
+      el.onclick = () => applyBgUrl(img.full);
+      el.onmouseover = () => el.style.borderColor = '#7986cb';
+      el.onmouseout = () => el.style.borderColor = 'transparent';
+      preview.appendChild(el);
+    });
+
+    // 자동 설정 버튼도 첫 번째 이미지로 연결
+    const btn = document.getElementById('bgAutoBtn');
+    if (btn && images[0]) {
+      btn.onclick = () => applyBgUrl(images[0].full);
+      btn.disabled = false;
+    }
+  } catch(e) {
+    preview.innerHTML = `<div style="color:#ef9a9a;font-size:12px">이미지 로드 실패</div>`;
+  }
+}
+
+async function autoSetBg() {
+  // loadWikiImages에서 버튼 클릭 핸들러가 연결됨 — 로딩 중엔 아무것도 안 함
+}
+
+async function applyBgUrl(url) {
+  // 즉시 화면에 반영
+  const el = document.getElementById('heroBgEl');
+  if (el) el.style.backgroundImage = `url('${url}')`;
+  currentProject.cover_bg = url;
+  closeBgPicker();
+  await sbPatch('projects', currentProject.id, { cover_bg: url });
+}
+
+async function saveBgUrl() {
+  const url = document.getElementById('bgUrlInput').value.trim();
+  await sbPatch('projects', currentProject.id, { cover_bg: url });
+  currentProject.cover_bg = url;
+  closeBgPicker();
+  document.getElementById('heroBgEl').style.backgroundImage = url ? `url('${url}')` : '';
+}
+
+async function uploadHeroBg(input) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+  const reader = new FileReader();
+  reader.onload = async e => {
+    const base64 = e.target.result;
+    await sbPatch('projects', currentProject.id, { cover_bg: base64 });
+    currentProject.cover_bg = base64;
+    const el = document.getElementById('heroBgEl');
+    if (el) el.style.backgroundImage = `url('${base64}')`;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function removeBg() {
+  await sbPatch('projects', currentProject.id, { cover_bg: '' });
+  currentProject.cover_bg = '';
+  closeBgPicker();
+  const el = document.getElementById('heroBgEl');
+  if (el) el.style.backgroundImage = '';
+}
+
+// ── Tabs ──
+async function loadTabs() {
+  tabs = await sbGet('tabs', `project_id=eq.${currentProject.id}&order=sort_order.asc,created_at.asc`);
+  renderTabBar();
+  // 히어로 화면에서 탭 자동 열기 하지 않음 — openProject에서 showProjectHero() 호출
+}
+
+function renderTabBar() {
+  const bar = document.getElementById('tabBar');
+  const btnHtml = tabs.map(t => `
+    <button class="tab-btn" id="tab-btn-${t.id}" data-id="${t.id}">
+      <span class="tab-label">${TAB_ICONS[t.type]||'📄'} ${t.title}</span>
+      <span class="tab-del" onclick="event.stopPropagation();deleteTab('${t.id}')">✕</span>
+    </button>`).join('');
+  bar.innerHTML = btnHtml + `<button class="tab-add-btn" onclick="openTabModal()">＋ 탭 추가</button>`;
+  initTabBarDrag();
+}
+
+// ── 탭 순서 드래그 재정렬 (Pointer Events — 마우스 + 터치 공용) ──
+function initTabBarDrag() {
+  const bar = document.getElementById('tabBar');
+  let dragBtn = null, activePointerId = null, longPressTimer = null;
+  let startX = 0, startY = 0, isTouch = false, moved = false;
+
+  function endDrag() {
+    if (!dragBtn) return;
+    dragBtn.classList.remove('dragging');
+    bar.classList.remove('tab-drag-active');
+    dragBtn.style.touchAction = 'pan-x';
+    dragBtn = null;
+    const order = [...bar.querySelectorAll('.tab-btn')].map(b => b.dataset.id);
+    const reordered = order.map(id => tabs.find(t => t.id === id)).filter(Boolean);
+    if (reordered.length === tabs.length) {
+      tabs = reordered;
+      tabs.forEach((t, i) => { if (t.sort_order !== i) { t.sort_order = i; sbPatch('tabs', t.id, { sort_order: i }); } });
+    }
+  }
+
+  bar.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.style.touchAction = 'pan-x';
+
+    btn.addEventListener('pointerdown', e => {
+      if (e.target.closest('.tab-del')) return;
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      isTouch = e.pointerType !== 'mouse';
+      startX = e.clientX; startY = e.clientY; moved = false;
+      activePointerId = e.pointerId;
+      clearTimeout(longPressTimer);
+      if (isTouch) {
+        longPressTimer = setTimeout(() => {
+          if (activePointerId !== e.pointerId) return;
+          moved = true;
+          dragBtn = btn;
+          btn.classList.add('dragging');
+          btn.style.touchAction = 'none';
+          bar.classList.add('tab-drag-active');
+          try { btn.setPointerCapture(e.pointerId); } catch (err) {}
+        }, 380);
+      }
+    });
+
+    btn.addEventListener('pointermove', e => {
+      if (activePointerId === null || e.pointerId !== activePointerId) return;
+      const dx = e.clientX - startX, dy = e.clientY - startY;
+      if (!dragBtn) {
+        if (!isTouch && Math.hypot(dx, dy) > 6) {
+          clearTimeout(longPressTimer);
+          moved = true;
+          dragBtn = btn;
+          btn.classList.add('dragging');
+          btn.style.touchAction = 'none';
+          bar.classList.add('tab-drag-active');
+          try { btn.setPointerCapture(e.pointerId); } catch (err) {}
+        } else if (isTouch && Math.hypot(dx, dy) > 10) {
+          clearTimeout(longPressTimer);
+        }
+        return;
+      }
+      e.preventDefault();
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const overBtn = el?.closest('.tab-btn');
+      if (overBtn && overBtn !== dragBtn && overBtn.parentElement === bar) {
+        const rect = overBtn.getBoundingClientRect();
+        const after = e.clientX > rect.left + rect.width / 2;
+        bar.insertBefore(dragBtn, after ? overBtn.nextSibling : overBtn);
+      }
+    });
+
+    ['pointerup', 'pointercancel'].forEach(evt => btn.addEventListener(evt, e => {
+      if (activePointerId === null || e.pointerId !== activePointerId) return;
+      clearTimeout(longPressTimer);
+      try { btn.releasePointerCapture(e.pointerId); } catch (err) {}
+      activePointerId = null;
+      if (dragBtn) endDrag();
+    }));
+
+    btn.addEventListener('click', e => {
+      if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; return; }
+      if (e.target.closest('.tab-del')) return;
+      openTab(btn.dataset.id);
+    });
+    btn.addEventListener('dblclick', e => {
+      if (e.target.closest('.tab-del')) return;
+      startRenameTab(e, btn.dataset.id);
+    });
+  });
+}
+
+function startRenameTab(e, id) {
+  e.stopPropagation();
+  const btn = document.getElementById(`tab-btn-${id}`);
+  const label = btn.querySelector('.tab-label');
+  const tab = tabs.find(t => t.id === id);
+  if (!tab) return;
+
+  const inp = document.createElement('input');
+  inp.value = tab.title;
+  inp.style.cssText = 'background:rgba(255,255,255,.15);border:none;border-bottom:2px solid #7986cb;outline:none;color:#fff;font-size:13px;font-weight:700;font-family:inherit;width:80px;padding:0 2px';
+  label.replaceWith(inp);
+  inp.focus();
+  inp.select();
+
+  const finish = async () => {
+    const newTitle = inp.value.trim();
+    if (newTitle && newTitle !== tab.title) {
+      tab.title = newTitle;
+      await sbPatch('tabs', id, { title: newTitle });
+    }
+    renderTabBar();
+    if (currentTab?.id === id) {
+      document.getElementById(`tab-btn-${id}`)?.classList.add('on');
+    }
+  };
+  inp.onblur = finish;
+  inp.onkeydown = e => { if (e.key === 'Enter') inp.blur(); if (e.key === 'Escape') { inp.value = tab.title; inp.blur(); } };
+}
+
+function openTabModal() {
+  selectedTabType = 'schedule';
+  document.querySelectorAll('.tab-type-card').forEach(x=>x.classList.remove('on'));
+  document.querySelector('[data-type="schedule"]').classList.add('on');
+  document.getElementById('tabTitle').value = '';
+  openModal('tabModal');
+}
+
+async function saveTab() {
+  const title = document.getElementById('tabTitle').value.trim() ||
+    { schedule:'일정', checklist:'체크리스트', list:'리스트', card:'카드', map:'지도', file:'파일' }[selectedTabType];
+  const data = { project_id: currentProject.id, type: selectedTabType, title, sort_order: tabs.length };
+  await sbPost('tabs', data);
+  closeModal('tabModal');
+  await loadTabs();
+  openTab(tabs[tabs.length-1]?.id);
+}
+
+async function deleteTab(id) {
+  if (!confirm('이 탭을 삭제하시겠습니까? 탭 안의 데이터도 삭제됩니다.')) return;
+  await sbDelete('tabs', id);
+  await loadTabs();
+}
+
+async function openTab(id) {
+  currentTab = tabs.find(t => t.id === id);
+  if (!currentTab) return;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('on'));
+  const btn = document.getElementById(`tab-btn-${id}`);
+  if (btn) btn.classList.add('on');
+  await renderTabContent(currentTab);
+}
+
+// ── Tab Content Renderer ──
+async function renderTabContent(tab) {
+  const container = document.getElementById('tabContent');
+  const items = await sbGet('tab_items', `tab_id=eq.${tab.id}&order=sort_order.asc,created_at.asc`);
+
+  if (tab.type === 'schedule') await renderSchedule(container, tab, items);
+  else if (tab.type === 'checklist') renderChecklist(container, tab, items);
+  else if (tab.type === 'list') renderList(container, tab, items);
+  else if (tab.type === 'card') renderCards(container, tab, items);
+  else if (tab.type === 'map') renderMap(container, tab, items);
+  else if (tab.type === 'file') renderFiles(container, tab, items);
+  else if (tab.type === 'budget') renderBudget(container, tab, items);
+  else if (tab.type === 'gallery') await renderGallery(container, tab);
+  else if (tab.type === 'table') renderTable(container, tab, items);
+  else if (tab.type === 'flight') renderFlight(container, tab, items);
+  else if (tab.type === 'slides') renderSlides(container, tab);
+}
+
+// ── SCHEDULE ──
+let schedDates = [], currentSchedDate = null, currentPayMethod = 'cash';
+
+async function renderSchedule(container, tab, items) {
+  schedDates = [...new Set(items.map(i => i.data.date).filter(Boolean))].sort();
+  if (schedDates.length === 0 && items.length > 0) schedDates = ['날짜 없음'];
+  currentSchedDate = schedDates[0] || null;
+
+  const sfId = `ps-sf-${tab.id}`;
+  container.innerHTML = `<div class="pane-wrap" id="pw-sched-${tab.id}">
+    <div class="pane-header">
+      <div class="pane-title">📅 ${tab.title}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="add-btn" style="font-size:12px;background:rgba(92,107,192,.2);border:1px solid var(--accent);color:var(--text)" onclick="document.getElementById('schedXlsInput').click()">📊 Excel 가져오기</button>
+        <button class="add-btn" style="font-size:12px;background:rgba(92,107,192,.2);border:1px solid var(--accent);color:var(--text)" onclick="document.getElementById('schedSheetBox').classList.toggle('open')">🔗 구글시트 연결</button>
+        <button class="pane-collapse-btn" onclick="toggleAllPS('pw-sched-${tab.id}',this)">접기 ▲</button>
+      </div>
+    </div>
+    <input type="file" id="schedXlsInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="importSchedExcel(this,'${tab.id}')">
+    <div id="schedSheetBox" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;gap:8px;flex-direction:column">
+      <div style="font-size:12px;color:var(--sub);margin-bottom:4px">구글 시트를 <b style="color:var(--text)">링크가 있는 모든 사용자 보기</b>로 공유 후 URL을 붙여넣으세요</div>
+      <div style="display:flex;gap:8px">
+        <input class="f-inp" id="schedSheetUrl" placeholder="https://docs.google.com/spreadsheets/d/..." style="flex:1">
+        <button class="f-btn" onclick="importSchedSheet('${tab.id}')">가져오기</button>
+      </div>
+    </div>
+    <div class="sched-dates" id="schedDates"></div>
+    <div class="ps" id="ps-si-${tab.id}">
+      <div class="ps-header" onclick="togglePS('ps-si-${tab.id}')">
+        <span class="ps-title">📋 일정 목록</span>
+        <span class="ps-arrow">▼</span>
+      </div>
+      <div class="ps-body">
+        <div class="sched-cost-bar" id="schedCostBar"></div>
+        <div id="schedItems"></div>
+      </div>
+    </div>
+    <div class="ps" id="${sfId}">
+      <div class="ps-header" onclick="togglePS('${sfId}')">
+        <span class="ps-title">＋ 일정 추가</span>
+        <span class="ps-arrow">▼</span>
+      </div>
+      <div class="ps-body">
+        <div class="form-box" style="border:none;border-radius:0;margin:0">
+          <div class="form-row">
+            <div class="f-inp" style="max-width:120px;display:flex;align-items:center;gap:3px;padding:6px 10px">
+              <input id="sTimeH" maxlength="2" placeholder="HH" inputmode="numeric"
+                style="background:none;border:none;color:var(--text);font-size:13px;width:28px;outline:none;text-align:center;font-family:inherit"
+                oninput="this.value=this.value.replace(/\D/g,'');if(this.value.length===2)document.getElementById('sTimeM').focus()"
+                onblur="if(this.value.length===1)this.value='0'+this.value">
+              <span style="color:var(--accent2);font-weight:700">:</span>
+              <input id="sTimeM" maxlength="2" placeholder="MM" inputmode="numeric"
+                style="background:none;border:none;color:var(--text);font-size:13px;width:28px;outline:none;text-align:center;font-family:inherit"
+                oninput="this.value=this.value.replace(/\D/g,'')"
+                onblur="if(this.value.length===1)this.value='0'+this.value">
+            </div>
+            <div style="position:relative;flex:1">
+              <input class="f-inp" id="sPlace" placeholder="🔍 장소 검색" style="width:100%" autocomplete="off"
+                oninput="searchPlace(this.value)" onblur="setTimeout(()=>document.getElementById('placeDropdown').innerHTML='',200)">
+              <div id="placeDropdown" style="position:absolute;top:100%;left:0;right:0;z-index:500;background:#1e2240;border:1px solid #3a3f6b;border-radius:10px;overflow:hidden;margin-top:4px;box-shadow:0 8px 24px rgba(0,0,0,.5)"></div>
+            </div>
+          </div>
+          <div id="schedMiniMapWrap" style="display:none;margin:2px 0 10px">
+            <div id="schedMiniMap" style="height:160px;border-radius:10px;overflow:hidden"></div>
+            <div style="font-size:11px;color:var(--sub);margin-top:5px">📌 지도를 클릭하면 위치를 미세 조정할 수 있어요</div>
+          </div>
+          <div class="form-row">
+            <input class="f-inp" id="sContent" placeholder="내용">
+          </div>
+          <div class="form-row" style="align-items:center">
+            <select class="f-sel" id="sCurrency" style="width:70px;flex:none">
+              <option value="KRW">₩</option>
+              <option value="EUR">€</option>
+              <option value="USD">$</option>
+              <option value="JPY">¥</option>
+            </select>
+            <input class="f-inp" id="sCost" placeholder="예상비용" style="flex:1" type="number" min="0">
+            <div style="display:flex;gap:4px;flex:none">
+              <button id="sPayCash" class="pay-toggle on" onclick="setPayMethod('cash')">💵 현금</button>
+              <button id="sPayCard" class="pay-toggle" onclick="setPayMethod('card')">💳 카드</button>
+            </div>
+          </div>
+          <div class="form-row">
+            <input class="f-inp" id="sNote" placeholder="메모/노트">
+            <button class="f-btn" id="sAddBtn" onclick="addSchedItem('${tab.id}')">추가</button>
+            <button class="f-btn" id="sCancelEdit" onclick="cancelSchedEdit()" style="display:none;background:rgba(255,255,255,.08);border:1px solid var(--border)">취소</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  renderSchedDates(items);
+  renderSchedItems(items, currentSchedDate);
+  initPS([`ps-si-${tab.id}`, `ps-sf-${tab.id}`]);
+}
+
+function renderSchedDates(items) {
+  // items가 있으면 그 날짜로 갱신, 없으면 기존 schedDates 유지
+  if (items.length > 0) {
+    const fromItems = [...new Set(items.map(i => i.data.date).filter(Boolean))].sort();
+    // 로컬에서 추가된 날짜도 병합
+    schedDates = [...new Set([...fromItems, ...schedDates])].sort();
+  }
+  const el = document.getElementById('schedDates');
+  if (!el) return;
+  el.innerHTML = schedDates.map(d =>
+    `<div class="date-tab${d===currentSchedDate?' on':''}" onclick="switchSchedDate('${d}', this)">
+      ${d}
+    </div>`
+  ).join('') + `<button class="add-btn" style="font-size:11px;padding:5px 12px" onclick="addSchedDate()">＋ 날짜</button>`;
+}
+
+async function switchSchedDate(d, el) {
+  document.querySelectorAll('.date-tab').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+  currentSchedDate = d;
+  fillSchedDateInputs(d);
+  const items = await sbGet('tab_items', `tab_id=eq.${currentTab.id}&order=sort_order.asc,created_at.asc`);
+  renderSchedItems(items, d);
+}
+
+function fillSchedDateInputs(d) {
+  if (!d) return;
+  const m = d.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) {
+    const y = document.getElementById('sDateY'); if(y) y.value = m[1];
+    const mo = document.getElementById('sDateM'); if(mo) mo.value = m[2];
+    const day = document.getElementById('sDateD'); if(day) day.value = m[3];
+  }
+  // YYYY-MM-DD 형식이 아니면(예: 1일차) 날짜 칸은 비워둠
+}
+
+function addSchedDate() {
+  // 기존 팝업 있으면 제거
+  const existing = document.getElementById('datePickerPop');
+  if (existing) { existing.remove(); return; }
+
+  const btn = event.currentTarget;
+  const pop = document.createElement('div');
+  pop.id = 'datePickerPop';
+  pop.style.cssText = 'position:absolute;z-index:999;background:#1e2240;border:1px solid #3a3f6b;border-radius:12px;padding:14px;box-shadow:0 8px 32px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:8px;min-width:220px';
+
+  const rect = btn.getBoundingClientRect();
+  pop.style.top = (rect.bottom + window.scrollY + 6) + 'px';
+  pop.style.left = rect.left + 'px';
+
+  pop.innerHTML = `
+    <div style="font-size:12px;font-weight:700;color:#9fa8da;margin-bottom:4px">날짜 추가</div>
+    <div style="display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.06);border:1px solid #3a3f6b;border-radius:8px;padding:7px 12px">
+      <input id="dpY" maxlength="4" placeholder="YYYY" inputmode="numeric"
+        style="background:none;border:none;color:#e8eaf6;font-size:15px;font-weight:700;width:48px;outline:none;text-align:center;font-family:inherit">
+      <span style="color:#5c6bc0;font-weight:700">-</span>
+      <input id="dpM" maxlength="2" placeholder="MM" inputmode="numeric"
+        style="background:none;border:none;color:#e8eaf6;font-size:15px;font-weight:700;width:30px;outline:none;text-align:center;font-family:inherit">
+      <span style="color:#5c6bc0;font-weight:700">-</span>
+      <input id="dpD" maxlength="2" placeholder="DD" inputmode="numeric"
+        style="background:none;border:none;color:#e8eaf6;font-size:15px;font-weight:700;width:30px;outline:none;text-align:center;font-family:inherit">
+    </div>
+    <input id="datePickerLabel" placeholder="또는 직접 입력 (예: 1일차)" style="background:rgba(255,255,255,.06);border:1px solid #3a3f6b;border-radius:8px;color:#e8eaf6;font-size:13px;padding:7px 10px;font-family:inherit;outline:none;width:100%">
+    <button onclick="confirmAddSchedDate()" style="background:#5c6bc0;color:#fff;border:none;border-radius:8px;padding:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;width:100%">추가</button>
+  `;
+
+  document.body.appendChild(pop);
+
+  const dpY = pop.querySelector('#dpY');
+  const dpM = pop.querySelector('#dpM');
+  const dpD = pop.querySelector('#dpD');
+  dpY.focus();
+
+  // 숫자만 허용
+  [dpY, dpM, dpD].forEach(el => el.addEventListener('keypress', e => { if (!/\d/.test(e.key)) e.preventDefault(); }));
+
+  // 자동 포커스 이동
+  dpY.addEventListener('input', () => { if (dpY.value.length === 4) dpM.focus(); });
+  dpM.addEventListener('input', () => {
+    if (dpM.value.length === 2) { dpD.focus(); return; }
+    if (dpM.value.length === 1 && parseInt(dpM.value) > 1) { dpM.value = '0' + dpM.value; dpD.focus(); }
+  });
+  dpD.addEventListener('input', () => {
+    if (dpD.value.length === 1 && parseInt(dpD.value) > 3) dpD.value = '0' + dpD.value;
+  });
+
+  // 외부 클릭 시 닫기
+  setTimeout(() => document.addEventListener('click', function outsideClick(e) {
+    if (!pop.contains(e.target) && e.target !== btn) { pop.remove(); document.removeEventListener('click', outsideClick); }
+  }), 100);
+}
+
+function confirmAddSchedDate() {
+  const y = document.getElementById('dpY')?.value;
+  const m = document.getElementById('dpM')?.value;
+  const d = document.getElementById('dpD')?.value;
+  const dateStr = (y && m && d) ? `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}` : '';
+  const label = document.getElementById('datePickerLabel')?.value.trim() || dateStr;
+  document.getElementById('datePickerPop')?.remove();
+  if (!label) return;
+  if (!schedDates.includes(label)) schedDates.push(label);
+  currentSchedDate = label;
+  // sDate 기본값 설정
+  const dateInput = document.getElementById('sDate');
+  if (dateInput && label.match(/^\d{4}-\d{2}-\d{2}$/)) dateInput.value = label;
+  renderSchedDates([]);
+}
+
+let schedItemsCache = [];
+let schedEditingId = null;
+
+function renderSchedItems(items, date) {
+  schedItemsCache = items;
+  const el = document.getElementById('schedItems');
+  if (!el) return;
+  const sym = { KRW:'₩', EUR:'€', USD:'$', JPY:'¥' };
+  const filtered = date ? items.filter(i => i.data.date === date) : items;
+  renderCostBar(filtered, date, items);
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty-state"><div class="icon">📅</div><p>일정을 추가해 보세요</p></div>`;
+    return;
+  }
+  el.innerHTML = `<div class="sched-timeline">${
+    filtered.sort((a,b)=>(a.data.time||'').localeCompare(b.data.time||'')).map(item => {
+      const costVal = item.data.cost ? parseFloat(item.data.cost) : 0;
+      const cur = item.data.currency || 'KRW';
+      const pay = item.data.payMethod || '';
+      const payBadge = pay==='cash'?'<span style="color:#66bb6a;font-size:10px;font-weight:700">현금</span>':pay==='card'?'<span style="color:#42a5f5;font-size:10px;font-weight:700">카드</span>':'';
+      const costStr = costVal ? `${sym[cur]||cur}${costVal.toLocaleString()} ${payBadge}` : '';
+      const hasGeo = item.data.lat != null && item.data.lng != null;
+      return `<div class="sched-item">
+        <div class="sched-time">${item.data.time||''}</div>
+        <div class="sched-body">
+          <div class="sched-content">${item.data.content||item.data.place||''}</div>
+          ${(item.data.place&&item.data.content)?`<div class="sched-place"${hasGeo?` style="cursor:pointer;text-decoration:underline dotted" onclick="showPlaceMapPopup('${item.id}')" title="클릭하면 지도로 보기"`:''}>📍 ${item.data.place}</div>`:''}
+          ${item.data.note?`<div class="sched-note">💡 ${item.data.note}</div>`:''}
+          ${costStr?`<div class="sched-cost">💰 ${costStr}</div>`:''}
+        </div>
+        <div class="sched-item-actions">
+          ${hasGeo?`<a class="del-btn" style="background:rgba(67,160,71,.15);color:#66bb6a;text-decoration:none;display:inline-flex;align-items:center" href="https://www.google.com/maps?q=${item.data.lat},${item.data.lng}" target="_blank" rel="noopener noreferrer">📍 구글맵</a>`:''}
+          <select class="del-btn" style="background:rgba(92,107,192,.15);color:#9fa8da;cursor:pointer" onchange="if(this.value)moveSchedItem('${item.id}',this.value)">
+            <option value="">📅 이동</option>
+            ${schedDates.filter(d=>d!==item.data.date).map(d=>`<option value="${d}">${d}</option>`).join('')}
+          </select>
+          <button class="del-btn" style="background:rgba(92,107,192,.15);color:#9fa8da" onclick="editSchedItem('${item.id}')">수정</button>
+          <button class="del-btn" onclick="deleteItem('${item.id}','${currentTab.id}')">삭제</button>
+        </div>
+      </div>`;
+    }).join('')
+  }</div>`;
+}
+
+let placePopupLeaflet = null, placePopupMarker = null;
+function showPlaceMapPopup(itemId) {
+  const item = schedItemsCache.find(i => i.id === itemId);
+  if (!item || item.data.lat == null || item.data.lng == null) return;
+  const lat = parseFloat(item.data.lat), lng = parseFloat(item.data.lng);
+  let bg = document.getElementById('placeMapPopupBg');
+  if (!bg) {
+    bg = document.createElement('div');
+    bg.id = 'placeMapPopupBg';
+    bg.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:2000;align-items:center;justify-content:center;padding:20px';
+    bg.innerHTML = `<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;max-width:420px;width:100%">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div id="placeMapPopupTitle" style="font-size:14px;font-weight:800;color:var(--text)"></div>
+        <button onclick="closePlaceMapPopup()" style="background:none;border:none;color:var(--sub);font-size:18px;cursor:pointer;line-height:1">✕</button>
+      </div>
+      <div id="placeMapPopupMap" style="height:220px;border-radius:10px;overflow:hidden"></div>
+      <a id="placeMapPopupLink" href="#" target="_blank" rel="noopener noreferrer" style="display:block;text-align:center;margin-top:10px;font-size:12px;color:var(--accent2)">구글맵에서 열기 →</a>
+    </div>`;
+    bg.addEventListener('click', e => { if (e.target === bg) closePlaceMapPopup(); });
+    document.body.appendChild(bg);
+  }
+  document.getElementById('placeMapPopupTitle').textContent = '📍 ' + (item.data.place || '');
+  document.getElementById('placeMapPopupLink').href = `https://www.google.com/maps?q=${lat},${lng}`;
+  bg.style.display = 'flex';
+  if (!placePopupLeaflet) {
+    placePopupLeaflet = L.map('placeMapPopupMap', { zoomControl: false, attributionControl: false }).setView([lat, lng], 16);
+    L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&hl=ko&x={x}&y={y}&z={z}', {
+      maxZoom: 20, subdomains: ['0','1','2','3']
+    }).addTo(placePopupLeaflet);
+    placePopupMarker = L.marker([lat, lng]).addTo(placePopupLeaflet);
+  } else {
+    placePopupLeaflet.setView([lat, lng], 16);
+    placePopupMarker.setLatLng([lat, lng]);
+  }
+  setTimeout(() => placePopupLeaflet && placePopupLeaflet.invalidateSize(), 60);
+}
+
+function closePlaceMapPopup() {
+  const bg = document.getElementById('placeMapPopupBg');
+  if (bg) bg.style.display = 'none';
+}
+
+async function moveSchedItem(id, newDate) {
+  const item = schedItemsCache.find(i => i.id === id);
+  if (!item) return;
+  await sbPatch('tab_items', id, { data: { ...item.data, date: newDate } });
+  const items = await sbGet('tab_items', `tab_id=eq.${currentTab.id}&order=sort_order.asc,created_at.asc`);
+  renderSchedDates(items);
+  renderSchedItems(items, currentSchedDate);
+}
+
+function setPayMethod(method) {
+  currentPayMethod = method;
+  document.getElementById('sPayCash').classList.toggle('on', method === 'cash');
+  document.getElementById('sPayCard').classList.toggle('on', method === 'card');
+}
+
+function calcSchedCost(items, date) {
+  const filtered = date ? items.filter(i => i.data.date === date) : items;
+  const result = {};
+  filtered.forEach(item => {
+    const c = item.data.cost;
+    if (!c || isNaN(parseFloat(c))) return;
+    const cur = item.data.currency || 'KRW';
+    const pay = item.data.payMethod || 'cash';
+    if (!result[cur]) result[cur] = { cash: 0, card: 0 };
+    result[cur][pay] += parseFloat(c);
+  });
+  return result;
+}
+
+function renderCostBar(items, date, allItems) {
+  const daily = calcSchedCost(items, date);
+  const total = calcSchedCost(allItems, null);
+  const fmt = (v, cur) => {
+    if (cur === 'KRW' || cur === 'JPY') return Math.round(v).toLocaleString();
+    return v.toFixed(2);
+  };
+  const sym = { KRW:'₩', EUR:'€', USD:'$', JPY:'¥' };
+
+  const dailyHtml = Object.entries(daily).map(([cur, v]) =>
+    `<span class="sched-cost-item"><span class="sched-cost-label">${sym[cur]||cur} 일별</span>
+    <span class="sched-cost-cash">현금 ${fmt(v.cash,cur)}</span>
+    <span style="color:var(--sub)">·</span>
+    <span class="sched-cost-card">카드 ${fmt(v.card,cur)}</span></span>`
+  ).join('');
+
+  const totalHtml = Object.entries(total).map(([cur, v]) =>
+    `<span class="sched-cost-item"><span class="sched-cost-label">${sym[cur]||cur} 전체</span>
+    <span class="sched-cost-val">${fmt(v.cash+v.card,cur)}</span></span>`
+  ).join('');
+
+  const bar = document.getElementById('schedCostBar');
+  if (bar) bar.innerHTML = dailyHtml + (totalHtml ? `<span style="margin-left:auto;opacity:.5">│</span>${totalHtml}` : '');
+}
+
+async function addSchedItem(tabId) {
+  const date = currentSchedDate || '';
+  const h = document.getElementById('sTimeH').value.padStart(2,'0');
+  const mn = document.getElementById('sTimeM').value.padStart(2,'0');
+  const time = (h !== '00' || mn !== '00') ? `${h}:${mn}` : '';
+  const placeInp = document.getElementById('sPlace');
+  const place = placeInp.value.trim();
+  const content = document.getElementById('sContent').value.trim();
+  const cost = document.getElementById('sCost').value.trim();
+  const currency = document.getElementById('sCurrency').value;
+  const payMethod = currentPayMethod;
+  const note = document.getElementById('sNote').value.trim();
+  const lat = placeInp.dataset.lat ? parseFloat(placeInp.dataset.lat) : null;
+  const lng = placeInp.dataset.lng ? parseFloat(placeInp.dataset.lng) : null;
+  if (!place && !content) { alert('장소 또는 내용을 입력하세요'); return; }
+  if (schedEditingId) {
+    // 수정 모드: 기존 날짜 유지하며 PATCH
+    const orig = schedItemsCache.find(i => i.id === schedEditingId);
+    const keepDate = orig?.data?.date || date;
+    await sbPatch('tab_items', schedEditingId, { data: { date: keepDate, time, place, content, cost, currency, payMethod, note, lat, lng } });
+    cancelSchedEdit();
+  } else {
+    await sbPost('tab_items', { tab_id: tabId, data: { date, time, place, content, cost, currency, payMethod, note, lat, lng }, sort_order: 0 });
+  }
+  ['sTimeH','sTimeM','sPlace','sContent','sCost','sNote'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  delete placeInp.dataset.lat; delete placeInp.dataset.lng;
+  hideSchedMiniMap();
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderSchedDates(items);
+  if (date) currentSchedDate = date;
+  renderSchedItems(items, currentSchedDate);
+}
+
+function editSchedItem(id) {
+  const item = schedItemsCache.find(i => i.id === id);
+  if (!item) return;
+  const d = item.data;
+  schedEditingId = id;
+  const [h, mn] = (d.time || ':').split(':');
+  document.getElementById('sTimeH').value = h || '';
+  document.getElementById('sTimeM').value = mn || '';
+  const placeInp = document.getElementById('sPlace');
+  placeInp.value = d.place || '';
+  if (d.lat != null && d.lng != null) {
+    placeInp.dataset.lat = d.lat; placeInp.dataset.lng = d.lng;
+    ensureSchedMiniMap(d.lat, d.lng);
+  } else {
+    delete placeInp.dataset.lat; delete placeInp.dataset.lng;
+    hideSchedMiniMap();
+    // 좌표가 없는 기존 일정: 저장된 장소/내용 텍스트로 자동 검색해 후보를 바로 보여줌
+    const autoQuery = (d.place || d.content || '').trim();
+    if (autoQuery.length >= 2) searchPlace(autoQuery);
+  }
+  document.getElementById('sContent').value = d.content || '';
+  document.getElementById('sCost').value = d.cost || '';
+  document.getElementById('sCurrency').value = d.currency || 'KRW';
+  setPayMethod(d.payMethod || 'cash');
+  document.getElementById('sNote').value = d.note || '';
+  const btn = document.getElementById('sAddBtn');
+  btn.textContent = '수정 완료';
+  document.getElementById('sCancelEdit').style.display = '';
+  // 입력폼 섹션이 접혀 있으면 펼치고 스크롤
+  const form = btn.closest('.ps');
+  if (form) {
+    if (form.classList.contains('collapsed')) togglePS(form.id);
+    form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+function cancelSchedEdit() {
+  schedEditingId = null;
+  const btn = document.getElementById('sAddBtn');
+  if (btn) btn.textContent = '추가';
+  const cancel = document.getElementById('sCancelEdit');
+  if (cancel) cancel.style.display = 'none';
+  ['sTimeH','sTimeM','sPlace','sContent','sCost','sNote'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const placeInp = document.getElementById('sPlace');
+  if (placeInp) { delete placeInp.dataset.lat; delete placeInp.dataset.lng; }
+  hideSchedMiniMap();
+  setPayMethod('cash');
+}
+
+// ── 일정 Excel/구글시트 가져오기 ──
+const SCHED_COL_MAP = {
+  date:    ['날짜','date','일자','day'],
+  time:    ['시간','time','출발','시각'],
+  place:   ['장소','place','위치','location','목적지'],
+  content: ['내용','일정','content','활동','activity','title','제목'],
+  cost:    ['비용','금액','cost','price','예산','예상비용'],
+  note:    ['메모','노트','note','비고','memo','remark'],
+};
+
+function detectCols(headers) {
+  const map = {};
+  headers.forEach((h, i) => {
+    const norm = (h||'').toString().trim().toLowerCase();
+    for (const [field, keywords] of Object.entries(SCHED_COL_MAP)) {
+      if (!map[field] && keywords.some(k => norm.includes(k))) map[field] = i;
+    }
+  });
+  return map;
+}
+
+function rowsToItems(rows, colMap) {
+  return rows.map(row => {
+    const get = f => (colMap[f] !== undefined ? (row[colMap[f]]||'').toString().trim() : '');
+    const date = get('date');
+    const time = get('time').replace(/[^0-9:]/g,'').slice(0,5);
+    const place = get('place');
+    const content = get('content');
+    const cost = get('cost');
+    const note = get('note');
+    if (!date && !place && !content) return null;
+    return { date, time, place, content, cost, note };
+  }).filter(Boolean);
+}
+
+async function importSchedExcel(input, tabId) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+  const data = await file.arrayBuffer();
+  const wb = XLSX.read(data, { type: 'array', cellDates: true });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+  if (rows.length < 2) { alert('데이터가 없습니다.'); return; }
+  const colMap = detectCols(rows[0]);
+  const items = rowsToItems(rows.slice(1), colMap);
+  await batchInsertSchedItems(items, tabId);
+}
+
+async function importSchedSheet(tabId) {
+  const url = document.getElementById('schedSheetUrl').value.trim();
+  if (!url) return;
+  const m = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  if (!m) { alert('올바른 구글 시트 URL이 아닙니다.'); return; }
+  const id = m[1];
+  const gidMatch = url.match(/gid=(\d+)/);
+  const gid = gidMatch ? gidMatch[1] : '0';
+  const csvUrl = `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`;
+  try {
+    const res = await fetch(csvUrl);
+    if (!res.ok) throw new Error('fetch 실패');
+    const text = await res.text();
+    const rows = text.split('\n').map(r => r.split(',').map(c => c.replace(/^"|"$/g,'').trim()));
+    if (rows.length < 2) { alert('데이터가 없습니다.'); return; }
+    const colMap = detectCols(rows[0]);
+    const items = rowsToItems(rows.slice(1), colMap);
+    await batchInsertSchedItems(items, tabId);
+    document.getElementById('schedSheetBox').classList.remove('open');
+    document.getElementById('schedSheetUrl').value = '';
+  } catch(e) {
+    alert('가져오기 실패.\n시트가 "링크가 있는 모든 사용자" 공개인지 확인해 주세요.');
+  }
+}
+
+// ── 장소 검색 (한국어는 Kakao, 그 외는 Nominatim) ──
+const HANGUL_RE = /[가-힣]/;
+
+// 반환 형식을 { display_name, lat, lon } 배열로 통일
+async function geocodeSearch(q) {
+  // 1순위: Google Places (전세계 커버리지 + 한국식 표기 인식 우수). 키 미설정/실패 시 아래로 폴백.
+  try {
+    const gr = await fetch(`/api/google-places-search?q=${encodeURIComponent(q)}`);
+    const gj = await gr.json();
+    if (gr.ok && !gj.error && (gj.places || []).length) {
+      return gj.places.map(p => ({
+        display_name: p.formattedAddress ? `${p.displayName?.text}, ${p.formattedAddress}` : p.displayName?.text,
+        lat: p.location?.latitude,
+        lon: p.location?.longitude
+      }));
+    }
+  } catch (e) { /* Google Places 실패 시 아래 폴백으로 진행 */ }
+
+  if (HANGUL_RE.test(q)) {
+    const r = await fetch(`/api/kakao-search?q=${encodeURIComponent(q)}`);
+    const j = await r.json();
+    if (!r.ok || j.error) throw new Error(j.error || 'kakao search failed');
+    return (j.documents || []).map(d => ({
+      display_name: d.road_address_name ? `${d.place_name}, ${d.road_address_name}` : `${d.place_name}, ${d.address_name}`,
+      lat: d.y, lon: d.x
+    }));
+  }
+  const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=6&accept-language=ko`, {
+    headers: { 'Accept-Language': 'ko' }
+  });
+  return await res.json();
+}
+
+let placeSearchTimer = null;
+async function searchPlace(q) {
+  clearTimeout(placeSearchTimer);
+  const dd = document.getElementById('placeDropdown');
+  const inp = document.getElementById('sPlace');
+  delete inp.dataset.lat; delete inp.dataset.lng;
+  hideSchedMiniMap();
+  if (!q || q.length < 2) { dd.innerHTML = ''; return; }
+  placeSearchTimer = setTimeout(async () => {
+    try {
+      const data = await geocodeSearch(q);
+      if (!data.length) { dd.innerHTML = `<div style="padding:10px 14px;font-size:12px;color:#7b80a0">검색 결과 없음</div>`; return; }
+      dd.innerHTML = data.map(p => {
+        const name = p.display_name.split(',').slice(0,3).join(', ');
+        return `<div onclick="selectPlace('${p.display_name.replace(/'/g,"\\'")}',${p.lat},${p.lon})"
+          style="padding:9px 14px;font-size:13px;color:#e0e2f5;cursor:pointer;border-bottom:1px solid #2a2f50;transition:.15s"
+          onmouseover="this.style.background='rgba(92,107,192,.2)'" onmouseout="this.style.background=''">${name}</div>`;
+      }).join('');
+    } catch(e) { dd.innerHTML = `<div style="padding:10px 14px;font-size:12px;color:#7b80a0">검색 실패</div>`; }
+  }, 350);
+}
+
+function selectPlace(name, lat, lng) {
+  // 짧게 정리 (앞 2개 항목만)
+  const short = name.split(',').slice(0,2).join(', ');
+  document.getElementById('sPlace').value = short;
+  document.getElementById('placeDropdown').innerHTML = '';
+  // 좌표도 저장 (일정 저장 시 활용)
+  document.getElementById('sPlace').dataset.lat = lat;
+  document.getElementById('sPlace').dataset.lng = lng;
+  ensureSchedMiniMap(lat, lng);
+}
+
+let schedMiniLeaflet = null, schedMiniMarker = null;
+function ensureSchedMiniMap(lat, lng) {
+  lat = parseFloat(lat); lng = parseFloat(lng);
+  if (isNaN(lat) || isNaN(lng)) return;
+  const wrap = document.getElementById('schedMiniMapWrap');
+  if (wrap) wrap.style.display = 'block';
+  if (!schedMiniLeaflet) {
+    schedMiniLeaflet = L.map('schedMiniMap', { zoomControl: false, attributionControl: false }).setView([lat, lng], 15);
+    L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&hl=ko&x={x}&y={y}&z={z}', {
+      maxZoom: 20, subdomains: ['0','1','2','3']
+    }).addTo(schedMiniLeaflet);
+    schedMiniMarker = L.marker([lat, lng], { draggable: true }).addTo(schedMiniLeaflet);
+    const applyDrag = () => {
+      const p = schedMiniMarker.getLatLng();
+      const inp = document.getElementById('sPlace');
+      inp.dataset.lat = p.lat; inp.dataset.lng = p.lng;
+    };
+    schedMiniMarker.on('dragend', applyDrag);
+    schedMiniLeaflet.on('click', e => {
+      schedMiniMarker.setLatLng(e.latlng);
+      const inp = document.getElementById('sPlace');
+      inp.dataset.lat = e.latlng.lat; inp.dataset.lng = e.latlng.lng;
+    });
+  } else {
+    schedMiniLeaflet.setView([lat, lng], 15);
+    schedMiniMarker.setLatLng([lat, lng]);
+  }
+  setTimeout(() => schedMiniLeaflet && schedMiniLeaflet.invalidateSize(), 60);
+}
+
+function hideSchedMiniMap() {
+  const wrap = document.getElementById('schedMiniMapWrap');
+  if (wrap) wrap.style.display = 'none';
+}
+
+async function batchInsertSchedItems(items, tabId) {
+  if (!items.length) { alert('인식된 데이터가 없습니다.\n날짜·장소·내용 열이 있는지 확인해 주세요.'); return; }
+  if (!confirm(`${items.length}개 일정을 가져오시겠습니까?\n(기존 일정은 유지됩니다)`)) return;
+  const rows = items.map((p, i) => ({ tab_id: tabId, data: p, sort_order: i }));
+  await sbPostMany('tab_items', rows);
+  const allItems = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderSchedDates(allItems);
+  renderSchedItems(allItems, currentSchedDate || allItems[0]?.data?.date);
+}
+
+// ── CHECKLIST ──
+const CL_DEFAULT_CATS = [
+  '👕 옷','📄 서류','💻 전자기기','💊 의약품','🧴 세면도구','📦 기타'
+];
+
+function renderChecklist(container, tab, items) {
+  const customCats = JSON.parse(localStorage.getItem(`clCats_${tab.id}`) || '[]');
+  const allCats = [...CL_DEFAULT_CATS, ...customCats];
+  const usedCats = [...new Set(items.map(i=>i.data.cat).filter(Boolean))];
+  const done = items.filter(i=>i.data.done).length;
+  const pct = items.length ? Math.round(done/items.length*100) : 0;
+
+  const grouped = {};
+  const noCat = [];
+  items.forEach(item => {
+    if (item.data.cat) { if (!grouped[item.data.cat]) grouped[item.data.cat] = []; grouped[item.data.cat].push(item); }
+    else noCat.push(item);
+  });
+
+  const renderItems = arr => arr.map(item=>`
+    <div class="cl-item${item.data.done?' done':''}" onclick="toggleClItem('${item.id}','${tab.id}',${!item.data.done})">
+      <div class="cl-check">${item.data.done?'✓':''}</div>
+      <div class="cl-text" contenteditable="true" spellcheck="false"
+        onclick="event.stopPropagation()"
+        onblur="saveItemField(event,'${item.id}','text')"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();event.target.blur();}"
+      >${item.data.text||''}</div>
+      <button class="del-btn" onclick="event.stopPropagation();deleteItem('${item.id}','${tab.id}')">삭제</button>
+    </div>`).join('');
+
+  const makeGroup = (c, itemList, labelStyle='') => {
+    const done = itemList.filter(i=>i.data.done).length;
+    const total = itemList.length;
+    const allDone = done === total;
+    return `<div class="cl-group" id="clg-${encodeURIComponent(c)}">
+      <div class="cl-group-label" onclick="toggleClGroup('${encodeURIComponent(c)}')" style="${labelStyle}">
+        <span>${c}</span>
+        <span style="font-size:11px;font-weight:400;color:${allDone?'#81c784':'#7b80a0'}">${done}/${total}</span>
+        <span class="cl-group-arrow">▼</span>
+      </div>
+      <div class="cl-group-body">${renderItems(itemList)}</div>
+    </div>`;
+  };
+  const groupHtml = [
+    ...allCats.filter(c=>grouped[c]).map(c=>makeGroup(c, grouped[c])),
+    ...usedCats.filter(c=>!allCats.includes(c)&&grouped[c]).map(c=>makeGroup(c, grouped[c])),
+    noCat.length ? makeGroup('미분류', noCat, 'color:#7b80a0') : ''
+  ].join('');
+
+  const catOptions = allCats.map(c=>`<option value="${c}">${c}</option>`).join('');
+
+  container.innerHTML = `<div class="pane-wrap" id="pw-cl-${tab.id}">
+    <div class="pane-header">
+      <div class="pane-title">✅ ${tab.title}</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="badge">${done}/${items.length} · ${pct}%</span>
+        <button class="pane-collapse-btn" onclick="toggleAllPS('pw-cl-${tab.id}',this)">접기 ▲</button>
+      </div>
+    </div>
+    <div class="progress-bar-wrap" style="margin-bottom:12px"><div class="progress-bar" style="width:${pct}%"></div></div>
+    <div class="ps" id="ps-clf-${tab.id}">
+      <div class="ps-header" onclick="togglePS('ps-clf-${tab.id}')">
+        <span class="ps-title">＋ 항목 추가</span>
+        <span class="ps-arrow">▼</span>
+      </div>
+      <div class="ps-body">
+        <div class="form-box" style="border:none;border-radius:0;margin:0">
+          <div class="form-row">
+            <input class="f-inp" id="clText" placeholder="준비물 입력" style="flex:1">
+            <select class="f-inp" id="clCat" style="max-width:160px" onchange="handleCatSelect(this,'${tab.id}')">
+              <option value="">카테고리 선택</option>
+              ${catOptions}
+              <option value="__add__" style="color:#7986cb;font-weight:700">＋ 직접 추가...</option>
+            </select>
+            <button class="f-btn" onclick="addClItem('${tab.id}')">추가</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    ${customCats.length ? `<div style="margin-bottom:12px;display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+      <span style="font-size:11px;color:#7b80a0">내 카테고리:</span>
+      ${customCats.map(c=>`<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(92,107,192,.15);border:1px solid #3a3f6b;border-radius:8px;padding:3px 10px;font-size:12px;color:#9fa8da">${c}<span onclick="removeCat('${tab.id}','${c}')" style="cursor:pointer;opacity:.6;margin-left:2px" title="삭제">✕</span></span>`).join('')}
+    </div>` : ''}
+    <div class="cl-list">${groupHtml}
+      ${!items.length?`<div class="empty-state"><div class="icon">✅</div><p>준비물을 추가해 보세요</p></div>`:''}
+    </div>
+  </div>`;
+  initPS([`ps-clf-${tab.id}`]);
+}
+
+const CAT_EMOJIS = [
+  '👕','👟','🧴','💄','💻','🔌','📷','📱','🎧','🔋',
+  '📄','💳','🎫','🛂','📋','🗂️','📁',
+  '💊','🩹','🌡️','😷',
+  '🍫','🧃','🥤','🍱','🧴',
+  '🎿','🏖️','🥾','⛺','🎣','🤿','🏋️',
+  '🎁','🛍️','🧧','📦','✈️','🚂','🚢','🏨','📸','🗺️'
+];
+
+function handleCatSelect(sel, tabId) {
+  if (sel.value === '__add__') {
+    sel.value = '';
+    openAddCatModal(tabId);
+  }
+}
+
+function openAddCatModal(tabId) {
+  document.getElementById('addCatModal')?.remove();
+  const m = document.createElement('div');
+  m.id = 'addCatModal';
+  m.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:999;background:#1e2240;border:1px solid #3a3f6b;border-radius:16px;padding:20px;width:360px;box-shadow:0 8px 40px rgba(0,0,0,.6);max-height:90vh;overflow-y:auto';
+  m.innerHTML = `
+    <div style="font-size:14px;font-weight:800;color:#e8eaf6;margin-bottom:14px">＋ 카테고리 추가</div>
+    <div style="font-size:11px;color:#7b80a0;margin-bottom:6px">이모지 선택</div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px;max-height:120px;overflow-y:auto;background:rgba(0,0,0,.2);border-radius:8px;padding:8px" id="catEmojiGrid">
+      ${CAT_EMOJIS.map(e=>`<span onclick="selectCatEmoji(this,'${e}')" style="font-size:20px;cursor:pointer;padding:4px 6px;border-radius:6px;border:2px solid transparent;transition:.15s" title="${e}">${e}</span>`).join('')}
+    </div>
+    <div style="font-size:11px;color:#7b80a0;margin-bottom:6px">카테고리 이름</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <div id="catEmojiPreview" style="width:40px;height:40px;background:rgba(255,255,255,.06);border:1px solid #3a3f6b;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📦</div>
+      <input id="newCatInput" class="f-inp" placeholder="카테고리 이름 *" style="flex:1">
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="f-btn" style="flex:1" onclick="confirmAddCat('${tabId}')">추가</button>
+      <button onclick="document.getElementById('addCatModal').remove()" style="flex:1;background:rgba(255,255,255,.06);border:1px solid #3a3f6b;color:#e8eaf6;border-radius:8px;padding:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">취소</button>
+    </div>`;
+  document.body.appendChild(m);
+  // 첫 번째 이모지 기본 선택
+  const first = m.querySelector('#catEmojiGrid span');
+  if (first) selectCatEmoji(first, CAT_EMOJIS[0]);
+  m.querySelector('#newCatInput').focus();
+  m.querySelector('#newCatInput').onkeydown = e => { if (e.key==='Enter') confirmAddCat(tabId); if (e.key==='Escape') m.remove(); };
+}
+
+function selectCatEmoji(el, emoji) {
+  document.querySelectorAll('#catEmojiGrid span').forEach(s => s.style.borderColor = 'transparent');
+  el.style.borderColor = '#7986cb';
+  el.style.background = 'rgba(92,107,192,.25)';
+  document.getElementById('catEmojiPreview').textContent = emoji;
+  document.getElementById('catEmojiPreview').dataset.emoji = emoji;
+}
+
+async function confirmAddCat(tabId) {
+  const name = document.getElementById('newCatInput')?.value.trim();
+  if (!name) return;
+  const emoji = document.getElementById('catEmojiPreview')?.dataset.emoji || '📦';
+  const full = `${emoji} ${name}`;
+  const key = `clCats_${tabId}`;
+  const cats = JSON.parse(localStorage.getItem(key) || '[]');
+  const isDup = cats.includes(full) || CL_DEFAULT_CATS.includes(full) ||
+    cats.some(c=>c.split(' ').slice(1).join(' ')===name);
+  if (!isDup) {
+    cats.push(full);
+    localStorage.setItem(key, JSON.stringify(cats));
+  }
+  document.getElementById('addCatModal')?.remove();
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderChecklist(document.getElementById('tabContent'), tab, items);
+}
+
+async function removeCat(tabId, cat) {
+  const key = `clCats_${tabId}`;
+  const cats = JSON.parse(localStorage.getItem(key) || '[]').filter(c => c !== cat);
+  localStorage.setItem(key, JSON.stringify(cats));
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderChecklist(document.getElementById('tabContent'), tab, items);
+}
+
+// ── Pane Section Collapse ──
+function togglePS(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const body = el.querySelector('.ps-body');
+  const collapsed = el.classList.toggle('collapsed');
+  if (!collapsed && body) psExpand(el, body);
+  localStorage.setItem(`ps_${currentProject?.id}_${id}`, collapsed ? '1' : '0');
+}
+
+// 펼침 애니메이션 후 max-height 제한 해제 → 내용이 늘어나도 잘리지 않음
+function psExpand(el, body) {
+  body.style.maxHeight = body.scrollHeight + 'px';
+  setTimeout(() => {
+    if (!el.classList.contains('collapsed')) body.style.maxHeight = 'none';
+  }, 400);
+}
+
+function initPS(ids) {
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const body = el.querySelector('.ps-body');
+    if (!body) return;
+    if (localStorage.getItem(`ps_${currentProject?.id}_${id}`) === '1') {
+      el.classList.add('collapsed');
+    } else {
+      body.style.maxHeight = 'none';
+    }
+  });
+}
+
+function toggleAllPS(containerId, btn) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const sections = container.querySelectorAll('.ps');
+  const allCollapsed = [...sections].every(s => s.classList.contains('collapsed'));
+  sections.forEach(s => {
+    const body = s.querySelector('.ps-body');
+    if (allCollapsed) {
+      s.classList.remove('collapsed');
+      if (body) psExpand(s, body);
+      if (s.id) localStorage.setItem(`ps_${currentProject?.id}_${s.id}`, '0');
+    } else {
+      s.classList.add('collapsed');
+      if (body) body.style.maxHeight = '0';
+      if (s.id) localStorage.setItem(`ps_${currentProject?.id}_${s.id}`, '1');
+    }
+  });
+  btn.textContent = allCollapsed ? '접기 ▲' : '펼치기 ▼';
+}
+
+function toggleClGroup(encodedCat) {
+  const el = document.getElementById('clg-' + encodedCat);
+  if (!el) return;
+  const body = el.querySelector('.cl-group-body');
+  const collapsed = el.classList.toggle('collapsed');
+  if (!collapsed && body) body.style.maxHeight = body.scrollHeight + 'px';
+}
+
+async function addClItem(tabId) {
+  const text = document.getElementById('clText').value.trim();
+  const cat = document.getElementById('clCat').value.trim();
+  if (!text) { alert('항목을 입력하세요'); return; }
+  await sbPost('tab_items', { tab_id: tabId, data: { text, cat, done: false }, sort_order: 0 });
+  document.getElementById('clText').value = '';
+  document.getElementById('clCat').value = '';
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderChecklist(document.getElementById('tabContent'), tab, items);
+}
+
+async function toggleClItem(id, tabId, done) {
+  const item = await sbGet('tab_items', `id=eq.${id}`);
+  if (!item[0]) return;
+  await sbPatch('tab_items', id, { data: { ...item[0].data, done } });
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderChecklist(document.getElementById('tabContent'), tab, items);
+}
+
+// ── LIST ──
+function renderList(container, tab, items) {
+  const editTd = (item, field) => `<td class="list-editable" contenteditable="true" spellcheck="false"
+      onblur="saveItemField(event,'${item.id}','${field}')"
+      onkeydown="if(event.key==='Enter'){event.preventDefault();event.target.blur();}"
+    >${(item.data[field]||'')}</td>`;
+  const rows = items.map(item=>`
+    <tr class="${item.data.done?'list-done':''}">
+      <td><span class="list-done-toggle" onclick="toggleListItem('${item.id}','${tab.id}',${!item.data.done})">${item.data.done?'✅':'⬜'}</span></td>
+      ${editTd(item,'name')}
+      ${editTd(item,'detail')}
+      ${editTd(item,'budget')}
+      ${editTd(item,'note')}
+      <td><button class="del-btn" onclick="deleteItem('${item.id}','${tab.id}')">삭제</button></td>
+    </tr>`).join('');
+  container.innerHTML = `<div class="pane-wrap" id="pw-list-${tab.id}">
+    <div class="pane-header">
+      <div class="pane-title">📋 ${tab.title}</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="badge">${items.length}개</span>
+        <button class="pane-collapse-btn" onclick="toggleAllPS('pw-list-${tab.id}',this)">접기 ▲</button>
+      </div>
+    </div>
+    <div class="ps" id="ps-lf-${tab.id}">
+      <div class="ps-header" onclick="togglePS('ps-lf-${tab.id}')">
+        <span class="ps-title">＋ 항목 추가</span>
+        <span class="ps-arrow">▼</span>
+      </div>
+      <div class="ps-body">
+        <div class="form-box" style="border:none;border-radius:0;margin:0">
+          <div class="form-row">
+            <input class="f-inp" id="lName" placeholder="이름/항목 *">
+            <input class="f-inp" id="lDetail" placeholder="세부내용">
+            <input class="f-inp" id="lBudget" placeholder="예산" style="max-width:120px">
+          </div>
+          <div class="form-row">
+            <input class="f-inp" id="lNote" placeholder="비고">
+            <button class="f-btn" onclick="addListItem('${tab.id}')">추가</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ps" id="ps-lt-${tab.id}">
+      <div class="ps-header" onclick="togglePS('ps-lt-${tab.id}')">
+        <span class="ps-title">📋 목록</span>
+        <span class="ps-count">${items.length}개</span>
+        <span class="ps-arrow">▼</span>
+      </div>
+      <div class="ps-body">
+        <div class="list-table-wrap">
+          <table class="list-table">
+            <thead><tr><th>완료</th><th>이름/항목</th><th>세부내용</th><th>예산</th><th>비고</th><th></th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+        ${!items.length?`<div class="empty-state"><div class="icon">📋</div><p>항목을 추가해 보세요</p></div>`:''}
+      </div>
+    </div>
+  </div>`;
+  initPS([`ps-lf-${tab.id}`, `ps-lt-${tab.id}`]);
+}
+
+async function addListItem(tabId) {
+  const name = document.getElementById('lName').value.trim();
+  if (!name) { alert('이름/항목을 입력하세요'); return; }
+  const data = {
+    name, detail: document.getElementById('lDetail').value.trim(),
+    budget: document.getElementById('lBudget').value.trim(),
+    note: document.getElementById('lNote').value.trim(), done: false
+  };
+  await sbPost('tab_items', { tab_id: tabId, data, sort_order: 0 });
+  ['lName','lDetail','lBudget','lNote'].forEach(id=>document.getElementById(id).value='');
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderList(document.getElementById('tabContent'), tab, items);
+}
+
+async function saveBudgetCell(e, id, tabId, field) {
+  if (field === 'amount') {
+    e.target.textContent = e.target.textContent.replace(/[^0-9.]/g, '').trim();
+  }
+  await saveItemField(e, id, field);
+  if (field === 'amount') {
+    const tab = currentTab;
+    const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+    renderBudget(document.getElementById('tabContent'), tab, items);
+  }
+}
+
+async function editCardLink(id) {
+  const item = await sbGet('tab_items', `id=eq.${id}`);
+  if (!item[0]) return;
+  const next = prompt('링크 URL을 입력하세요', item[0].data.link || '');
+  if (next === null) return;
+  await sbPatch('tab_items', id, { data: { ...item[0].data, link: next.trim() } });
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tab.id}&order=sort_order.asc,created_at.asc`);
+  renderCards(document.getElementById('tabContent'), tab, items);
+}
+
+async function saveItemField(e, id, field) {
+  const value = e.target.textContent.trim();
+  const item = await sbGet('tab_items', `id=eq.${id}`);
+  if (!item[0]) return;
+  if (value === (item[0].data[field] || '')) return;
+  await sbPatch('tab_items', id, { data: { ...item[0].data, [field]: value } });
+}
+
+// ── TABLE (custom columns) ──
+function renderTable(container, tab, items) {
+  const metaItem = items.find(i => i.data.__meta);
+  if (!metaItem) {
+    container.innerHTML = `
+      <div class="pane-wrap" id="pw-table-${tab.id}">
+        <div class="pane-header"><div class="pane-title">🧮 ${tab.title}</div></div>
+        <div class="form-box">
+          <label class="modal-label">컬럼(열) 이름을 쉼표(,)로 구분해 입력하세요</label>
+          <input class="f-inp" id="tblColsInput" placeholder="예: 방 번호, 인원, 이름, 비고" style="width:100%;margin-bottom:10px">
+          <button class="f-btn" onclick="createTableColumns('${tab.id}')">테이블 만들기</button>
+        </div>
+      </div>`;
+    return;
+  }
+  const columns = metaItem.data.columns || [];
+  const rows = items.filter(i => !i.data.__meta);
+
+  const colMgrHtml = columns.map(c => `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+      <span contenteditable="true" spellcheck="false" style="flex:1;font-size:13px;padding:2px 4px;border-radius:4px;cursor:text"
+        onblur="renameTableColumn(event,'${tab.id}','${encodeURIComponent(c)}')"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();event.target.blur();}"
+      >${c}</span>
+      <button class="del-btn" onclick="deleteTableColumn('${tab.id}','${encodeURIComponent(c)}')">삭제</button>
+    </div>`).join('');
+
+  const rowsHtml = rows.map(item => `
+    <tr>
+      ${columns.map(c => `<td class="list-editable" contenteditable="true" spellcheck="false"
+          onblur="saveTableCell(event,'${item.id}','${encodeURIComponent(c)}')"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();event.target.blur();}"
+        >${(item.data.cells && item.data.cells[c]) || ''}</td>`).join('')}
+      <td><button class="del-btn" onclick="deleteItem('${item.id}','${tab.id}')">삭제</button></td>
+    </tr>`).join('');
+
+  const addRowInputs = columns.map(c => `<input class="f-inp tbl-new-input" data-col="${encodeURIComponent(c)}" placeholder="${c}">`).join('');
+
+  container.innerHTML = `<div class="pane-wrap" id="pw-table-${tab.id}">
+    <div class="pane-header">
+      <div class="pane-title">🧮 ${tab.title}</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="badge">${rows.length}개</span>
+        <button class="pane-collapse-btn" onclick="toggleAllPS('pw-table-${tab.id}',this)">접기 ▲</button>
+      </div>
+    </div>
+    <div class="ps" id="ps-tcm-${tab.id}">
+      <div class="ps-header" onclick="togglePS('ps-tcm-${tab.id}')">
+        <span class="ps-title">🔧 컬럼 관리</span>
+        <span class="ps-arrow">▼</span>
+      </div>
+      <div class="ps-body">
+        ${colMgrHtml}
+        <div class="form-row" style="margin-top:10px">
+          <input class="f-inp" id="tblNewColInput" placeholder="새 컬럼 이름">
+          <button class="f-btn" onclick="addTableColumn('${tab.id}')">컬럼 추가</button>
+        </div>
+      </div>
+    </div>
+    <div class="ps" id="ps-tf-${tab.id}">
+      <div class="ps-header" onclick="togglePS('ps-tf-${tab.id}')">
+        <span class="ps-title">＋ 항목 추가</span>
+        <span class="ps-arrow">▼</span>
+      </div>
+      <div class="ps-body">
+        <div class="form-box" style="border:none;border-radius:0;margin:0">
+          <div class="form-row" id="tblNewRow-${tab.id}">${addRowInputs}</div>
+          <div class="form-row">
+            <button class="f-btn" onclick="addTableRow('${tab.id}')">추가</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ps" id="ps-tt-${tab.id}">
+      <div class="ps-header" onclick="togglePS('ps-tt-${tab.id}')">
+        <span class="ps-title">📊 목록</span>
+        <span class="ps-count">${rows.length}개</span>
+        <span class="ps-arrow">▼</span>
+      </div>
+      <div class="ps-body">
+        <div class="list-table-wrap">
+          <table class="list-table">
+            <thead><tr>${columns.map(c=>`<th>${c}</th>`).join('')}<th></th></tr></thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        </div>
+        ${!rows.length ? `<div class="empty-state"><div class="icon">🧮</div><p>항목을 추가해 보세요</p></div>` : ''}
+      </div>
+    </div>
+  </div>`;
+  initPS([`ps-tcm-${tab.id}`, `ps-tf-${tab.id}`, `ps-tt-${tab.id}`]);
+}
+
+async function reloadTable(tabId) {
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderTable(document.getElementById('tabContent'), tab, items);
+}
+
+async function createTableColumns(tabId) {
+  const raw = document.getElementById('tblColsInput').value.trim();
+  const columns = raw.split(',').map(s=>s.trim()).filter(Boolean);
+  if (!columns.length) { alert('컬럼 이름을 입력하세요'); return; }
+  await sbPost('tab_items', { tab_id: tabId, data: { __meta: true, columns }, sort_order: -1 });
+  await reloadTable(tabId);
+}
+
+async function addTableRow(tabId) {
+  const inputs = document.querySelectorAll(`#tblNewRow-${tabId} .tbl-new-input`);
+  const cells = {};
+  let hasValue = false;
+  inputs.forEach(inp => {
+    const col = decodeURIComponent(inp.dataset.col);
+    const val = inp.value.trim();
+    if (val) hasValue = true;
+    cells[col] = val;
+  });
+  if (!hasValue) { alert('값을 하나 이상 입력하세요'); return; }
+  await sbPost('tab_items', { tab_id: tabId, data: { cells }, sort_order: 0 });
+  await reloadTable(tabId);
+}
+
+async function saveTableCell(e, id, encCol) {
+  const col = decodeURIComponent(encCol);
+  const value = e.target.textContent.trim();
+  const item = await sbGet('tab_items', `id=eq.${id}`);
+  if (!item[0]) return;
+  const cells = { ...(item[0].data.cells || {}) };
+  if (value === (cells[col] || '')) return;
+  cells[col] = value;
+  await sbPatch('tab_items', id, { data: { ...item[0].data, cells } });
+}
+
+async function addTableColumn(tabId) {
+  const input = document.getElementById('tblNewColInput');
+  const name = input.value.trim();
+  if (!name) { alert('컬럼 이름을 입력하세요'); return; }
+  const metas = await sbGet('tab_items', `tab_id=eq.${tabId}&data->>__meta=eq.true`);
+  const meta = metas[0];
+  if (!meta) return;
+  if ((meta.data.columns||[]).includes(name)) { alert('이미 있는 컬럼 이름입니다'); return; }
+  const columns = [...(meta.data.columns||[]), name];
+  await sbPatch('tab_items', meta.id, { data: { ...meta.data, columns } });
+  await reloadTable(tabId);
+}
+
+async function renameTableColumn(e, tabId, encOldName) {
+  const oldName = decodeURIComponent(encOldName);
+  const newName = e.target.textContent.trim();
+  if (!newName || newName === oldName) { e.target.textContent = oldName; return; }
+  const metas = await sbGet('tab_items', `tab_id=eq.${tabId}&data->>__meta=eq.true`);
+  const meta = metas[0];
+  if (!meta) return;
+  const columns = (meta.data.columns||[]).map(c => c === oldName ? newName : c);
+  await sbPatch('tab_items', meta.id, { data: { ...meta.data, columns } });
+  const rows = await sbGet('tab_items', `tab_id=eq.${tabId}`);
+  for (const r of rows) {
+    if (r.data.__meta) continue;
+    if (r.data.cells && Object.prototype.hasOwnProperty.call(r.data.cells, oldName)) {
+      const cells = { ...r.data.cells };
+      cells[newName] = cells[oldName];
+      delete cells[oldName];
+      await sbPatch('tab_items', r.id, { data: { ...r.data, cells } });
+    }
+  }
+  await reloadTable(tabId);
+}
+
+async function deleteTableColumn(tabId, encName) {
+  const name = decodeURIComponent(encName);
+  if (!confirm(`"${name}" 컬럼을 삭제하시겠습니까? (해당 컬럼의 데이터는 사라집니다)`)) return;
+  const metas = await sbGet('tab_items', `tab_id=eq.${tabId}&data->>__meta=eq.true`);
+  const meta = metas[0];
+  if (!meta) return;
+  const columns = (meta.data.columns||[]).filter(c => c !== name);
+  await sbPatch('tab_items', meta.id, { data: { ...meta.data, columns } });
+  await reloadTable(tabId);
+}
+
+// ── FLIGHT (항공편 정보) ──
+let editingFlightId = null;
+
+function renderFlight(container, tab, items) {
+  const metaItem = items.find(i => i.data.__meta);
+  const legs = items.filter(i => !i.data.__meta).sort((a,b)=>(a.data.direction==='return'?1:0)-(b.data.direction==='return'?1:0));
+  const bookingNo = metaItem?.data.bookingNo || '';
+
+  const summaryParts = [];
+  const airlines = [...new Set(legs.map(l=>l.data.airline).filter(Boolean))];
+  if (airlines.length) summaryParts.push(airlines.join('/'));
+  const flightNos = legs.map(l=>l.data.flightNo).filter(Boolean);
+  if (flightNos.length) summaryParts.push(flightNos.join('/'));
+  const dep = legs.find(l=>l.data.direction!=='return'), ret = legs.find(l=>l.data.direction==='return');
+  if (dep) summaryParts.push(`${dep.data.fromCode||''} ↔ ${dep.data.toCode||''}`.trim());
+  if (bookingNo) summaryParts.push(`예약번호 ${bookingNo}`);
+
+  const legCard = item => {
+    const d = item.data;
+    const isReturn = d.direction === 'return';
+    const badges = (d.badges||[]).map(b=>`<span class="flight-badge">${b}</span>`).join('');
+    return `<div class="flight-leg">
+      <div class="flight-leg-head">
+        <span>${isReturn?'🛬 오는 편':'🛫 가는 편'} · ${d.date||''} · ${d.flightNo||''}</span>
+        <span class="flight-leg-actions">
+          <button class="del-btn" style="background:rgba(92,107,192,.15);color:#9fa8da" onclick="editFlightLeg('${item.id}','${tab.id}')">수정</button>
+          <button class="del-btn" onclick="deleteItem('${item.id}','${tab.id}')">삭제</button>
+        </span>
+      </div>
+      <div class="flight-route">
+        <div class="flight-airport">
+          <div class="flight-code">${d.fromCode||''}</div>
+          <div class="flight-name">${d.fromName||''}</div>
+          <div class="flight-time">${d.depTime||''}</div>
+        </div>
+        <div class="flight-mid">✈️<div class="flight-duration">${d.duration||''}${(d.duration&&(d.stops||'직항'))?' · ':''}${d.stops||'직항'}</div></div>
+        <div class="flight-airport">
+          <div class="flight-code">${d.toCode||''}</div>
+          <div class="flight-name">${d.toName||''}</div>
+          <div class="flight-time">${d.arrTime||''}</div>
+        </div>
+      </div>
+      ${badges?`<div class="flight-badges">${badges}</div>`:''}
+    </div>`;
+  };
+
+  container.innerHTML = `<div class="pane-wrap" id="pw-flight-${tab.id}">
+    <div class="pane-header">
+      <div>
+        <div class="pane-title">✈️ ${tab.title}</div>
+        ${summaryParts.length?`<div style="font-size:12px;color:var(--sub);margin-top:4px">${summaryParts.join(' · ')}</div>`:''}
+      </div>
+      <button class="pane-collapse-btn" onclick="toggleAllPS('pw-flight-${tab.id}',this)">접기 ▲</button>
+    </div>
+    <div style="display:grid;grid-template-columns:${legs.length>1?'1fr 1fr':'1fr'};gap:16px;margin-bottom:16px">
+      ${legs.map(legCard).join('') || `<div class="empty-state"><div class="icon">✈️</div><p>항공편을 추가해 보세요</p></div>`}
+    </div>
+    <div class="ps" id="ps-ff-${tab.id}">
+      <div class="ps-header" onclick="togglePS('ps-ff-${tab.id}')">
+        <span class="ps-title">＋ 항공편 추가</span>
+        <span class="ps-arrow">▼</span>
+      </div>
+      <div class="ps-body">
+        <div class="form-box" style="border:none;border-radius:0;margin:0">
+          <div class="form-row">
+            <select class="f-sel" id="flDirection"><option value="depart">🛫 가는 편</option><option value="return">🛬 오는 편</option></select>
+            <input class="f-inp" id="flDate" type="date">
+            <input class="f-inp" id="flFlightNo" placeholder="편명 (예: KE0921)">
+          </div>
+          <div class="form-row">
+            <input class="f-inp" id="flAirline" placeholder="항공사 (예: 대한항공)">
+            <input class="f-inp" id="flBookingNo" placeholder="예약번호" value="${bookingNo}">
+          </div>
+          <div class="form-row">
+            <input class="f-inp" id="flFromCode" placeholder="출발 공항코드 (예: ICN)" style="max-width:140px">
+            <input class="f-inp" id="flFromName" placeholder="출발 도시명 (예: 인천)">
+            <input class="f-inp" id="flDepTime" placeholder="출발시간 (예: 12:45)" style="max-width:140px">
+          </div>
+          <div class="form-row">
+            <input class="f-inp" id="flToCode" placeholder="도착 공항코드 (예: LIS)" style="max-width:140px">
+            <input class="f-inp" id="flToName" placeholder="도착 도시명 (예: 리스본)">
+            <input class="f-inp" id="flArrTime" placeholder="도착시간 (예: 20:15)" style="max-width:140px">
+          </div>
+          <div class="form-row">
+            <input class="f-inp" id="flDuration" placeholder="소요시간 (예: 15시간 30분)">
+            <input class="f-inp" id="flStops" placeholder="직항/경유 (예: 직항)" style="max-width:140px">
+            <input class="f-inp" id="flBadges" placeholder="배지 (쉼표로 구분, 예: 수하물 포함, 연차 1일 필요)">
+          </div>
+          <div class="form-row">
+            <button class="f-btn" id="flSaveBtn" onclick="saveFlightLeg('${tab.id}')">추가</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  initPS([`ps-ff-${tab.id}`]);
+}
+
+function editFlightLeg(id, tabId) {
+  sbGet('tab_items', `id=eq.${id}`).then(rows => {
+    const item = rows[0];
+    if (!item) return;
+    editingFlightId = id;
+    const d = item.data;
+    document.getElementById('flDirection').value = d.direction || 'depart';
+    document.getElementById('flDate').value = d.date || '';
+    document.getElementById('flFlightNo').value = d.flightNo || '';
+    document.getElementById('flAirline').value = d.airline || '';
+    document.getElementById('flFromCode').value = d.fromCode || '';
+    document.getElementById('flFromName').value = d.fromName || '';
+    document.getElementById('flDepTime').value = d.depTime || '';
+    document.getElementById('flToCode').value = d.toCode || '';
+    document.getElementById('flToName').value = d.toName || '';
+    document.getElementById('flArrTime').value = d.arrTime || '';
+    document.getElementById('flDuration').value = d.duration || '';
+    document.getElementById('flStops').value = d.stops || '';
+    document.getElementById('flBadges').value = (d.badges||[]).join(', ');
+    document.getElementById('flSaveBtn').textContent = '수정 완료';
+    document.getElementById(`ps-ff-${tabId}`)?.querySelector('.ps-body')?.classList.remove('collapsed');
+    document.getElementById('flDirection').scrollIntoView({ behavior:'smooth', block:'center' });
+  });
+}
+
+async function saveFlightLeg(tabId) {
+  const flightNo = document.getElementById('flFlightNo').value.trim();
+  const fromCode = document.getElementById('flFromCode').value.trim();
+  const toCode = document.getElementById('flToCode').value.trim();
+  if (!fromCode || !toCode) { alert('출발/도착 공항코드를 입력하세요'); return; }
+  const data = {
+    direction: document.getElementById('flDirection').value,
+    date: document.getElementById('flDate').value,
+    flightNo, airline: document.getElementById('flAirline').value.trim(),
+    fromCode, fromName: document.getElementById('flFromName').value.trim(),
+    toCode, toName: document.getElementById('flToName').value.trim(),
+    depTime: document.getElementById('flDepTime').value.trim(),
+    arrTime: document.getElementById('flArrTime').value.trim(),
+    duration: document.getElementById('flDuration').value.trim(),
+    stops: document.getElementById('flStops').value.trim(),
+    badges: document.getElementById('flBadges').value.split(',').map(s=>s.trim()).filter(Boolean)
+  };
+  const bookingNo = document.getElementById('flBookingNo').value.trim();
+
+  if (editingFlightId) {
+    await sbPatch('tab_items', editingFlightId, { data });
+    editingFlightId = null;
+    document.getElementById('flSaveBtn').textContent = '추가';
+  } else {
+    await sbPost('tab_items', { tab_id: tabId, data, sort_order: 0 });
+  }
+
+  const metas = await sbGet('tab_items', `tab_id=eq.${tabId}&data->>__meta=eq.true`);
+  if (metas[0]) {
+    if (bookingNo !== (metas[0].data.bookingNo||'')) await sbPatch('tab_items', metas[0].id, { data: { ...metas[0].data, bookingNo } });
+  } else if (bookingNo) {
+    await sbPost('tab_items', { tab_id: tabId, data: { __meta: true, bookingNo }, sort_order: -1 });
+  }
+
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderFlight(document.getElementById('tabContent'), tab, items);
+}
+
+async function toggleListItem(id, tabId, done) {
+  const item = await sbGet('tab_items', `id=eq.${id}`);
+  if (!item[0]) return;
+  await sbPatch('tab_items', id, { data: { ...item[0].data, done } });
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderList(document.getElementById('tabContent'), tab, items);
+}
+
+// ── CARD ──
+function renderCards(container, tab, items) {
+  const groups = {};
+  const noGroup = [];
+  items.forEach(item => {
+    const g = item.data.group || '';
+    if (g) { if (!groups[g]) groups[g] = []; groups[g].push(item); }
+    else noGroup.push(item);
+  });
+  const existingGroups = [...new Set(items.map(i=>i.data.group).filter(Boolean))];
+  const groupOpts = existingGroups.map(g=>`<option value="${g}">${g}</option>`).join('');
+
+  const renderGroupItems = arr => arr.map(item=>`
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+      <span class="card-icon-btn" style="font-size:20px;flex-shrink:0;margin-top:1px" onclick="event.stopPropagation();toggleCardIconPicker('${item.id}')" title="아이콘 변경">${item.data.icon||'📌'}<div class="card-icon-picker" id="cip-${item.id}" data-item="${item.id}">${CAT_EMOJIS.concat(['🏨','🍽️','☕','🍷','🚇','🚕','🚶','🧭','💰','📞','🎵','🎨','⛪','🏛️','🌸','🌊','🏔️','🗼','🎡','🛒','💈','🎪']).map(e=>`<span onclick="event.stopPropagation();setItemIcon('${item.id}','${e}')" style="font-size:18px;cursor:pointer;padding:3px;border-radius:6px">${e}</span>`).join('')}</div></span>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+          <span class="card-badge-tag" contenteditable="true" spellcheck="false"
+            onclick="event.stopPropagation()"
+            onblur="saveItemField(event,'${item.id}','badge')"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();event.target.blur();}"
+            data-placeholder="배지"
+          >${item.data.badge||''}</span>
+          <div class="card-editable-title" contenteditable="true" spellcheck="false"
+            onclick="event.stopPropagation()"
+            onblur="saveItemField(event,'${item.id}','title')"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();event.target.blur();}"
+            style="font-size:14px;font-weight:800;color:var(--text);cursor:text;flex:1"
+          >${item.data.title||''}</div>
+          <span class="card-price-tag" contenteditable="true" spellcheck="false"
+            onclick="event.stopPropagation()"
+            onblur="saveItemField(event,'${item.id}','price')"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();event.target.blur();}"
+            data-placeholder="가격"
+          >${item.data.price||''}</span>
+        </div>
+        <div class="card-editable-detail" contenteditable="true" spellcheck="false"
+          onclick="event.stopPropagation()"
+          onblur="saveItemField(event,'${item.id}','detail')"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();event.target.blur();}"
+          style="font-size:12px;color:var(--sub);line-height:1.55;cursor:text;min-height:14px;white-space:pre-wrap"
+          data-placeholder="설명 추가"
+        >${item.data.detail||''}</div>
+        <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap;align-items:center">
+          <span style="font-size:11px;color:#7986cb;display:flex;align-items:center;gap:3px">🔗${item.data.link
+            ? `<a href="${item.data.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" ondblclick="event.preventDefault();event.stopPropagation();editCardLink('${item.id}')" style="color:inherit;text-decoration:underline;cursor:pointer" title="더블클릭하면 수정">${item.data.link}</a>`
+            : `<span onclick="event.stopPropagation();editCardLink('${item.id}')" style="cursor:pointer;opacity:.6">링크 추가</span>`
+          }</span>
+          ${item.data.lat&&item.data.lng?`<a href="https://maps.google.com/?q=${item.data.lat},${item.data.lng}" target="_blank" style="font-size:11px;color:#43a047;text-decoration:none">📍 지도 보기</a>`:''}
+          <span style="font-size:11px;color:#7b80a0;display:flex;align-items:center;gap:3px">📍<span class="card-editable-place" contenteditable="true" spellcheck="false"
+            onclick="event.stopPropagation()"
+            onblur="saveItemField(event,'${item.id}','place')"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();event.target.blur();}"
+            style="cursor:text;min-width:16px;display:inline-block" data-placeholder="장소 추가"
+          >${item.data.place||''}</span></span>
+        </div>
+      </div>
+      <button class="del-btn" onclick="event.stopPropagation();deleteItem('${item.id}','${tab.id}')">삭제</button>
+    </div>`).join('');
+
+  const makeGroupPS = (g, arr) => {
+    const psId = `ps-cg-${tab.id}-${encodeURIComponent(g)}`;
+    return `<div class="ps" id="${psId}">
+      <div class="ps-header" onclick="togglePS('${psId}')">
+        <span class="ps-title">${g}</span>
+        <span class="ps-count">${arr.length}개</span>
+        <span class="ps-arrow">▼</span>
+      </div>
+      <div class="ps-body" style="padding:0 4px">${renderGroupItems(arr)}</div>
+    </div>`;
+  };
+
+  const groupHtml = [
+    ...existingGroups.map(g => makeGroupPS(g, groups[g])),
+    noGroup.length ? makeGroupPS('기타', noGroup) : ''
+  ].join('');
+
+  const allPsIds = [
+    `ps-cf-${tab.id}`,
+    ...existingGroups.map(g => `ps-cg-${tab.id}-${encodeURIComponent(g)}`),
+    ...(noGroup.length ? [`ps-cg-${tab.id}-${encodeURIComponent('기타')}`] : [])
+  ];
+
+  container.innerHTML = `<div class="pane-wrap" id="pw-card-${tab.id}">
+    <div class="pane-header">
+      <div class="pane-title">🃏 ${tab.title}</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="badge">${items.length}개</span>
+        <button class="pane-collapse-btn" onclick="toggleAllPS('pw-card-${tab.id}',this)">접기 ▲</button>
+      </div>
+    </div>
+    <div class="ps" id="ps-cf-${tab.id}">
+      <div class="ps-header" onclick="togglePS('ps-cf-${tab.id}')">
+        <span class="ps-title">＋ 카드 추가</span>
+        <span class="ps-arrow">▼</span>
+      </div>
+      <div class="ps-body">
+        <div class="form-box" style="border:none;border-radius:0;margin:0">
+          <div class="form-row">
+            <button id="cIconBtn" onclick="toggleCardEmojiPicker()" style="width:48px;height:40px;background:rgba(255,255,255,.06);border:1px solid #3a3f6b;border-radius:8px;font-size:20px;cursor:pointer;flex-shrink:0;position:relative" title="이모지 선택">📌</button>
+            <input type="hidden" id="cIcon" value="📌">
+            <input class="f-inp" id="cTitle" placeholder="제목 *" style="flex:2">
+            <input class="f-inp" id="cDetail" placeholder="설명/내용">
+          </div>
+          <div class="form-row" style="position:relative">
+            <input class="f-inp" id="cPlace" placeholder="📍 장소 검색" oninput="cardPlaceSearch(this)" autocomplete="off">
+            <div id="cPlaceSuggest" style="display:none;position:absolute;top:42px;left:0;right:0;background:#1e2240;border:1px solid #3a3f6b;border-radius:8px;z-index:50;max-height:160px;overflow-y:auto"></div>
+            <input class="f-inp" id="cLink" placeholder="링크 URL (선택)">
+          </div>
+          <div class="form-row">
+            <input class="f-inp" id="cBadge" placeholder="배지 (예: 현지 1위, 저렴)" style="max-width:200px">
+            <input class="f-inp" id="cPrice" placeholder="가격 (예: €12~18)" style="max-width:160px">
+          </div>
+          <div class="form-row">
+            <input class="f-inp" id="cGroup" placeholder="카드 그룹" list="cGroupList">
+            <datalist id="cGroupList">${groupOpts}</datalist>
+            <button class="f-btn" onclick="addCard('${tab.id}')">추가</button>
+          </div>
+        </div>
+        <div id="cardEmojiPicker" style="display:none;background:#1e2240;border:1px solid #3a3f6b;border-radius:12px;padding:12px;margin-bottom:12px;flex-wrap:wrap;gap:4px">
+          ${CAT_EMOJIS.concat(['🏨','🍽️','☕','🍷','🚇','🚕','🚶','🧭','💰','📞','🎵','🎨','⛪','🏛️','🌸','🌊','🏔️','🗼','🎡','🛒','💈','🎪']).map(e=>
+            `<span onclick="setCardIcon('${e}')" style="font-size:22px;cursor:pointer;padding:4px;border-radius:6px;transition:.1s" onmouseover="this.style.background='rgba(92,107,192,.3)'" onmouseout="this.style.background=''">${e}</span>`
+          ).join('')}
+        </div>
+      </div>
+    </div>
+    ${groupHtml}
+    ${!items.length?`<div class="empty-state"><div class="icon">🃏</div><p>그룹명과 항목을 추가해 보세요</p></div>`:''}
+  </div>`;
+  initPS(allPsIds);
+}
+
+function toggleCardEmojiPicker() {
+  const p = document.getElementById('cardEmojiPicker');
+  p.style.display = p.style.display === 'none' ? 'flex' : 'none';
+}
+function setCardIcon(emoji) {
+  document.getElementById('cIcon').value = emoji;
+  document.getElementById('cIconBtn').textContent = emoji;
+  document.getElementById('cardEmojiPicker').style.display = 'none';
+}
+
+let cardPlaceLat = null, cardPlaceLng = null, cardPlaceName = '';
+async function cardPlaceSearch(input) {
+  const q = input.value.trim();
+  const box = document.getElementById('cPlaceSuggest');
+  cardPlaceLat = null; cardPlaceLng = null; cardPlaceName = '';
+  if (q.length < 2) { box.style.display = 'none'; return; }
+  try {
+    const list = await geocodeSearch(q);
+    if (!list.length) { box.style.display = 'none'; return; }
+    box.style.display = 'block';
+    box.innerHTML = list.map(p => `
+      <div onclick="selectCardPlace('${p.display_name.replace(/'/g,'`')}',${p.lat},${p.lon})"
+        style="padding:8px 12px;cursor:pointer;font-size:12px;color:#c5cae9;border-bottom:1px solid #252940"
+        onmouseover="this.style.background='rgba(92,107,192,.2)'" onmouseout="this.style.background=''">
+        📍 ${p.display_name}
+      </div>`).join('');
+  } catch(e) { box.style.display = 'none'; }
+}
+function selectCardPlace(name, lat, lng) {
+  cardPlaceLat = lat; cardPlaceLng = lng;
+  cardPlaceName = name.split(',')[0];
+  document.getElementById('cPlace').value = cardPlaceName;
+  document.getElementById('cPlaceSuggest').style.display = 'none';
+}
+
+async function addCard(tabId) {
+  const title = document.getElementById('cTitle').value.trim();
+  if (!title) { alert('제목을 입력하세요'); return; }
+  const data = {
+    icon: document.getElementById('cIcon').value.trim() || '📌',
+    title,
+    detail: document.getElementById('cDetail').value.trim(),
+    link: document.getElementById('cLink').value.trim(),
+    badge: document.getElementById('cBadge').value.trim(),
+    price: document.getElementById('cPrice').value.trim(),
+    group: document.getElementById('cGroup').value.trim(),
+    place: cardPlaceName || document.getElementById('cPlace').value.trim(),
+    lat: cardPlaceLat, lng: cardPlaceLng
+  };
+  await sbPost('tab_items', { tab_id: tabId, data, sort_order: 0 });
+  ['cTitle','cDetail','cLink','cBadge','cPrice','cPlace'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('cIcon').value = '📌';
+  document.getElementById('cIconBtn').textContent = '📌';
+  cardPlaceLat = null; cardPlaceLng = null; cardPlaceName = '';
+  const tab = currentTab;
+  const newItems = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderCards(document.getElementById('tabContent'), tab, newItems);
+}
+
+function toggleCardIconPicker(id) {
+  document.querySelectorAll('.card-icon-picker').forEach(el => { if (el.dataset.item !== id) el.style.display = 'none'; });
+  const p = document.getElementById(`cip-${id}`);
+  if (p) p.style.display = p.style.display === 'flex' ? 'none' : 'flex';
+}
+async function setItemIcon(id, emoji) {
+  const item = await sbGet('tab_items', `id=eq.${id}`);
+  if (!item[0]) return;
+  await sbPatch('tab_items', id, { data: { ...item[0].data, icon: emoji } });
+  const tab = currentTab;
+  const newItems = await sbGet('tab_items', `tab_id=eq.${tab.id}&order=sort_order.asc,created_at.asc`);
+  renderCards(document.getElementById('tabContent'), tab, newItems);
+}
+
+// ── MAP ──
+const LAYER_PALETTE = ['#e53935','#43a047','#fb8c00','#1e88e5','#8e24aa','#00acc1','#f06292','#6d4c41','#546e7a','#fdd835','#00897b','#5e35b1'];
+let mapAllItems = [], mapActiveLayers = new Set(), mapLayerColors = {};
+
+function getLayerColor(layer) {
+  if (!layer) return '#5c6bc0';
+  if (!mapLayerColors[layer]) {
+    const idx = Object.keys(mapLayerColors).length % LAYER_PALETTE.length;
+    mapLayerColors[layer] = LAYER_PALETTE[idx];
+  }
+  return mapLayerColors[layer];
+}
+
+function renderMap(container, tab, items) {
+  mapAllItems = items;
+  mapLayerColors = {};
+  const layers = [...new Set(items.map(i => i.data.layer||'').filter(Boolean))];
+  layers.forEach(l => getLayerColor(l));
+  mapActiveLayers = new Set([...layers, '']);
+
+  const layerBarHtml = layers.length > 0 ? `<div class="map-layer-bar">
+    <span style="font-size:11px;color:var(--sub);font-weight:700;white-space:nowrap">레이어:</span>
+    ${layers.map(l=>`<button class="map-layer-btn on" data-layer="${l}" style="background:${getLayerColor(l)}" onclick="toggleMapLayer(this,'${l}')">${l}</button>`).join('')}
+  </div>` : '';
+
+  container.innerHTML = `<div class="map-wrap">
+    ${layerBarHtml}
+    <div class="map-layout">
+      <div id="tab-map-el"></div>
+      <div class="map-sidebar">
+        <div class="map-sidebar-header">
+          📍 장소 목록 <span class="badge" id="mapCount">${items.length}곳</span>
+          <button class="map-kml-btn" onclick="document.getElementById('kmlFileInput').click()">📂 KML 가져오기</button>
+        </div>
+        <input type="file" id="kmlFileInput" accept=".kml,.kmz" style="display:none" onchange="importKML(this,'${tab.id}')">
+        <div class="map-place-list" id="mapPlaceList">${renderPlaceList(items, tab.id)}</div>
+        <div class="map-add-form">
+          <div style="font-size:12px;font-weight:700;color:var(--accent2);margin-bottom:8px">＋ 장소 추가</div>
+          <div style="position:relative;margin-bottom:6px">
+            <input class="f-inp" id="mSearch" placeholder="🔍 장소 이름으로 검색" style="width:100%" autocomplete="off"
+              oninput="mapPlaceSearch(this.value)" onblur="setTimeout(()=>document.getElementById('mSearchDropdown').innerHTML='',200)">
+            <div id="mSearchDropdown" style="position:absolute;top:100%;left:0;right:0;z-index:50;background:#1e2240;border:1px solid #3a3f6b;border-radius:8px;overflow:hidden;margin-top:4px;max-height:180px;overflow-y:auto"></div>
+          </div>
+          <div style="position:relative;margin-bottom:6px">
+            <input class="f-inp" id="mGurl" placeholder="🗺️ 구글맵 URL 붙여넣기 (자동 입력)" style="width:100%;padding-right:60px" oninput="parseGmapUrl(this.value)">
+            <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--sub)">자동</span>
+          </div>
+          <input class="f-inp" id="mName" placeholder="장소 이름 *" style="margin-bottom:6px;width:100%">
+          <input class="f-inp" id="mDesc" placeholder="설명 (선택)" style="margin-bottom:6px;width:100%">
+          <input class="f-inp" id="mLayer" placeholder="레이어 (예: 맛집, 1일차)" style="margin-bottom:6px;width:100%">
+          <div class="map-coord-hint">구글맵 URL 붙여넣기 또는 지도를 직접 클릭하면 좌표가 입력됩니다</div>
+          <div class="map-coord-row">
+            <input class="f-inp" id="mLat" placeholder="위도" style="flex:1">
+            <input class="f-inp" id="mLng" placeholder="경도" style="flex:1">
+          </div>
+          <button class="f-btn" style="width:100%" onclick="addMapPlace('${tab.id}')">추가</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  initLeafletTab(items, tab.id);
+}
+
+function renderPlaceList(items, tabId) {
+  return items.map(item => {
+    const color = getLayerColor(item.data.layer||'');
+    const layerBadge = item.data.layer ? `<div class="map-place-layer" style="background:${color}">${item.data.layer}</div>` : '';
+    return `<div class="map-place-item" id="mpi-${item.id}" onclick="focusMarker(${item.data.lat},${item.data.lng})">
+      <div class="map-place-name">${item.data.name||''}</div>
+      <div class="map-place-desc">${item.data.desc||''}</div>
+      ${layerBadge}
+      <div style="display:flex;justify-content:flex-end;margin-top:4px">
+        <button class="del-btn" onclick="event.stopPropagation();deleteItem('${item.id}','${tabId}')">삭제</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleMapLayer(btn, layer) {
+  btn.classList.toggle('on');
+  if (mapActiveLayers.has(layer)) mapActiveLayers.delete(layer);
+  else mapActiveLayers.add(layer);
+  Object.entries(lMarkers).forEach(([id, m]) => {
+    const item = mapAllItems.find(i=>i.id===id);
+    const l = item?.data?.layer || '';
+    if (mapActiveLayers.has(l) || (!l && mapActiveLayers.has(''))) m.addTo(leafletMap);
+    else if (leafletMap.hasLayer(m)) leafletMap.removeLayer(m);
+  });
+  const visible = mapAllItems.filter(i => mapActiveLayers.has(i.data.layer||''));
+  document.getElementById('mapCount').textContent = `${visible.length}곳`;
+  // 목록도 필터
+  mapAllItems.forEach(item => {
+    const el = document.getElementById('mpi-'+item.id);
+    if (el) el.style.display = mapActiveLayers.has(item.data.layer||'') ? '' : 'none';
+  });
+}
+
+function initLeafletTab(items, tabId) {
+  if (leafletMap) { leafletMap.remove(); leafletMap = null; }
+  leafletMap = window.leafletMap = L.map('tab-map-el').setView([37.5665, 126.9780], 5);
+  L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&hl=ko&x={x}&y={y}&z={z}', {
+    maxZoom:20, subdomains:['0','1','2','3']
+  }).addTo(leafletMap);
+  leafletMap.on('click', e => {
+    document.getElementById('mLat').value = e.latlng.lat.toFixed(6);
+    document.getElementById('mLng').value = e.latlng.lng.toFixed(6);
+  });
+  lMarkers = {};
+  items.forEach(item => addLeafletMarker(item));
+  if (items.length > 0) {
+    const lats = items.map(i=>i.data.lat), lngs = items.map(i=>i.data.lng);
+    leafletMap.fitBounds([[Math.min(...lats),Math.min(...lngs)],[Math.max(...lats),Math.max(...lngs)]], {padding:[30,30]});
+  }
+}
+
+function addLeafletMarker(item) {
+  if (!item.data.lat || !item.data.lng) return;
+  const color = getLayerColor(item.data.layer||'');
+  const icon = L.divIcon({
+    html:`<div style="width:12px;height:12px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.5)"></div>`,
+    className:'', iconSize:[12,12], iconAnchor:[6,6]
+  });
+  const m = L.marker([item.data.lat, item.data.lng], { icon })
+    .bindPopup(`<b>${item.data.name||''}</b>${item.data.layer?'<br><small>'+item.data.layer+'</small>':''}${item.data.desc?'<br>'+item.data.desc:''}`)
+    .addTo(leafletMap);
+  lMarkers[item.id] = m;
+}
+
+function focusMarker(lat, lng) {
+  if (leafletMap && lat && lng) leafletMap.setView([lat, lng], 15);
+}
+
+// ── KML 가져오기 ──
+async function importKML(input, tabId) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+
+  let text;
+  if (file.name.toLowerCase().endsWith('.kmz')) {
+    // KMZ = ZIP 압축 해제 후 doc.kml 추출
+    const zip = await JSZip.loadAsync(await file.arrayBuffer());
+    const kmlFile = zip.file(/\.kml$/i)[0];
+    if (!kmlFile) { alert('KMZ 안에 KML 파일이 없습니다.'); return; }
+    text = await kmlFile.async('text');
+  } else {
+    text = await file.text();
+  }
+
+  const parser = new DOMParser();
+  const xml = parser.parseFromString(text, 'text/xml');
+
+  const places = [];
+
+  // 태그명으로 첫 번째 자식 텍스트 반환 (네임스페이스 무관)
+  function childText(el, tag) {
+    const els = el.getElementsByTagName(tag);
+    for (let i = 0; i < els.length; i++) {
+      if (els[i].parentNode === el) return els[i].textContent.trim();
+    }
+    return '';
+  }
+
+  // Placemark에서 장소 정보 추출
+  function extractPlace(pm, layerName) {
+    const name = childText(pm, 'name') || '이름 없음';
+    const descEls = pm.getElementsByTagName('description');
+    const desc = descEls.length ? descEls[0].textContent.replace(/<[^>]+>/g, '').trim() : '';
+    // 좌표: lng,lat,alt 형식
+    const coordEls = pm.getElementsByTagName('coordinates');
+    if (!coordEls.length) return null;
+    const parts = coordEls[0].textContent.trim().split(/[\s,]+/);
+    const lng = parseFloat(parts[0]);
+    const lat = parseFloat(parts[1]);
+    if (isNaN(lat) || isNaN(lng)) return null;
+    return { name, desc, lat, lng, layer: layerName };
+  }
+
+  // Folder를 재귀적으로 순회
+  function parseFolder(folder, defaultLayer) {
+    const layerName = childText(folder, 'name') || defaultLayer;
+    for (const child of folder.children) {
+      const tag = child.localName || child.tagName;
+      if (tag === 'Placemark') {
+        const p = extractPlace(child, layerName);
+        if (p) places.push(p);
+      } else if (tag === 'Folder') {
+        parseFolder(child, layerName);
+      }
+    }
+  }
+
+  // NetworkLink 감지 → href에서 실제 KML 로드
+  const netLinks = xml.getElementsByTagName('NetworkLink');
+  if (netLinks.length > 0 && places.length === 0) {
+    const hrefEls = xml.getElementsByTagName('href');
+    const urls = [];
+    for (let i = 0; i < hrefEls.length; i++) {
+      const u = hrefEls[i].textContent.trim();
+      if (u.startsWith('http')) urls.push(u);
+    }
+    if (urls.length === 0) { alert('NetworkLink URL을 찾지 못했습니다.'); return; }
+
+    // CORS 프록시를 통해 실제 KML 데이터 가져오기
+    const proxies = [
+      u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+      u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+      u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+    ];
+    for (const url of urls) {
+      let fetched = false;
+      for (const makeProxy of proxies) {
+        try {
+          const res = await fetch(makeProxy(url));
+          if (!res.ok) continue;
+          const kmlText = await res.text();
+          if (!kmlText.includes('<')) continue;
+          const xml2 = parser.parseFromString(kmlText, 'text/xml');
+          const docEls2 = xml2.getElementsByTagName('Document');
+          const root2 = docEls2.length ? docEls2[0] : xml2.documentElement;
+          let hasFolders2 = false;
+          for (const child of root2.children) {
+            const tag = child.localName || child.tagName;
+            if (tag === 'Folder') { parseFolder(child, '기타'); hasFolders2 = true; }
+          }
+          if (!hasFolders2) {
+            const allPm = xml2.getElementsByTagName('Placemark');
+            for (let i = 0; i < allPm.length; i++) {
+              const p = extractPlace(allPm[i], '기타');
+              if (p) places.push(p);
+            }
+          }
+          if (places.length > 0) { fetched = true; break; }
+        } catch(e) { console.warn('KML fetch 실패:', e); }
+      }
+      if (fetched) break;
+      // 모든 프록시 실패 시 URL 직접 안내
+      if (!fetched && places.length === 0) {
+        const directUrl = url.includes('forcekml') ? url : url + (url.includes('?') ? '&' : '?') + 'forcekml=1';
+        if (window.confirm(`자동 가져오기에 실패했습니다.\n\n아래 방법으로 직접 KML 파일을 다운받아 가져오기 해주세요:\n\n1. 아래 URL을 브라우저 주소창에 붙여넣기\n2. 파일이 다운로드되면 그 파일로 다시 KML 가져오기\n\n[확인]을 누르면 URL이 클립보드에 복사됩니다.`)) {
+          navigator.clipboard.writeText(directUrl).catch(()=>{});
+        }
+      }
+    }
+  } else {
+    // 일반 KML: Document 또는 최상위에서 시작
+    const docEls = xml.getElementsByTagName('Document');
+    const root = docEls.length ? docEls[0] : xml.documentElement;
+    let hasFolders = false;
+    for (const child of root.children) {
+      const tag = child.localName || child.tagName;
+      if (tag === 'Folder') { parseFolder(child, '기타'); hasFolders = true; }
+    }
+    if (!hasFolders) {
+      const allPm = xml.getElementsByTagName('Placemark');
+      for (let i = 0; i < allPm.length; i++) {
+        const p = extractPlace(allPm[i], '기타');
+        if (p) places.push(p);
+      }
+    }
+  }
+
+  if (places.length === 0) {
+    alert('가져올 장소가 없습니다.\n\n구글 My Maps에서 KML 내보내기 시 "네트워크 링크 유지" 옵션을 해제하거나,\n지도가 공개(공유) 상태인지 확인해 주세요.');
+    return;
+  }
+
+  if (!window.confirm(`${places.length}개 장소를 가져오시겠습니까?\n\n기존 장소는 유지됩니다.`)) return;
+
+  // 일괄 저장
+  const rows = places.map((p, i) => ({ tab_id: tabId, data: p, sort_order: i }));
+  await sbPostMany('tab_items', rows);
+
+  // 지도 새로고침
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderMap(document.getElementById('tabContent'), currentTab, items);
+}
+
+let mapPlaceSearchTimer = null;
+async function mapPlaceSearch(q) {
+  clearTimeout(mapPlaceSearchTimer);
+  const dd = document.getElementById('mSearchDropdown');
+  if (!q || q.length < 2) { dd.innerHTML = ''; return; }
+  mapPlaceSearchTimer = setTimeout(async () => {
+    try {
+      const data = await geocodeSearch(q);
+      if (!data.length) { dd.innerHTML = `<div style="padding:10px 14px;font-size:12px;color:#7b80a0">검색 결과 없음</div>`; return; }
+      dd.innerHTML = data.map(p => {
+        const parts = p.display_name.split(',');
+        const name = parts[0];
+        const addr = parts.slice(1,3).join(', ');
+        return `<div onclick='selectMapSearchPlace(${JSON.stringify(name)},${JSON.stringify(addr)},${p.lat},${p.lon})'
+          style="padding:9px 14px;font-size:13px;color:#e0e2f5;cursor:pointer;border-bottom:1px solid #2a2f50"
+          onmouseover="this.style.background='rgba(92,107,192,.2)'" onmouseout="this.style.background=''">
+          <div style="font-weight:700">${name}</div><div style="font-size:11px;color:#9fa8da">${addr}</div>
+        </div>`;
+      }).join('');
+    } catch(e) { dd.innerHTML = `<div style="padding:10px 14px;font-size:12px;color:#7b80a0">검색 실패</div>`; }
+  }, 350);
+}
+
+function selectMapSearchPlace(name, addr, lat, lng) {
+  document.getElementById('mSearch').value = name;
+  document.getElementById('mSearchDropdown').innerHTML = '';
+  document.getElementById('mName').value = name;
+  document.getElementById('mDesc').value = addr;
+  document.getElementById('mLat').value = parseFloat(lat).toFixed(6);
+  document.getElementById('mLng').value = parseFloat(lng).toFixed(6);
+  if (window.leafletMap) window.leafletMap.setView([lat, lng], 16);
+}
+
+function parseGmapUrl(url) {
+  if (!url) return;
+  let lat, lng, name = '';
+
+  // @lat,lng,zoom 형식 (가장 일반적)
+  let m = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (m) { lat = parseFloat(m[1]); lng = parseFloat(m[2]); }
+
+  // ?q=lat,lng 형식
+  if (!lat) { m = url.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/); if (m) { lat=parseFloat(m[1]); lng=parseFloat(m[2]); } }
+
+  // ll=lat,lng 형식
+  if (!lat) { m = url.match(/ll=(-?\d+\.\d+),(-?\d+\.\d+)/); if (m) { lat=parseFloat(m[1]); lng=parseFloat(m[2]); } }
+
+  // !3d lat !4d lng 형식 (Place ID URL)
+  if (!lat) { m = url.match(/!3d(-?\d+\.\d+).*!4d(-?\d+\.\d+)/); if (m) { lat=parseFloat(m[1]); lng=parseFloat(m[2]); } }
+
+  // 장소명 추출 (/maps/place/이름/)
+  m = url.match(/maps\/place\/([^/@?]+)/);
+  if (m) name = decodeURIComponent(m[1].replace(/\+/g,' ')).replace(/_/g,' ');
+
+  if (lat && lng) {
+    document.getElementById('mLat').value = lat.toFixed(6);
+    document.getElementById('mLng').value = lng.toFixed(6);
+    if (name && !document.getElementById('mName').value) document.getElementById('mName').value = name;
+    if (window.leafletMap) window.leafletMap.setView([lat, lng], 16);
+  }
+}
+
+async function addMapPlace(tabId) {
+  const name = document.getElementById('mName').value.trim();
+  const lat = parseFloat(document.getElementById('mLat').value);
+  const lng = parseFloat(document.getElementById('mLng').value);
+  if (!name) { alert('장소 이름을 입력하세요'); return; }
+  if (!lat || !lng) { alert('지도를 클릭하거나 좌표를 입력하세요'); return; }
+  const desc = document.getElementById('mDesc').value.trim();
+  const layer = document.getElementById('mLayer').value.trim();
+  await sbPost('tab_items', { tab_id: tabId, data: { name, desc, lat, lng, layer }, sort_order: 0 });
+  ['mGurl','mName','mDesc','mLayer','mLat','mLng'].forEach(id=>document.getElementById(id).value='');
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderMap(document.getElementById('tabContent'), tab, items);
+}
+
+// ── FILE / LINK ──
+function renderFiles(container, tab, items) {
+  const fileIcon = t => {
+    if (t.includes('pdf')) return '📄';
+    if (t.includes('image') || t.includes('jpg') || t.includes('png')) return '🖼️';
+    if (t.includes('word') || t.includes('doc')) return '📝';
+    if (t.includes('excel') || t.includes('xls')) return '📊';
+    return '📎';
+  };
+  container.innerHTML = `<div class="pane-wrap" id="pw-file-${tab.id}">
+    <div class="pane-header">
+      <div class="pane-title">📎 ${tab.title}</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="badge">${items.length}개</span>
+        <button class="pane-collapse-btn" onclick="toggleAllPS('pw-file-${tab.id}',this)">접기 ▲</button>
+      </div>
+    </div>
+    <div class="ps" id="ps-ff-${tab.id}">
+      <div class="ps-header" onclick="togglePS('ps-ff-${tab.id}')">
+        <span class="ps-title">＋ 파일/링크 추가</span>
+        <span class="ps-arrow">▼</span>
+      </div>
+      <div class="ps-body">
+        <div class="form-box" style="border:none;border-radius:0;margin:0">
+          <div class="form-row">
+            <input class="f-inp" id="fName" placeholder="파일/링크 이름 *">
+            <input class="f-inp" id="fType" placeholder="종류 (예: PDF, 이미지, 링크)">
+          </div>
+          <div class="form-row">
+            <input class="f-inp" id="fUrl" placeholder="URL 또는 링크 주소">
+            <input class="f-inp" id="fNote" placeholder="비고">
+            <button class="f-btn" onclick="addFile('${tab.id}')">추가</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ps" id="ps-fl-${tab.id}">
+      <div class="ps-header" onclick="togglePS('ps-fl-${tab.id}')">
+        <span class="ps-title">📎 파일 목록</span>
+        <span class="ps-count">${items.length}개</span>
+        <span class="ps-arrow">▼</span>
+      </div>
+      <div class="ps-body">
+        <div class="file-list scroll-list">${items.map(item=>`
+          <div class="file-item">
+            <div class="file-icon">${fileIcon(item.data.type||'')}</div>
+            <div class="file-info">
+              <div class="file-name">${item.data.name||''}</div>
+              <div class="file-meta">${item.data.type||''}${item.data.note?' · '+item.data.note:''}</div>
+              ${item.data.url?`<a class="file-link" href="${item.data.url}" target="_blank">${item.data.url}</a>`:''}
+            </div>
+            <button class="del-btn" onclick="deleteItem('${item.id}','${tab.id}')">삭제</button>
+          </div>`).join('')}
+        </div>
+        ${!items.length?`<div class="empty-state"><div class="icon">📎</div><p>파일이나 링크를 추가해 보세요</p></div>`:''}
+      </div>
+    </div>
+  </div>`;
+  initPS([`ps-ff-${tab.id}`, `ps-fl-${tab.id}`]);
+}
+
+async function addFile(tabId) {
+  const name = document.getElementById('fName').value.trim();
+  if (!name) { alert('이름을 입력하세요'); return; }
+  const data = {
+    name, type: document.getElementById('fType').value.trim(),
+    url: document.getElementById('fUrl').value.trim(),
+    note: document.getElementById('fNote').value.trim()
+  };
+  await sbPost('tab_items', { tab_id: tabId, data, sort_order: 0 });
+  ['fName','fType','fUrl','fNote'].forEach(id=>document.getElementById(id).value='');
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderFiles(document.getElementById('tabContent'), tab, items);
+}
+
+// ── GALLERY ──
+const NICK_KEY = 'trip-nickname';
+let galPhotos = [], galLbIndex = 0;
+
+function getNickname(force) {
+  let nick = localStorage.getItem(NICK_KEY);
+  if (!nick || force) {
+    nick = (prompt('사진에 표시할 이름(닉네임)을 입력하세요', nick || '') || '').trim();
+    if (!nick) return null;
+    localStorage.setItem(NICK_KEY, nick);
+  }
+  return nick;
+}
+
+function galThumb(url) {
+  // Cloudinary URL에 썸네일 변환 삽입: /upload/ → /upload/w_400,c_limit,q_auto,f_auto/
+  return url.replace('/upload/', '/upload/w_400,c_limit,q_auto,f_auto/');
+}
+
+async function renderGallery(container, tab) {
+  galPhotos = await sbGet('photos', `project_id=eq.${currentProject.id}&order=created_at.desc`);
+  galPhotos = galPhotos.map(p => {
+    const url = p.url || (p.blob ? URL.createObjectURL(p.blob) : '');
+    return Object.assign({}, p, { url, thumb_url: p.thumb_url || url });
+  });
+  const nick = localStorage.getItem(NICK_KEY);
+  container.innerHTML = `<div class="pane-wrap" id="pw-gal-${tab.id}">
+    <div class="pane-header">
+      <div class="pane-title">📷 ${tab.title}</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="badge">${galPhotos.length}장</span>
+      </div>
+    </div>
+    <div class="gal-toolbar">
+      <input type="file" id="galFile" accept="image/*" multiple style="display:none" onchange="uploadGalPhotos(this)">
+      <button class="gal-upload-btn" id="galUpBtn" onclick="galPickFiles()">📤 사진 올리기</button>
+      <span class="gal-progress" id="galProgress"></span>
+      <span style="flex:1"></span>
+      ${nick ? `<span class="gal-nick">업로더: <b>${nick}</b> <button class="gal-nick-change" onclick="changeNickname()">변경</button></span>` : ''}
+    </div>
+    <div class="gal-grid scroll-list" id="galGrid">${galPhotos.map((p, i) => `
+      <div class="gal-item" onclick="openGalLb(${i})">
+        <img src="${p.thumb_url || galThumb(p.url)}" alt="${p.caption || ''}" loading="lazy">
+        <button class="gal-item-del" title="삭제" onclick="event.stopPropagation();deleteGalPhoto('${p.id}')">🗑️</button>
+        <div class="gal-item-info">
+          <span class="gal-item-nick">${p.nickname}</span>
+          <span>${(p.created_at || '').slice(5, 10).replace('-', '/')}</span>
+        </div>
+      </div>`).join('')}
+    </div>
+    ${!galPhotos.length ? `<div class="empty-state"><div class="icon">📷</div><p>여행 사진을 올려 함께 공유해 보세요</p></div>` : ''}
+    <div class="gal-lightbox" id="galLb" onclick="if(event.target===this)closeGalLb()">
+      <button class="gal-lb-close" onclick="closeGalLb()">✕</button>
+      <button class="gal-lb-nav prev" onclick="navGalLb(-1)">‹</button>
+      <img id="galLbImg" src="">
+      <div class="gal-lb-meta" id="galLbMeta"></div>
+      <button class="gal-lb-nav next" onclick="navGalLb(1)">›</button>
+    </div>
+  </div>`;
+}
+
+function galPickFiles() {
+  if (!getNickname()) return;
+  document.getElementById('galFile').click();
+}
+
+function changeNickname() {
+  if (getNickname(true)) renderGallery(document.getElementById('tabContent'), currentTab);
+}
+
+async function uploadGalPhotos(input) {
+  const files = [...input.files];
+  if (!files.length) return;
+  const nick = getNickname();
+  if (!nick) return;
+  const btn = document.getElementById('galUpBtn');
+  const prog = document.getElementById('galProgress');
+  btn.disabled = true;
+  let done = 0, failed = 0;
+  for (const file of files) {
+    prog.textContent = `저장 중… ${done + 1}/${files.length}`;
+    try {
+      await sbPost('photos', {
+        project_id: currentProject.id,
+        blob: file,
+        nickname: nick
+      });
+      done++;
+    } catch (err) {
+      console.error('저장 실패:', err);
+      failed++;
+    }
+  }
+  btn.disabled = false;
+  prog.textContent = failed ? `⚠️ ${done}장 성공, ${failed}장 실패` : '';
+  input.value = '';
+  await renderGallery(document.getElementById('tabContent'), currentTab);
+}
+
+async function deleteGalPhoto(id) {
+  if (!confirm('이 사진을 삭제하시겠습니까?')) return;
+  await sbDelete('photos', id);
+  await renderGallery(document.getElementById('tabContent'), currentTab);
+}
+
+function openGalLb(i) {
+  galLbIndex = i;
+  updateGalLb();
+  document.getElementById('galLb').classList.add('open');
+}
+function closeGalLb() { document.getElementById('galLb').classList.remove('open'); }
+function navGalLb(d) {
+  galLbIndex = (galLbIndex + d + galPhotos.length) % galPhotos.length;
+  updateGalLb();
+}
+function updateGalLb() {
+  const p = galPhotos[galLbIndex];
+  if (!p) return;
+  document.getElementById('galLbImg').src = p.url;
+  document.getElementById('galLbMeta').innerHTML =
+    `<span class="nick">${p.nickname}</span> · ${(p.created_at || '').slice(0, 10)} · ${galLbIndex + 1}/${galPhotos.length}`;
+}
+
+// ── Common Delete ──
+async function deleteItem(id, tabId) {
+  if (!confirm('삭제하시겠습니까?')) return;
+  await sbDelete('tab_items', id);
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  const container = document.getElementById('tabContent');
+  if (tab.type === 'schedule') renderSchedItems(items, currentSchedDate);
+  else if (tab.type === 'checklist') renderChecklist(container, tab, items);
+  else if (tab.type === 'list') renderList(container, tab, items);
+  else if (tab.type === 'card') renderCards(container, tab, items);
+  else if (tab.type === 'map') renderMap(container, tab, items);
+  else if (tab.type === 'file') renderFiles(container, tab, items);
+  else if (tab.type === 'budget') renderBudget(container, tab, items);
+  else if (tab.type === 'table') renderTable(container, tab, items);
+  else if (tab.type === 'flight') renderFlight(container, tab, items);
+  else if (tab.type === 'slides') renderSlides(container, tab);
+}
+
+// ── BUDGET ──
+function calcBudget(items, currency) {
+  const rows = items.filter(i => i.data.currency === currency);
+  const income = rows.filter(i=>i.data.type==='in').reduce((s,i)=>s+parseFloat((i.data.amount||'0').replace(/,/g,'')),0);
+  const expense = rows.filter(i=>i.data.type==='out').reduce((s,i)=>s+parseFloat((i.data.amount||'0').replace(/,/g,'')),0);
+  return { income, expense, balance: income - expense };
+}
+
+// ── SLIDES ──
+function renderSlides(container, tab) {
+  const cfg = tab.config || {};
+  const dir = cfg.slideDir || 'slides/shamon';
+  const total = cfg.slideCount || 19;
+  let cur = 1;
+
+  container.innerHTML = `<div class="slide-viewer">
+    <div class="slide-stage" id="slideStage">
+      <button class="slide-nav slide-prev" onclick="slideMov(-1)">‹</button>
+      <img id="slideImg" src="${dir}/slide-1.png" alt="슬라이드 1">
+      <button class="slide-nav slide-next" onclick="slideMov(1)">›</button>
+      <div class="slide-counter"><span id="slideCur">1</span> / ${total}</div>
+    </div>
+    <div class="slide-thumbs" id="slideThumbs">
+      ${Array.from({length:total},(_,i)=>
+        `<img class="slide-thumb${i===0?' on':''}" src="${dir}/slide-${i+1}.png" alt="${i+1}" onclick="slideGo(${i+1})">`
+      ).join('')}
+    </div>
+  </div>`;
+
+  window._slideTotal = total;
+  window._slideDir = dir;
+  window._slideCur = 1;
+
+  // 키보드 화살표
+  container._slideKeyHandler = e => {
+    if (e.key === 'ArrowRight') slideMov(1);
+    if (e.key === 'ArrowLeft')  slideMov(-1);
+  };
+  document.addEventListener('keydown', container._slideKeyHandler);
+}
+
+window.slideMov = function(d) {
+  const total = window._slideTotal || 19;
+  window._slideCur = Math.max(1, Math.min(total, (window._slideCur||1) + d));
+  slideGo(window._slideCur);
+};
+
+window.slideGo = function(n) {
+  window._slideCur = n;
+  const img = document.getElementById('slideImg');
+  const cur = document.getElementById('slideCur');
+  const thumbs = document.querySelectorAll('.slide-thumb');
+  if (!img) return;
+  img.style.opacity = '0';
+  setTimeout(() => {
+    img.src = `${window._slideDir}/slide-${n}.png`;
+    img.alt = `슬라이드 ${n}`;
+    img.style.opacity = '1';
+  }, 120);
+  if (cur) cur.textContent = n;
+  thumbs.forEach((t,i) => t.classList.toggle('on', i+1===n));
+  // 썸네일 스크롤
+  const activeThumb = thumbs[n-1];
+  if (activeThumb) activeThumb.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+};
+
+const BUDGET_SYM = { krw:'₩', eur:'€', usd:'$', jpy:'¥', cny:'CN¥' };
+const BUDGET_LABEL = { krw:'원화 (KRW)', eur:'유로 (EUR)', usd:'달러 (USD)', jpy:'엔화 (JPY)', cny:'위안화 (CNY)' };
+const BUDGET_CUR_OPTS = `<option value="krw">₩ 원화</option><option value="eur">€ 유로</option><option value="usd">$ 달러</option><option value="jpy">¥ 엔화</option><option value="cny">CN¥ 위안화</option>`;
+
+function renderBudget(container, tab, items) {
+  const sym = BUDGET_SYM;
+  const metaItem = items.find(i => i.data.__meta);
+  const peopleCount = Math.max(1, parseInt(metaItem?.data.peopleCount) || 1);
+  const pinned = (metaItem?.data.pinned && metaItem.data.pinned.length) ? metaItem.data.pinned : ['krw','eur'];
+  const curs = Array.from(new Set([...pinned, ...items.map(i=>i.data.currency).filter(Boolean)])).filter(c=>sym[c]);
+
+  const summaryHtml = curs.map(cur => {
+    const { income, expense, balance } = calcBudget(items, cur);
+    const label = BUDGET_LABEL[cur];
+    const balColor = balance >= 0 ? '#a5d6a7' : '#ef9a9a';
+    const perPerson = Math.round(expense / peopleCount);
+    const curCount = items.filter(i=>i.data.currency===cur).length;
+    const labelHtml = (curCount === 0 && pinned.includes(cur))
+      ? `<select class="f-sel" style="font-size:11px;font-weight:800;padding:3px 6px" onchange="changePinnedCurrency('${tab.id}','${cur}',this.value)">${BUDGET_CUR_OPTS.replace(`value="${cur}"`, `value="${cur}" selected`)}</select>`
+      : `<span style="font-size:12px;font-weight:800;color:var(--sub)">${label}</span>`;
+    return `<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 20px;flex:1;min-width:220px">
+      <div style="margin-bottom:10px">${labelHtml}</div>
+      <div style="display:flex;gap:16px;font-size:13px;flex-wrap:wrap">
+        <div><div style="color:var(--sub);font-size:11px">입금</div><div style="color:#a5d6a7;font-weight:700">${sym[cur]}${income.toLocaleString()}</div></div>
+        <div><div style="color:var(--sub);font-size:11px">출금</div><div style="color:#ef9a9a;font-weight:700">${sym[cur]}${expense.toLocaleString()}</div></div>
+        <div><div style="color:var(--sub);font-size:11px">잔액</div><div style="color:${balColor};font-weight:800">${sym[cur]}${balance.toLocaleString()}</div></div>
+        <div><div style="color:var(--sub);font-size:11px">1인당 예상</div><div style="color:#ffb74d;font-weight:800">${sym[cur]}${perPerson.toLocaleString()}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const rowsHtml = curs.map(cur => {
+    const psId = `ps-bg-${tab.id}-${cur}`;
+    const curItems = items.filter(i=>i.data.currency===cur);
+    const label = (curItems.length === 0 && pinned.includes(cur))
+      ? `<select class="f-sel" style="font-size:11px;font-weight:800;padding:3px 6px" onclick="event.stopPropagation()" onchange="event.stopPropagation();changePinnedCurrency('${tab.id}','${cur}',this.value)">${BUDGET_CUR_OPTS.replace(`value="${cur}"`, `value="${cur}" selected`)}</select>`
+      : `${sym[cur]} ${BUDGET_LABEL[cur]}`;
+    const inRows = curItems.filter(i=>i.data.type==='in');
+    const outRows = curItems.filter(i=>i.data.type==='out');
+    const bEditTd = (item, field, style='') => `<td class="list-editable" style="${style}" contenteditable="true" spellcheck="false"
+        onblur="saveBudgetCell(event,'${item.id}','${tab.id}','${field}')"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();event.target.blur();}"
+      >${item.data[field]||''}</td>`;
+    const mkRows = arr => arr.map(item=>`
+      <tr class="budget-row" data-id="${item.id}">
+        <td class="budget-drag-handle" title="드래그해서 이동">⠿</td>
+        <td><select class="f-sel" style="font-size:11px;padding:4px 6px" onchange="saveBudgetCurrency('${item.id}','${tab.id}',this.value)">${BUDGET_CUR_OPTS.replace(`value="${cur}"`, `value="${cur}" selected`)}</select></td>
+        ${bEditTd(item,'date')}
+        ${bEditTd(item,'item')}
+        <td style="color:${item.data.type==='in'?'#a5d6a7':'#ef9a9a'};font-weight:700">${sym[cur]}<span class="list-editable" contenteditable="true" spellcheck="false"
+            onblur="saveBudgetCell(event,'${item.id}','${tab.id}','amount')"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();event.target.blur();}"
+          >${item.data.amount ? Number(String(item.data.amount).replace(/,/g,'')).toLocaleString() : ''}</span></td>
+        ${bEditTd(item,'note','color:var(--sub)')}
+        <td><button class="del-btn" onclick="deleteItem('${item.id}','${tab.id}')">삭제</button></td>
+      </tr>`).join('');
+    return `<div class="ps" id="${psId}">
+      <div class="ps-header" onclick="togglePS('${psId}')">
+        <span class="ps-title">${label}</span>
+        <span class="ps-count">${curItems.length}건</span>
+        <span class="ps-arrow">▼</span>
+      </div>
+      <div class="ps-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 4px">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#a5d6a7;margin-bottom:6px">▶ 입금</div>
+            <div class="scroll-list"><table class="list-table"><thead><tr><th></th><th>통화</th><th>날짜</th><th>항목</th><th>금액</th><th>비고</th><th></th></tr></thead><tbody class="budget-tbody" data-tab="${tab.id}" data-cur="${cur}" data-type="in">${mkRows(inRows)}</tbody></table></div>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#ef9a9a;margin-bottom:6px">◀ 출금</div>
+            <div class="scroll-list"><table class="list-table"><thead><tr><th></th><th>통화</th><th>날짜</th><th>항목</th><th>금액</th><th>비고</th><th></th></tr></thead><tbody class="budget-tbody" data-tab="${tab.id}" data-cur="${cur}" data-type="out">${mkRows(outRows)}</tbody></table></div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  container.innerHTML = `<div class="pane-wrap" id="pw-budget-${tab.id}">
+    <div class="pane-header">
+      <div class="pane-title">💰 ${tab.title}</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <label style="font-size:12px;color:var(--sub);display:flex;align-items:center;gap:6px">인원 수
+          <input class="f-inp" id="bPeople-${tab.id}" type="number" min="1" value="${peopleCount}"
+            style="width:56px;padding:5px 8px" onchange="saveBudgetPeople('${tab.id}',this.value)">명
+        </label>
+        <button class="pane-collapse-btn" onclick="toggleAllPS('pw-budget-${tab.id}',this)">접기 ▲</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">${summaryHtml}</div>
+    <div class="ps" id="ps-bf-${tab.id}">
+      <div class="ps-header" onclick="togglePS('ps-bf-${tab.id}')">
+        <span class="ps-title">＋ 내역 추가</span>
+        <span class="ps-arrow">▼</span>
+      </div>
+      <div class="ps-body">
+        <div class="form-box" style="border:none;border-radius:0;margin:0">
+          <div class="form-row">
+            <select class="f-sel" id="bCur">${BUDGET_CUR_OPTS}</select>
+            <select class="f-sel" id="bType"><option value="in">▶ 입금</option><option value="out">◀ 출금</option></select>
+            <input class="f-inp" id="bDate" type="date">
+            <input class="f-inp" id="bItem" placeholder="항목 *">
+          </div>
+          <div class="form-row">
+            <input class="f-inp" id="bAmount" placeholder="금액 *">
+            <input class="f-inp" id="bNote" placeholder="비고">
+            <button class="f-btn" onclick="addBudgetItem('${tab.id}')">추가</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    ${rowsHtml}
+  </div>`;
+  initPS([`ps-bf-${tab.id}`, ...curs.map(c=>`ps-bg-${tab.id}-${c}`)]);
+  initBudgetDrag(container);
+}
+
+// ── 입금/출금 행 드래그 이동 (Pointer Events — 마우스 + 터치 공용) ──
+function initBudgetDrag(container) {
+  let dragRow = null, activePointerId = null, longPressTimer = null;
+  let startX = 0, startY = 0, isTouch = false, moved = false;
+
+  const rows = container.querySelectorAll('.budget-row');
+
+  function endDrag() {
+    if (!dragRow) return;
+    const tbody = dragRow.closest('.budget-tbody');
+    dragRow.classList.remove('dragging');
+    dragRow.style.touchAction = 'pan-y';
+    const newType = tbody.dataset.type;
+    const tabId = tbody.dataset.tab;
+    const itemId = dragRow.dataset.id;
+    dragRow = null;
+    saveBudgetRowMove(itemId, tabId, newType);
+  }
+
+  rows.forEach(row => {
+    row.style.touchAction = 'pan-y';
+
+    row.addEventListener('pointerdown', e => {
+      if (!e.target.closest('.budget-drag-handle')) return;
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      isTouch = e.pointerType !== 'mouse';
+      startX = e.clientX; startY = e.clientY; moved = false;
+      activePointerId = e.pointerId;
+      clearTimeout(longPressTimer);
+      const start = () => {
+        moved = true;
+        dragRow = row;
+        row.classList.add('dragging');
+        row.style.touchAction = 'none';
+        try { row.setPointerCapture(e.pointerId); } catch (err) {}
+      };
+      if (isTouch) longPressTimer = setTimeout(start, 150);
+      else start();
+    });
+
+    row.addEventListener('pointermove', e => {
+      if (activePointerId === null || e.pointerId !== activePointerId) return;
+      if (!dragRow) return;
+      e.preventDefault();
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const overRow = el?.closest('.budget-row');
+      const overTbody = el?.closest('.budget-tbody');
+      if (overRow && overRow !== dragRow) {
+        const rect = overRow.getBoundingClientRect();
+        const after = e.clientY > rect.top + rect.height / 2;
+        overRow.parentElement.insertBefore(dragRow, after ? overRow.nextSibling : overRow);
+      } else if (overTbody && !overTbody.contains(dragRow)) {
+        overTbody.appendChild(dragRow);
+      }
+    });
+
+    ['pointerup', 'pointercancel'].forEach(evt => row.addEventListener(evt, e => {
+      if (activePointerId === null || e.pointerId !== activePointerId) return;
+      clearTimeout(longPressTimer);
+      try { row.releasePointerCapture(e.pointerId); } catch (err) {}
+      activePointerId = null;
+      if (dragRow) endDrag();
+    }));
+  });
+}
+
+async function saveBudgetRowMove(itemId, tabId, newType) {
+  const item = await sbGet('tab_items', `id=eq.${itemId}`);
+  if (!item[0]) return;
+  if (item[0].data.type !== newType) {
+    await sbPatch('tab_items', itemId, { data: { ...item[0].data, type: newType } });
+  }
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderBudget(document.getElementById('tabContent'), tab, items);
+}
+
+async function changePinnedCurrency(tabId, oldCur, newCur) {
+  if (oldCur === newCur) return;
+  const metas = await sbGet('tab_items', `tab_id=eq.${tabId}&data->>__meta=eq.true`);
+  const meta = metas[0];
+  const pinned = (meta?.data.pinned && meta.data.pinned.length) ? [...meta.data.pinned] : ['krw','eur'];
+  const idx = pinned.indexOf(oldCur);
+  if (idx >= 0) pinned[idx] = newCur; else pinned.push(newCur);
+  if (meta) {
+    await sbPatch('tab_items', meta.id, { data: { ...meta.data, pinned } });
+  } else {
+    await sbPost('tab_items', { tab_id: tabId, data: { __meta: true, pinned }, sort_order: -1 });
+  }
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderBudget(document.getElementById('tabContent'), tab, items);
+}
+
+async function saveBudgetCurrency(id, tabId, newCur) {
+  const item = await sbGet('tab_items', `id=eq.${id}`);
+  if (!item[0]) return;
+  await sbPatch('tab_items', id, { data: { ...item[0].data, currency: newCur } });
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderBudget(document.getElementById('tabContent'), tab, items);
+}
+
+async function saveBudgetPeople(tabId, value) {
+  const n = Math.max(1, parseInt(value) || 1);
+  const metas = await sbGet('tab_items', `tab_id=eq.${tabId}&data->>__meta=eq.true`);
+  if (metas[0]) {
+    await sbPatch('tab_items', metas[0].id, { data: { ...metas[0].data, peopleCount: n } });
+  } else {
+    await sbPost('tab_items', { tab_id: tabId, data: { __meta: true, peopleCount: n }, sort_order: -1 });
+  }
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderBudget(document.getElementById('tabContent'), tab, items);
+}
+
+async function addBudgetItem(tabId) {
+  const item = document.getElementById('bItem').value.trim();
+  const amount = document.getElementById('bAmount').value.replace(/[^0-9.]/g, '').trim();
+  if (!item || !amount) { alert('항목과 금액을 입력하세요'); return; }
+  const data = {
+    currency: document.getElementById('bCur').value,
+    type: document.getElementById('bType').value,
+    date: document.getElementById('bDate').value,
+    item, amount,
+    note: document.getElementById('bNote').value.trim()
+  };
+  await sbPost('tab_items', { tab_id: tabId, data, sort_order: 0 });
+  ['bDate','bItem','bAmount','bNote'].forEach(id=>document.getElementById(id).value='');
+  const tab = currentTab;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderBudget(document.getElementById('tabContent'), tab, items);
+}
+
+// ── Start ──
+(async () => {
+  const params = new URLSearchParams(location.search);
+  const pid = params.get('project');
+  const isNew = params.get('new');
+  if (!pid && !isNew) { location.href = 'hub.html'; return; }
+  await loadProjects();
+  if (pid) {
+    const p = projects.find(x => x.id === pid);
+    if (p) openProject(pid);
+  } else if (isNew) {
+    openProjectModal();
+  }
+})();
+
+window.addEventListener('scroll', () => {
+  document.getElementById('topBtn')?.classList.toggle('show', window.scrollY > 500);
+}, { passive: true });
+</script>
+
+<button class="top-btn" id="topBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="맨 위로">⬆️</button>
+</body>
+</html>
