@@ -571,6 +571,7 @@ body.readonly .add-day-btn{display:none!important}
     <a href="#gifts" onclick="navOn(this,event)">🎁 선물</a>
     <a href="#checklist" onclick="navOn(this,event)">🎒 준비물</a>
     <a href="#lisboacard" onclick="navOn(this,event)">📋 리스보아카드</a>
+    <a href="#backup-plan" onclick="navOn(this,event)">🆘 예비계획</a>
     <a href="#travel-docs" onclick="navOn(this,event)">📁 여행자료</a>
     <a href="#photos" onclick="navOn(this,event)">📷 사진</a>
   </div>
@@ -2797,7 +2798,7 @@ body.readonly .add-day-btn{display:none!important}
     <div style="background:rgba(239,154,154,.1);border:1px solid rgba(239,154,154,.3);border-radius:14px;padding:20px">
       <div style="font-size:20px;margin-bottom:8px">⚠️</div>
       <div style="font-weight:700;font-size:14px;color:#ef9a9a;margin-bottom:6px">예약은 카드와 별개! (중요)</div>
-      <div style="font-size:13px;color:var(--sub);line-height:1.6">카드 = 입장료 무료일 뿐, <strong style="color:#e8eaf6">제로니무스 수도원·벨렝탑은 카드 소지자도 시간대 예약 필수</strong>(2025.9~ 정책). 예약 사이트: mmp.bymeoblueticket.pt → "LISBOA CARD" 옵션 선택 → 카드 코드(LC0000000000) 입력 → 무료 예약. <strong>카드를 실물로 받은 후에만</strong> 예약 가능</div>
+      <div style="font-size:13px;color:var(--sub);line-height:1.6">카드 = 입장료 무료일 뿐, <strong style="color:#e8eaf6">제로니무스 수도원·벨렝탑은 카드 소지자도 시간대 예약 필수</strong>(2025.9~ 정책). 예약 사이트: mmp.bymeoblueticket.pt → "LISBOA CARD" 옵션 선택 → 카드 코드(LC0000000000) 입력 → 무료 예약. <strong>카드를 실물로 받은 후에만</strong> 예약 가능 · 예약을 못 구했을 때 대안은 <a href="#backup-plan" onclick="navOn(document.querySelector('[href=\'#backup-plan\']'),event)" style="color:#9fa8da;text-decoration:underline">🆘 예비계획 탭</a> 참고</div>
     </div>
     <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px">
       <div style="font-size:20px;margin-bottom:8px">🚇</div>
@@ -2809,6 +2810,40 @@ body.readonly .add-day-btn{display:none!important}
       <div style="font-weight:700;font-size:14px;color:#c5cae9;margin-bottom:6px">교환 장소</div>
       <div style="font-size:13px;color:var(--sub);line-height:1.6">리스본 공항 1층 관광안내소 (도착 후 바로!) · 호텔 컨시어지 · 시내 관광안내소 · 일부 기차역</div>
     </div>
+  </div>
+</div>
+
+<div class="section" id="backup-plan" style="scroll-margin-top:60px">
+  <div class="sec-eyebrow">BACKUP PLAN</div>
+  <div class="sec-title">🆘 예비 계획 — 명소 예약 실패 시</div>
+  <div class="sec-sub">시간대 지정 예약이 필요한 명소에서 원하는 슬롯을 못 구했을 때의 대안 정리</div>
+
+  <div style="margin-top:28px;display:flex;flex-direction:column;gap:20px">
+
+    <div style="background:rgba(239,154,154,.1);border:1px solid rgba(239,154,154,.3);border-radius:14px;padding:22px">
+      <div style="font-weight:800;font-size:15px;color:#ef9a9a;margin-bottom:6px">⚠️ 예약 필수 명소 (카드로 무료여도 시간대 예약 별도)</div>
+      <div style="font-size:13px;color:var(--sub);line-height:1.7">
+        <strong style="color:#e8eaf6">제로니무스 수도원 · 벨렝탑</strong> — 리스보아 카드로 무료 입장이지만 2025.9~ 정책으로 시간대 지정 예약이 별도 필수. 예약 사이트: <strong>mmp.bymeoblueticket.pt</strong> → "LISBOA CARD" 옵션 선택 → 카드 코드(LC0000000000) 입력. <strong>카드를 실물로 받은 후에만</strong> 예약 가능하므로 8/1(D-1) 리스본 도착 즉시 처리.<br>
+        <strong style="color:#e8eaf6">신트라 페나 궁전</strong> — 리스보아 카드 불포함, 완전 별도 유료 예약. parquesdesintra.pt
+      </div>
+    </div>
+
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px">
+      <div style="font-weight:800;font-size:15px;color:#c5cae9;margin-bottom:10px">🏛️ 제로니무스 수도원 · 벨렝탑 — 예약 실패 시 3단계</div>
+      <div style="font-size:13px;color:var(--sub);line-height:1.8">
+        <strong style="color:#9fa8da">① D2(8/2) 오후로 이월</strong> — D2는 저녁에 어차피 벨렝으로 다시 오므로(벨렘 저녁 식사 일정), 원래 LX팩토리 시간(15:00~17:00)을 제로니무스·벨렝탑 방문으로 전환하고 LX팩토리는 생략하거나 짧게만. 라스트 오더(17:30 전후) 확인 필수.<br>
+        <strong style="color:#9fa8da">② 유료 스킵더라인 티켓 구매</strong> — 무료(리스보아 카드) 슬롯이 꽉 찼다면 GetYourGuide·Tiqets·마이리얼트립에서 별도 유료 티켓(약 €10+€15) 구매해 원하는 시간에 확정 입장. 카드 환불은 안 되지만 확실히 입장 가능.<br>
+        <strong style="color:#9fa8da">③ 오픈런 대기</strong> — 그래도 못 구했다면 개장 30~45분 전(08:45 제로니무스 / 09:30 벨렝탑) 도착해 현장 잔여 티켓·워크인 여부 확인. 100% 보장은 아니므로 최후 수단으로만.
+      </div>
+    </div>
+
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px">
+      <div style="font-weight:800;font-size:15px;color:#c5cae9;margin-bottom:10px">🌊 신트라 페나 궁전 — 예약 실패 시</div>
+      <div style="font-size:13px;color:var(--sub);line-height:1.8">
+        오전 인기 슬롯(10~12시)이 마감되면 오후 슬롯(14~16시)으로 방문 시간을 조정하고 저녁 CP 기차 시간을 뒤로 미루는 방식 고려. 그래도 전체 매진이면 레갈레이라·무어인 성 등 예약 없이 갈 수 있는 곳으로 D3 오전 일정을 대체하고, 페나 궁전은 D3 오후 여유 시간대에 재시도.
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -2940,6 +2975,23 @@ body.readonly .add-day-btn{display:none!important}
       <div class="pdoc-viewer" style="display:none">
         <iframe style="width:100%;height:780px;border:none;background:#1a1d2e;display:block" title="리스보아 카드 원본 설명서"></iframe>
         <p class="pdoc-hint">PDF가 보이지 않으면 <a href="리스보아카드_설명서.pdf" target="_blank">새 탭에서 열기</a></p>
+      </div>
+    </div>
+
+    <div class="pdoc-card">
+      <div class="pdoc-icon">🚆</div>
+      <div class="pdoc-info">
+        <div class="pdoc-name">CP 기차표 (온라인 예매 확인서)</div>
+        <div class="pdoc-meta">CP_기차표_온라인.pdf &nbsp;·&nbsp; 128KB</div>
+        <div class="pdoc-desc">리스본↔포르투 CP 기차 온라인 예매 확인서 (콤보 티켓)</div>
+      </div>
+      <div class="pdoc-btns">
+        <button class="pdoc-preview-btn" onclick="togglePdf(this,'CP_기차표_온라인.pdf')">📄 미리보기</button>
+        <a class="pdoc-dl-btn" href="CP_기차표_온라인.pdf" download>⬇ 다운로드</a>
+      </div>
+      <div class="pdoc-viewer" style="display:none">
+        <iframe style="width:100%;height:680px;border:none;background:#1a1d2e;display:block" title="CP 기차표"></iframe>
+        <p class="pdoc-hint">PDF가 보이지 않으면 <a href="CP_기차표_온라인.pdf" target="_blank">새 탭에서 열기</a></p>
       </div>
     </div>
 
