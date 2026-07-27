@@ -4,29 +4,35 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🇨🇳 광저우·마카오 가족 여행 2027</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0d0f1a;--surface:#13162a;--card:#181c30;--border:#252940;
-  --text:#e8eaf6;--sub:#7b80a0;--accent:#5c6bc0;--accent2:#7986cb;
+  /* 여권&엽서 톤 (다크 기반, 카드는 짙은 차콜 페이퍼) */
+  --bg:#12181f;--surface:#182029;--card:#1c2530;--border:#2a3542;
+  --text:#ece7da;--sub:#8b93a1;--accent:#2b6e6a;--accent2:#3f8f8a;
+  --ink:#ece7da;--stamp:#c1442c;--brass:#b8873a;--paper-sub:#8b93a1;
+  --light-accent:#7fc4bf;--pale-accent:#cde9e6;--pale-cream:#f3efe4;
 }
-body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;min-height:100vh}
+body{background:var(--bg);color:var(--text);font-family:'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif;min-height:100vh;
+  background-image:radial-gradient(rgba(255,255,255,.03) 1px,transparent 1px);background-size:3px 3px}
+h1,h2,h3,.hero-title,.nav-logo,.sec-title,.day-hero h3{font-family:'Pretendard',sans-serif;font-weight:800;letter-spacing:-.3px}
 
 /* ── NAV ── */
 nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);height:52px;display:flex;align-items:center;padding:0 20px;gap:12px}
 .nav-back{background:rgba(255,255,255,.07);border:1px solid var(--border);border-radius:10px;color:var(--sub);font-size:13px;font-weight:600;padding:6px 14px;cursor:pointer;text-decoration:none;transition:.2s}
-.nav-back:hover{background:rgba(92,107,192,.2);color:#9fa8da}
+.nav-back:hover{background:rgba(43,110,106,.2);color:var(--light-accent)}
 .nav-logo{font-size:16px;font-weight:800;white-space:nowrap}
 .nav-spacer{flex:1}
 
 /* ── HERO ── */
 .hero{position:relative;min-height:72vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.hero-bg{position:absolute;inset:0;background:linear-gradient(135deg,#1a237e 0%,#880e4f 40%,#b71c1c 70%,#e65100 100%);opacity:.85}
+.hero-bg{position:absolute;inset:0;background:linear-gradient(135deg,#1c2530 0%,#2b6e6a 40%,#c1442c 70%,#b8873a 100%);opacity:.85}
 .hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(13,15,26,.1) 0%,rgba(13,15,26,.75) 100%)}
 .hero-content{position:relative;text-align:center;padding:100px 24px 60px}
 .hero-emoji{font-size:56px;margin-bottom:16px}
 .hero-title{font-size:clamp(28px,5.5vw,62px);font-weight:900;letter-spacing:-1px;line-height:1.1;margin-bottom:10px}
-.hero-title span{color:#f48fb1}
+.hero-title span{color:var(--stamp)}
 .hero-sub{color:rgba(255,255,255,.75);font-size:15px;margin-bottom:6px}
 .hero-route{color:rgba(255,255,255,.5);font-size:13px;margin-bottom:32px}
 .hero-stats{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:36px}
@@ -41,12 +47,12 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.95
 .tab-bar{display:flex;gap:0;overflow-x:auto;max-width:1100px;margin:0 auto;padding:0 24px}
 .tab-bar::-webkit-scrollbar{display:none}
 .tab-btn{border:none;background:none;color:var(--sub);font-size:14px;font-weight:600;padding:16px 20px;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:.2s;font-family:inherit;position:relative;bottom:-1px}
-.tab-btn.on{color:#e8eaf6;border-bottom-color:var(--accent2)}
-.tab-btn:hover:not(.on){color:#c5cae9}
+.tab-btn.on{color:var(--pale-cream);border-bottom-color:var(--accent2)}
+.tab-btn:hover:not(.on){color:var(--pale-accent)}
 
 /* ── SECTION ── */
 .section{padding:56px 24px 48px;max-width:1100px;margin:0 auto}
-.sec-eyebrow{font-size:11px;font-weight:800;letter-spacing:3px;color:#7986cb;text-transform:uppercase;margin-bottom:8px}
+.sec-eyebrow{font-size:11px;font-weight:800;letter-spacing:3px;color:var(--brass);text-transform:uppercase;margin-bottom:8px}
 .sec-title{font-size:clamp(20px,3.5vw,32px);font-weight:800;margin-bottom:8px}
 .sec-sub{color:var(--sub);font-size:13px;margin-bottom:28px}
 
@@ -58,33 +64,33 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.95
 .day-tabs::-webkit-scrollbar{display:none}
 .dt-btn{border:1px solid var(--border);border-radius:12px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;background:var(--card);color:var(--sub);transition:.2s;font-family:inherit}
 .dt-btn.on{color:#fff;border-color:transparent}
-.dt-d1.on{background:linear-gradient(135deg,#b71c1c,#c62828)}
-.dt-d2.on{background:linear-gradient(135deg,#1a237e,#283593)}
-.dt-d3.on{background:linear-gradient(135deg,#1b5e20,#2e7d32)}
-.dt-d4.on{background:linear-gradient(135deg,#6a1b9a,#7b1fa2)}
+.dt-d1.on{background:linear-gradient(135deg,#a3381f,#c1442c)}
+.dt-d2.on{background:linear-gradient(135deg,#1f4b4a,#2b6e6a)}
+.dt-d3.on{background:linear-gradient(135deg,#8a6423,#b8873a)}
+.dt-d4.on{background:linear-gradient(135deg,#3a2f24,#5c4a35)}
 
 .day-panel{display:none}
 .day-panel.show{display:block}
 
-.day-hero{border-radius:14px 14px 0 0;padding:18px 22px}
-.d1-h{background:linear-gradient(135deg,#b71c1c,#c62828)}
-.d2-h{background:linear-gradient(135deg,#1a237e,#283593)}
-.d3-h{background:linear-gradient(135deg,#1b5e20,#2e7d32)}
-.d4-h{background:linear-gradient(135deg,#6a1b9a,#7b1fa2)}
+.day-hero{border-radius:3px 3px 0 0;padding:18px 22px}
+.d1-h{background:linear-gradient(135deg,#a3381f,#c1442c)}
+.d2-h{background:linear-gradient(135deg,#1f4b4a,#2b6e6a)}
+.d3-h{background:linear-gradient(135deg,#8a6423,#b8873a)}
+.d4-h{background:linear-gradient(135deg,#3a2f24,#5c4a35)}
 .day-hero h3{font-size:18px;font-weight:800;margin-bottom:4px}
 .day-hero p{font-size:13px;opacity:.75}
 
-.timeline{background:var(--card);border:1px solid var(--border);border-top:none;border-radius:0 0 14px 14px;overflow:hidden}
+.timeline{background:var(--card);border:1px solid var(--border);border-top:none;border-radius:0 0 3px 3px;overflow:hidden}
 .tl-item{display:grid;grid-template-columns:86px 1fr;gap:0;border-bottom:1px solid var(--border)}
 .tl-item:last-child{border-bottom:none}
 .tl-time{padding:16px 12px;text-align:center;border-right:1px solid var(--border);background:rgba(0,0,0,.2)}
-.tl-time .t{font-size:13px;font-weight:800;color:#c5cae9}
+.tl-time .t{font-size:13px;font-weight:800;color:var(--pale-accent)}
 .tl-time .dur{font-size:10px;color:var(--sub);margin-top:3px}
 .tl-body{padding:14px 16px}
 .tl-cats{display:flex;gap:5px;margin-bottom:6px;flex-wrap:wrap}
 .cat{border-radius:8px;padding:2px 8px;font-size:10px;font-weight:700}
-.cat-flight{background:rgba(92,107,192,.25);color:#9fa8da}
-.cat-move{background:rgba(121,134,203,.2);color:#b39ddb}
+.cat-flight{background:rgba(43,110,106,.25);color:var(--light-accent)}
+.cat-move{background:rgba(184,135,58,.2);color:#d9b26a}
 .cat-sight{background:rgba(79,142,247,.2);color:#90caf9}
 .cat-meal{background:rgba(255,152,0,.2);color:#ffcc80}
 .cat-hotel{background:rgba(0,188,212,.2);color:#80deea}
@@ -97,23 +103,23 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.95
 
 /* ── RESTAURANT ── */
 .rest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
-.rest-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;display:flex;gap:14px;transition:.2s}
-.rest-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.rest-card{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:18px;display:flex;gap:14px;transition:.25s;box-shadow:0 1px 0 var(--border),0 6px 16px rgba(0,0,0,.22)}
+.rest-card:hover{border-color:var(--brass);transform:translateY(-3px);box-shadow:0 12px 26px rgba(0,0,0,.3)}
 .rest-icon{font-size:36px;flex-shrink:0;width:52px;height:52px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(255,255,255,.05)}
 .rest-info{flex:1}
 .rest-name{font-size:14px;font-weight:800;margin-bottom:4px}
 .rest-location{font-size:11px;color:var(--sub);margin-bottom:6px}
 .rest-desc{font-size:12px;color:#b0bec5;line-height:1.5;margin-bottom:8px}
 .rest-tags{display:flex;flex-wrap:wrap;gap:5px}
-.rest-tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:rgba(92,107,192,.15);color:#9fa8da}
+.rest-tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:rgba(43,110,106,.15);color:var(--light-accent)}
 .rest-tag.rec{background:rgba(255,152,0,.2);color:#ffcc80}
-.rest-section-title{font-size:13px;font-weight:800;color:#7986cb;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;margin-top:28px}
+.rest-section-title{font-size:13px;font-weight:800;color:var(--brass);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;margin-top:28px}
 .rest-section-title:first-child{margin-top:0}
 
 /* ── SHOPPING ── */
 .shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
-.shop-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;transition:.2s}
-.shop-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.shop-card{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:18px;transition:.25s;box-shadow:0 1px 0 var(--border),0 6px 16px rgba(0,0,0,.22)}
+.shop-card:hover{border-color:var(--brass);transform:translateY(-3px);box-shadow:0 12px 26px rgba(0,0,0,.3)}
 .shop-card-head{display:flex;align-items:center;gap:12px;margin-bottom:10px}
 .shop-card-icon{font-size:28px;width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(255,255,255,.06);flex-shrink:0}
 .shop-card-name{font-size:14px;font-weight:800}
@@ -130,16 +136,16 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.95
 .budget-table td:last-child{text-align:right;font-weight:700;color:#a5d6a7}
 .budget-table .total-row td{font-size:15px;font-weight:800;color:var(--text);border-top:1px solid var(--accent2);padding-top:16px}
 .budget-table .total-row td:last-child{color:#80deea}
-.budget-note{background:rgba(92,107,192,.1);border:1px solid rgba(92,107,192,.2);border-radius:12px;padding:14px 18px;font-size:12px;color:#b0bec5;line-height:1.7;margin-top:8px}
-.budget-section{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px}
-.budget-section-title{font-size:13px;font-weight:800;color:#7986cb;margin-bottom:14px}
+.budget-note{background:rgba(43,110,106,.1);border:1px solid rgba(43,110,106,.25);border-radius:3px;padding:14px 18px;font-size:12px;color:#b0bec5;line-height:1.7;margin-top:8px}
+.budget-section{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:20px;margin-bottom:16px;box-shadow:0 1px 0 var(--border),0 6px 16px rgba(0,0,0,.2)}
+.budget-section-title{font-size:13px;font-weight:800;color:var(--brass);margin-bottom:14px}
 
 /* ── CHECKLIST ── */
-.cl-section-title{font-size:13px;font-weight:800;color:#7986cb;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;margin-top:28px}
+.cl-section-title{font-size:13px;font-weight:800;color:var(--brass);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;margin-top:28px}
 .cl-section-title:first-child{margin-top:0}
 .cl-grid{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
-.cl-item{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;cursor:pointer;transition:.2s}
-.cl-item:hover{border-color:rgba(92,107,192,.4)}
+.cl-item{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:3px;padding:12px 14px;cursor:pointer;transition:.2s}
+.cl-item:hover{border-color:var(--brass)}
 .cl-item.done{opacity:.5}
 .cl-item.done .cl-text{text-decoration:line-through;color:var(--sub)}
 .cl-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;transition:.2s}
@@ -148,7 +154,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.95
 .cl-tag{font-size:10px;color:var(--sub);background:rgba(255,255,255,.06);border-radius:6px;padding:2px 8px;white-space:nowrap}
 
 /* ── TIPS BOX ── */
-.tip-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:20px}
+.tip-box{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:20px;margin-bottom:20px}
 .tip-box-title{font-size:14px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px}
 .tip-list{list-style:none;display:flex;flex-direction:column;gap:8px}
 .tip-list li{font-size:13px;color:#b0bec5;line-height:1.55;padding-left:20px;position:relative}
@@ -157,7 +163,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.95
 
 /* ── INFO BADGE ── */
 .info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-bottom:28px}
-.info-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px}
+.info-card{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:16px 18px}
 .info-card-label{font-size:11px;color:var(--sub);font-weight:700;margin-bottom:6px}
 .info-card-value{font-size:14px;font-weight:700;line-height:1.4}
 .info-card-value.warn{color:#ffcc80}
@@ -165,7 +171,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.95
 /* ── FLIGHT CARD ── */
 .flight-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
 @media(max-width:600px){.flight-grid{grid-template-columns:1fr}}
-.flight-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px}
+.flight-card{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:22px;box-shadow:0 1px 0 var(--border),0 6px 16px rgba(0,0,0,.2)}
 .fc-header{font-size:11px;color:var(--sub);font-weight:700;letter-spacing:1px;margin-bottom:16px}
 .fc-row{display:flex;align-items:center;gap:8px}
 .fc-airport{text-align:center}
@@ -176,12 +182,44 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.95
 .fc-arrow .plane{font-size:16px}
 .fc-arrow .dur{font-size:11px;color:var(--sub)}
 .fc-meta{margin-top:14px;display:flex;flex-wrap:wrap;gap:6px}
-.fc-tag{background:rgba(92,107,192,.15);color:#9fa8da;border-radius:10px;padding:3px 10px;font-size:11px}
+.fc-tag{background:rgba(43,110,106,.15);color:var(--light-accent);border-radius:10px;padding:3px 10px;font-size:11px}
 
 @media(max-width:600px){
   .rest-grid,.shop-grid{grid-template-columns:1fr}
   .info-grid{grid-template-columns:1fr 1fr}
 }
+
+/* ── TRAVEL DOCS ── */
+.pdoc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;margin-top:8px}
+.pdoc-card{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:22px;display:flex;flex-direction:column;gap:14px;transition:.25s;box-shadow:0 1px 0 var(--border),0 6px 16px rgba(0,0,0,.2)}
+.pdoc-card:hover{border-color:var(--brass);transform:translateY(-2px)}
+.pdoc-icon{font-size:32px;line-height:1}
+.pdoc-name{font-size:15px;font-weight:700;color:var(--pale-cream);margin-bottom:4px}
+.pdoc-meta{font-size:11px;color:var(--sub)}
+.pdoc-desc{font-size:12px;color:var(--sub);margin-top:4px;line-height:1.5}
+.pdoc-btns{display:flex;gap:10px;flex-wrap:wrap}
+.pdoc-preview-btn{background:rgba(43,110,106,.14);border:1px solid rgba(43,110,106,.3);border-radius:10px;color:var(--light-accent);font-size:13px;font-weight:600;padding:8px 18px;cursor:pointer;transition:.2s}
+.pdoc-preview-btn:hover,.pdoc-preview-btn.open{background:rgba(43,110,106,.28);border-color:var(--accent2);color:var(--pale-accent)}
+.pdoc-preview-btn.open::after{content:' ▲'}
+.pdoc-preview-btn:not(.open)::after{content:' ▼'}
+.pdoc-dl-btn{background:linear-gradient(135deg,#2b6e6a,#3f8f8a);color:#fff;text-decoration:none;border-radius:10px;font-size:13px;font-weight:600;padding:8px 18px;display:inline-flex;align-items:center;white-space:nowrap}
+.pdoc-dl-btn:hover{opacity:.88}
+.pdoc-viewer{border-radius:12px;overflow:hidden;border:1px solid var(--border);margin-top:4px}
+.pdoc-hint{font-size:11px;color:var(--sub);text-align:center;margin:8px 0 0;padding-bottom:4px}
+.pdoc-hint a{color:var(--light-accent)}
+
+/* ── QUOTE SUMMARY ── */
+.quote-box{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:20px;margin-top:24px}
+.quote-box-title{font-size:14px;font-weight:800;margin-bottom:14px}
+.quote-row{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.quote-row:last-child{border-bottom:none}
+.quote-row .k{color:var(--sub);flex-shrink:0}
+.quote-row .v{text-align:right;font-weight:600}
+.quote-plan{margin-top:14px;background:var(--card);border:1px solid var(--border);border-radius:3px;padding:14px 16px}
+.quote-plan-title{font-size:12px;font-weight:800;color:var(--light-accent);margin-bottom:8px}
+.quote-plan ul{list-style:none;display:flex;flex-direction:column;gap:5px}
+.quote-plan li{font-size:12px;color:#b0bec5;line-height:1.5;padding-left:16px;position:relative}
+.quote-plan li::before{content:'▶';position:absolute;left:0;color:var(--accent2);font-size:10px}
 </style>
 </head>
 <body>
@@ -222,6 +260,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.95
     <button class="tab-btn" onclick="switchTab(2,this)">🛍 쇼핑</button>
     <button class="tab-btn" onclick="switchTab(3,this)">💰 예산</button>
     <button class="tab-btn" onclick="switchTab(4,this)">✅ 준비물</button>
+    <button class="tab-btn" onclick="switchTab(5,this)">📁 여행자료</button>
   </div>
 </div>
 
@@ -876,11 +915,112 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,15,26,.95
 </div>
 </div>
 
+<!-- ══════════ TAB 5: 여행자료 ══════════ -->
+<div class="tab-pane" id="pane-5">
+<div class="section">
+  <div class="sec-eyebrow">TRAVEL DOCS</div>
+  <div class="sec-title">📁 여행 자료 모음</div>
+  <div class="sec-sub">여행사 견적서·바우처 등 PDF 자료를 한 곳에서 열람하고 다운로드하세요</div>
+
+  <div class="pdoc-grid">
+
+    <div class="pdoc-card">
+      <div class="pdoc-icon">🧾</div>
+      <div class="pdoc-info">
+        <div class="pdoc-name">마카오 데이 투어 견적서 (한룡여행사)</div>
+        <div class="pdoc-meta">마카오_견적서_한룡여행사_27년1월.pdf &nbsp;·&nbsp; 138KB</div>
+        <div class="pdoc-desc">12+0명 · 27년 1월 · 차량(21인승)+가이드비+입장료 포함 · 지상비 총 1,200,000원</div>
+      </div>
+      <div class="pdoc-btns">
+        <button class="pdoc-preview-btn" onclick="togglePdf(this,'마카오_견적서_한룡여행사_27년1월.pdf')">📄 미리보기</button>
+        <a class="pdoc-dl-btn" href="마카오_견적서_한룡여행사_27년1월.pdf" download>⬇ 다운로드</a>
+      </div>
+      <div class="pdoc-viewer" style="display:none">
+        <iframe style="width:100%;height:780px;border:none;background:#1a1d2e;display:block" title="마카오 데이 투어 견적서"></iframe>
+        <p class="pdoc-hint">PDF가 보이지 않으면 <a href="마카오_견적서_한룡여행사_27년1월.pdf" target="_blank">새 탭에서 열기</a></p>
+      </div>
+    </div>
+
+  </div><!-- /.pdoc-grid -->
+
+  <div class="quote-box">
+    <div class="quote-box-title">🧾 견적서 요약 파악 결과</div>
+    <div class="quote-row"><span class="k">여행사</span><span class="v">한룡여행사(KOREA DRAGON TRAVEL) · 최윤식 소장</span></div>
+    <div class="quote-row"><span class="k">연락처</span><span class="v">010-4637-2240 · 카카오톡 miso3456</span></div>
+    <div class="quote-row"><span class="k">주소</span><span class="v">서울 서대문구 충정로2가 191 골든타워 지하1층 01호</span></div>
+    <div class="quote-row"><span class="k">여행지 / 상품</span><span class="v">마카오 데이 투어</span></div>
+    <div class="quote-row"><span class="k">인원 / 기간</span><span class="v">12+0명 · 2027년 1월</span></div>
+    <div class="quote-row"><span class="k">지상비</span><span class="v">총 1,200,000원 (싱글차지·룸넘버 미기재)</span></div>
+    <div class="quote-row"><span class="k">포함사항</span><span class="v">차량(21인승) · 가이드비 · 입장료</span></div>
+    <div class="quote-row"><span class="k">불포함사항</span><span class="v">개인경비 · 식당 내 음료·주류</span></div>
+    <div class="quote-row"><span class="k">특이사항</span><span class="v">노쇼핑·노팁·노옵션</span></div>
+
+    <div class="quote-plan">
+      <div class="quote-plan-title">1안 (몬테요새·그랜드리스보아 위주)</div>
+      <ul>
+        <li>마카오 방면 이민국 출구 가이드 미팅</li>
+        <li>마카오 랜드마크: 몬테요새·마카오박물관·성바울성당·육포&쿠키거리·세나도광장</li>
+        <li>그랜드 리스보아 보물관람</li>
+        <li>윈 마카오 황금나무쇼 · 윈팰리스 분수쇼</li>
+        <li>파리지앵 에펠탑 야경</li>
+        <li>베네시안 카지노 관람(인공하늘)</li>
+        <li>런더너 마카오 근위병 교대식 (화~목 19:30·21:30 / 금~일 16:00·19:30·21:30)</li>
+        <li>이민국으로 이동</li>
+      </ul>
+    </div>
+    <div class="quote-plan">
+      <div class="quote-plan-title">2안 (콜로안 빌리지·타이파 위주)</div>
+      <ul>
+        <li>마카오 방면 이민국 출구 가이드 미팅</li>
+        <li>마카오 랜드마크: 몬테요새·마카오박물관·성바울성당·육포&쿠키거리·세나도광장</li>
+        <li>콜로안 빌리지 (영화 '도둑들' 촬영지 성하비에르 성당)</li>
+        <li>타이파 빌리지 및 주택박물관</li>
+        <li>윈팰리스 분수쇼 · 파리지앵 에펠탑 야경</li>
+        <li>베네시안 카지노 관람(인공하늘)</li>
+        <li>런더너 마카오 근위병 교대식 (동일 공연시간)</li>
+        <li>이민국으로 이동</li>
+      </ul>
+    </div>
+
+    <div class="tip-box" style="margin-top:16px">
+      <div class="tip-box-title">⚠ 유의사항</div>
+      <ul class="tip-list">
+        <li>마카오/홍콩은 전자담배 기기 <strong>소지 자체가 금지</strong> — 적발 시 마카오 68만원 / 홍콩 최대 800만원 벌금.</li>
+        <li>일반 담배도 <strong>19개비까지만</strong> 반입 가능 — 초과분은 개비당 벌금.</li>
+        <li>마카오/홍콩은 <strong>홍콩달러(HKD)</strong> 통용 — 홍콩달러로 환전 권장.</li>
+        <li>상기 일정은 <strong>당일 가이드 미팅 후 변경 가능</strong>.</li>
+        <li>싱글차지·ROOM NO·피켓명 등은 견적서에 아직 기재되어 있지 않아 여행사 확인 필요.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+</div>
+
 <script>
 // ── 탭 전환 ──
 function switchTab(idx, btn) {
   document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('on', i===idx));
   document.querySelectorAll('.tab-pane').forEach((p,i) => p.classList.toggle('show', i===idx));
+}
+
+// ── PDF 미리보기 토글 ──
+function togglePdf(btn, src) {
+  const card = btn.closest('.pdoc-card');
+  const viewer = card.querySelector('.pdoc-viewer');
+  const iframe = viewer.querySelector('iframe');
+  const isOpen = viewer.style.display !== 'none';
+
+  document.querySelectorAll('.pdoc-viewer').forEach(v => { v.style.display = 'none'; });
+  document.querySelectorAll('.pdoc-preview-btn').forEach(b => b.classList.remove('open'));
+
+  if (!isOpen) {
+    if (!iframe.src || !iframe.src.endsWith(encodeURIComponent(src).replace(/%2F/g,'/'))) {
+      iframe.src = src;
+    }
+    viewer.style.display = 'block';
+    btn.classList.add('open');
+    setTimeout(() => viewer.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
+  }
 }
 
 // ── 일정 탭 전환 ──

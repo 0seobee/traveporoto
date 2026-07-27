@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🗺️ 여행 플래너 (내 브라우저 저장)</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -11,19 +12,22 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0d0f1a;--surface:#13162a;--card:#181c30;--border:#252940;
-  --text:#e8eaf6;--sub:#7b80a0;--accent:#5c6bc0;--accent2:#7986cb;
+  --bg:#12181f;--surface:#182029;--card:#f5efe2;--border:#2a3542;
+  --text:#ece7da;--sub:#8b93a1;--accent:#2b6e6a;--accent2:#3f8f8a;
+  --ink:#1c1712;--stamp:#c1442c;--brass:#b8873a;--paper-sub:#8a7f68;
 }
 body.light{
-  --bg:#eef1f9;--surface:#ffffff;--card:#ffffff;--border:#d5daee;
-  --text:#22283f;--sub:#6b7290;--accent:#5c6bc0;--accent2:#3f51b5;
+  --bg:#efe9da;--surface:#f5efe2;--card:#faf6ec;--border:#ddd2b8;
+  --text:#241f18;--sub:#6f6858;--accent:#2b6e6a;--accent2:#1f4b4a;
+  --ink:#1c1712;--stamp:#c1442c;--brass:#a8762f;--paper-sub:#7a7160;
 }
-body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;min-height:100vh}
+body{background:var(--bg);color:var(--text);font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;min-height:100vh}
+h1,h2,h3,.nav-logo,.dash-title,.hero-title,.project-card-name,.project-header-name,.modal-title,.pane-title{font-family:'Pretendard',sans-serif;font-weight:800;letter-spacing:-.3px}
 /* ── 라이트 테마 보정 ── */
 body.light nav{background:rgba(255,255,255,.92)}
 body.light .nav-back{background:rgba(0,0,0,.05);color:var(--text)}
 body.light .nav-back:hover{background:rgba(0,0,0,.1)}
-body.light .nav-project-name{color:#3f51b5}
+body.light .nav-project-name{color:var(--brass)}
 body.light .f-inp,body.light .f-sel,body.light .modal-inp{background:rgba(0,0,0,.04);color:var(--text)}
 body.light .f-inp::placeholder,body.light .modal-inp::placeholder{color:#9aa0bd}
 body.light .modal-btn.cancel{background:rgba(0,0,0,.05);color:var(--text)}
@@ -42,18 +46,18 @@ body.light nav a[href="hub.html"]{background:rgba(0,0,0,.05)!important;color:var
 body.light .f-inp option{background:#fff;color:var(--text)}
 body.light .cl-check{border-color:#b8bedd}
 body.light .tab-del{color:var(--sub)}
-body.light .map-sidebar-header .badge{background:rgba(92,107,192,.15)}
+body.light .map-sidebar-header .badge{background:rgba(43,110,106,.15)}
 body.light .slide-nav,body.light .slide-counter{color:#fff}
 
 /* ── NAV ── */
-nav{position:fixed;top:0;left:0;right:0;z-index:300;background:rgba(13,15,26,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);height:52px;display:flex;align-items:center;padding:0 20px;gap:12px}
+nav{position:fixed;top:0;left:0;right:0;z-index:300;background:rgba(18,24,31,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--brass);height:52px;display:flex;align-items:center;padding:0 20px;gap:12px}
 .nav-logo{font-size:17px;font-weight:800;cursor:pointer;white-space:nowrap}
-.nav-back{background:rgba(255,255,255,.08);border:1px solid var(--border);color:var(--text);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;display:none;font-family:inherit}
+.nav-back{background:rgba(255,255,255,.08);border:1px solid var(--border);color:var(--text);border-radius:3px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;display:none;font-family:inherit}
 .nav-back:hover{background:rgba(255,255,255,.14)}
-.nav-project-name{font-size:14px;font-weight:700;color:#9fa8da;display:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}
+.nav-project-name{font-size:14px;font-weight:700;color:var(--brass);display:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}
 .nav-spacer{flex:1}
-.nav-btn{background:var(--accent);color:#fff;border:none;border-radius:20px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
-.nav-btn:hover{background:#7986cb}
+.nav-btn{background:var(--stamp);color:#fff;border:1.5px solid var(--stamp);border-radius:3px;padding:7px 16px;font-size:12px;font-weight:700;letter-spacing:.5px;cursor:pointer;font-family:inherit;transition:.2s}
+.nav-btn:hover{background:transparent;color:var(--stamp)}
 
 /* ── VIEWS ── */
 .view{display:none;padding-top:52px;min-height:100vh}
@@ -66,8 +70,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;background:rgba(13,15,26,.95
 .dash-title{font-size:28px;font-weight:900;margin-bottom:6px}
 .dash-sub{color:var(--sub);font-size:14px}
 .project-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
-.project-card{background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden;cursor:pointer;transition:.2s;position:relative}
-.project-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.project-card{background:var(--card);color:var(--ink);border:1px solid var(--border);border-radius:3px;overflow:hidden;cursor:pointer;transition:.2s;position:relative;box-shadow:0 1px 0 var(--border),0 8px 20px rgba(0,0,0,.22)}
+.project-card:hover{border-color:var(--brass);transform:translateY(-3px);box-shadow:0 14px 30px rgba(0,0,0,.3)}
 .project-card-cover{height:90px;display:flex;align-items:center;justify-content:center;font-size:40px;position:relative}
 .project-card-actions{position:absolute;top:8px;right:8px;display:flex;gap:4px;opacity:0;transition:.2s}
 .project-card:hover .project-card-actions{opacity:1}
@@ -76,9 +80,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;background:rgba(13,15,26,.95
 .project-card-body{padding:14px 16px}
 .project-card-name{font-size:15px;font-weight:800;margin-bottom:4px}
 .project-card-dest{font-size:12px;color:var(--sub);margin-bottom:6px}
-.project-card-dates{font-size:11px;color:var(--accent2);background:rgba(92,107,192,.12);border-radius:10px;padding:3px 10px;display:inline-block}
-.project-card-new{border:2px dashed var(--border);background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:180px;color:var(--sub);font-size:14px;font-weight:600}
-.project-card-new:hover{border-color:var(--accent);color:var(--accent2)}
+.project-card-dates{font-size:11px;color:var(--accent);background:rgba(43,110,106,.1);border:1px solid rgba(43,110,106,.28);border-radius:2px;padding:3px 10px;display:inline-block;font-weight:700}
+.project-card-body{border-top:1px dashed var(--border)}
+.project-card-new{border:2px dashed var(--border);background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:180px;color:var(--sub);font-size:14px;font-weight:600;border-radius:3px}
+.project-card-new:hover{border-color:var(--brass);color:var(--brass)}
 .project-card-new .plus{font-size:32px}
 
 /* ── PROJECT VIEW ── */
@@ -125,7 +130,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;background:rgba(13,15,26,.95
 .tab-bar.tab-drag-active{overflow-x:hidden}
 
 /* ── FLIGHT ── */
-.flight-leg{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px 20px}
+.flight-leg{background:var(--card);color:var(--ink);border:1px solid var(--border);border-radius:3px;padding:18px 20px}
 .flight-leg-head{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--sub);margin-bottom:14px}
 .flight-leg-actions{display:flex;gap:6px}
 .flight-route{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -136,7 +141,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;background:rgba(13,15,26,.95
 .flight-mid{flex:0 0 auto;text-align:center;color:var(--sub);font-size:16px}
 .flight-duration{font-size:11px;color:var(--sub);white-space:nowrap;margin-top:2px}
 .flight-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
-.flight-badge{font-size:11px;background:rgba(92,107,192,.15);color:var(--accent2);border-radius:10px;padding:3px 10px;font-weight:600}
+.flight-badge{font-size:11px;background:rgba(43,110,106,.15);color:var(--accent2);border-radius:10px;padding:3px 10px;font-weight:600}
 @media(max-width:700px){
   #tabContent [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
   .flight-code{font-size:20px}
@@ -152,7 +157,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;background:rgba(13,15,26,.95
 .pane-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
 .pane-title{font-size:18px;font-weight:800}
 .add-btn{background:var(--accent);color:#fff;border:none;border-radius:20px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
-.add-btn:hover{background:#7986cb}
+.add-btn:hover{background:var(--accent2)}
 .del-btn{background:rgba(229,57,53,.12);border:1px solid rgba(229,57,53,.25);color:#ef9a9a;border-radius:8px;padding:3px 8px;font-size:11px;cursor:pointer;font-family:inherit;transition:.2s}
 .del-btn:hover{background:rgba(229,57,53,.25)}
 
@@ -164,17 +169,17 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;background:rgba(13,15,26,.95
 .f-inp:focus{border-color:var(--accent)}
 .f-inp::placeholder{color:var(--sub)}
 .f-inp option{background:#1e2240;color:#e8eaf6;font-size:14px;padding:6px}
-.f-sel{background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:8px 12px;font-family:inherit;cursor:pointer}
+.f-sel{background:var(--card);border:1px solid var(--border);border-radius:3px;color:var(--ink);font-size:13px;padding:8px 12px;font-family:inherit;cursor:pointer}
 .f-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
-.f-btn:hover{background:#7986cb}
+.f-btn:hover{background:var(--accent2)}
 .f-btn.secondary{background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--text)}
 .f-btn.secondary:hover{background:rgba(255,255,255,.1)}
 textarea.f-inp{resize:vertical;min-height:60px}
 
 /* ── CHECKLIST ── */
 .cl-list{display:flex;flex-direction:column;gap:6px}
-.cl-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:.2s}
-.cl-item:hover{border-color:var(--accent)}
+.cl-item{background:var(--card);color:var(--ink);border:1px solid var(--border);border-radius:3px;padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:.2s}
+.cl-item:hover{border-color:var(--brass)}
 .cl-item.done{opacity:.5}
 .cl-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;transition:.2s}
 .cl-item.done .cl-check{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -182,13 +187,13 @@ textarea.f-inp{resize:vertical;min-height:60px}
 .cl-text:focus{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
 .card-editable-title:focus,.card-editable-detail:focus,.card-editable-link:focus,.card-editable-place:focus{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
 .card-editable-detail:empty:before,.card-editable-link:empty:before,.card-editable-place:empty:before,.card-badge-tag:empty:before,.card-price-tag:empty:before{content:attr(data-placeholder);color:var(--sub);opacity:.6}
-.card-badge-tag{font-size:10px;font-weight:700;background:rgba(92,107,192,.18);color:var(--accent2);border-radius:8px;padding:2px 8px;cursor:text;white-space:nowrap;flex-shrink:0}
+.card-badge-tag{font-size:10px;font-weight:700;background:rgba(43,110,106,.18);color:var(--accent2);border-radius:8px;padding:2px 8px;cursor:text;white-space:nowrap;flex-shrink:0}
 .card-price-tag{font-size:11px;font-weight:700;color:#ffb74d;cursor:text;white-space:nowrap;flex-shrink:0}
 .card-icon-btn{cursor:pointer;position:relative}
-.card-icon-picker{display:none;position:absolute;top:24px;left:0;z-index:60;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px;width:220px;flex-wrap:wrap;gap:4px;box-shadow:0 8px 24px rgba(0,0,0,.3)}
-.card-icon-picker span:hover{background:rgba(92,107,192,.3)}
+.card-icon-picker{display:none;position:absolute;top:24px;left:0;z-index:60;background:var(--card);color:var(--ink);border:1px solid var(--border);border-radius:3px;padding:8px;width:220px;flex-wrap:wrap;gap:4px;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.card-icon-picker span:hover{background:rgba(43,110,106,.3)}
 .cl-item.done .cl-text{text-decoration:line-through}
-.cl-cat-badge{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(92,107,192,.15);color:var(--accent2)}
+.cl-cat-badge{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(43,110,106,.15);color:var(--accent2)}
 .cl-group{margin-bottom:8px;border:1px solid var(--border);border-radius:12px;overflow:hidden}
 .cl-group-label{font-size:12px;font-weight:800;letter-spacing:.5px;color:var(--text);padding:10px 14px;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;background:rgba(128,128,160,.08);transition:.15s}
 .cl-group-label:hover{background:rgba(255,255,255,.06)}
@@ -213,11 +218,11 @@ textarea.f-inp{resize:vertical;min-height:60px}
 /* ── 목록 내부 스크롤 ── */
 .scroll-list{max-height:62vh;overflow-y:auto;overflow-x:auto;padding-right:4px}
 .list-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-.scroll-list{scrollbar-width:thin;scrollbar-color:rgba(92,107,192,.7) rgba(128,128,160,.15)}
+.scroll-list{scrollbar-width:thin;scrollbar-color:rgba(43,110,106,.7) rgba(128,128,160,.15)}
 .scroll-list::-webkit-scrollbar{width:11px;height:11px}
 .scroll-list::-webkit-scrollbar-track{background:rgba(128,128,160,.12);border-radius:6px}
-.scroll-list::-webkit-scrollbar-thumb{background:rgba(92,107,192,.65);border-radius:6px;border:2px solid transparent;background-clip:padding-box}
-.scroll-list::-webkit-scrollbar-thumb:hover{background:rgba(92,107,192,.95);background-clip:padding-box}
+.scroll-list::-webkit-scrollbar-thumb{background:rgba(43,110,106,.65);border-radius:6px;border:2px solid transparent;background-clip:padding-box}
+.scroll-list::-webkit-scrollbar-thumb:hover{background:rgba(43,110,106,.95);background-clip:padding-box}
 .pane-collapse-btn{background:transparent;border:1px solid var(--border);border-radius:20px;color:var(--sub);font-size:12px;font-weight:700;padding:4px 12px;cursor:pointer;font-family:inherit;transition:.2s;white-space:nowrap}
 .pane-collapse-btn:hover{border-color:var(--accent);color:var(--accent2)}
 
@@ -229,20 +234,20 @@ textarea.f-inp{resize:vertical;min-height:60px}
 .budget-drag-handle{cursor:grab;color:var(--sub);text-align:center;width:20px;touch-action:none;user-select:none}
 .budget-row.dragging{opacity:.4}
 .list-table td.list-editable{cursor:text}
-.list-table td.list-editable:hover{background:rgba(92,107,192,.08)}
-.list-table td.list-editable:focus{outline:2px solid var(--accent);outline-offset:-2px;background:rgba(92,107,192,.12)}
+.list-table td.list-editable:hover{background:rgba(43,110,106,.08)}
+.list-table td.list-editable:focus{outline:2px solid var(--accent);outline-offset:-2px;background:rgba(43,110,106,.12)}
 .list-done-toggle{cursor:pointer;font-size:16px}
 .list-done{opacity:.45;text-decoration:line-through}
 
 /* ── CARD ── */
 .icard-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
-.icard-group{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px 18px}
-.icard-group-title{font-size:13px;font-weight:800;color:#7986cb;letter-spacing:.5px;padding-bottom:8px;margin-bottom:4px;border-bottom:1px solid var(--border)}
+.icard-group{background:var(--card);color:var(--ink);border:1px solid var(--border);border-radius:3px;padding:16px 18px}
+.icard-group-title{font-size:13px;font-weight:800;color:var(--accent2);letter-spacing:.5px;padding-bottom:8px;margin-bottom:4px;border-bottom:1px solid var(--border)}
 
 #schedSheetBox.open{display:flex!important}
 .pay-toggle{background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--sub);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;white-space:nowrap}
-.pay-toggle.on{background:rgba(92,107,192,.25);border-color:var(--accent);color:var(--text)}
-.sched-cost-bar{background:rgba(92,107,192,.08);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:12px}
+.pay-toggle.on{background:rgba(43,110,106,.25);border-color:var(--accent);color:var(--text)}
+.sched-cost-bar{background:rgba(43,110,106,.08);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:12px}
 .sched-cost-item{display:flex;align-items:center;gap:5px}
 .sched-cost-label{color:var(--sub);font-weight:600}
 .sched-cost-val{font-weight:800;color:var(--text)}
@@ -250,17 +255,17 @@ textarea.f-inp{resize:vertical;min-height:60px}
 .sched-cost-card{color:#42a5f5}
 /* ── SCHEDULE ── */
 .sched-dates{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
-.date-tab{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:6px}
-.date-tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.date-tab{background:var(--card);color:var(--ink);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:6px}
+.date-tab.on{background:var(--stamp);border-color:var(--stamp);color:#fff}
 .date-tab-del{background:none;border:none;color:inherit;cursor:pointer;font-size:11px;opacity:.6;padding:0}
 .date-tab-del:hover{opacity:1}
 .sched-timeline{display:flex;flex-direction:column;gap:10px}
-.sched-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;gap:14px;align-items:flex-start}
+.sched-item{background:var(--card);color:var(--ink);border:1px solid var(--border);border-radius:3px;padding:12px 16px;display:flex;gap:14px;align-items:flex-start}
 .sched-time{font-size:13px;font-weight:800;color:var(--accent2);min-width:50px;text-align:center;padding-top:2px}
 .sched-body{flex:1}
 .sched-place{font-size:12px;color:var(--sub);line-height:1.5;margin-top:3px}
 .sched-content{font-size:14px;font-weight:700;margin-bottom:0}
-.sched-note{font-size:11px;color:#7986cb;margin-top:4px;background:rgba(92,107,192,.08);border-radius:6px;padding:4px 8px;display:inline-block}
+.sched-note{font-size:11px;color:var(--accent2);margin-top:4px;background:rgba(43,110,106,.08);border-radius:6px;padding:4px 8px;display:inline-block}
 .sched-cost{font-size:11px;color:#a5d6a7;margin-top:4px}
 .sched-item-actions{display:flex;gap:4px;flex-shrink:0}
 
@@ -274,14 +279,14 @@ textarea.f-inp{resize:vertical;min-height:60px}
 #tab-map-el{width:100%;height:100%;min-height:400px}
 .map-sidebar{background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
 .map-sidebar-header{padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px}
-.map-sidebar-header .badge{font-size:11px;background:rgba(92,107,192,.2);color:var(--accent2);border-radius:10px;padding:1px 8px}
-.map-kml-btn{margin-left:auto;background:rgba(92,107,192,.15);border:1px solid var(--accent);color:var(--accent2);border-radius:12px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:.2s}
-.map-kml-btn:hover{background:rgba(92,107,192,.3)}
+.map-sidebar-header .badge{font-size:11px;background:rgba(43,110,106,.2);color:var(--accent2);border-radius:10px;padding:1px 8px}
+.map-kml-btn{margin-left:auto;background:rgba(43,110,106,.15);border:1px solid var(--accent);color:var(--accent2);border-radius:12px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:.2s}
+.map-kml-btn:hover{background:rgba(43,110,106,.3)}
 .map-place-list{flex:1;overflow-y:auto;padding:8px}
 .map-place-list::-webkit-scrollbar{width:4px}
 .map-place-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-.map-place-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:6px;cursor:pointer;transition:.2s}
-.map-place-item:hover{border-color:var(--accent)}
+.map-place-item{background:var(--card);color:var(--ink);border:1px solid var(--border);border-radius:3px;padding:10px 12px;margin-bottom:6px;cursor:pointer;transition:.2s}
+.map-place-item:hover{border-color:var(--brass)}
 .map-place-name{font-size:13px;font-weight:700;margin-bottom:2px}
 .map-place-desc{font-size:11px;color:var(--sub)}
 .map-place-layer{display:inline-block;font-size:10px;font-weight:700;border-radius:8px;padding:1px 7px;color:#fff;margin-top:4px}
@@ -307,7 +312,7 @@ textarea.f-inp{resize:vertical;min-height:60px}
 
 /* ── FILE ── */
 .file-list{display:flex;flex-direction:column;gap:8px}
-.file-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px}
+.file-item{background:var(--card);color:var(--ink);border:1px solid var(--border);border-radius:3px;padding:12px 16px;display:flex;align-items:center;gap:12px}
 .file-icon{font-size:28px;flex-shrink:0}
 .file-info{flex:1}
 .file-name{font-size:14px;font-weight:700;margin-bottom:2px}
@@ -318,13 +323,13 @@ textarea.f-inp{resize:vertical;min-height:60px}
 /* ── GALLERY ── */
 .gal-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
 .gal-upload-btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
-.gal-upload-btn:hover{background:#7986cb}
+.gal-upload-btn:hover{background:var(--accent2)}
 .gal-upload-btn:disabled{opacity:.5;cursor:wait}
 .gal-nick{font-size:12px;color:var(--sub)}
 .gal-nick b{color:var(--accent2)}
 .gal-nick-change{background:none;border:none;color:var(--sub);font-size:11px;cursor:pointer;text-decoration:underline;font-family:inherit}
 .gal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
-.gal-item{position:relative;border-radius:12px;overflow:hidden;background:var(--card);border:1px solid var(--border);cursor:pointer;aspect-ratio:1}
+.gal-item{position:relative;border-radius:3px;overflow:hidden;background:var(--card);border:1px solid var(--border);cursor:pointer;aspect-ratio:1}
 .gal-item img{width:100%;height:100%;object-fit:cover;display:block;transition:.2s}
 .gal-item:hover img{transform:scale(1.05)}
 .gal-item-info{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(0,0,0,.75));padding:18px 8px 6px;font-size:11px;color:#fff;display:flex;justify-content:space-between;align-items:flex-end;gap:4px}
@@ -349,30 +354,30 @@ textarea.f-inp{resize:vertical;min-height:60px}
 /* ── MODAL ── */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
 .modal-bg.open{display:flex}
-.modal{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
-.modal-title{font-size:18px;font-weight:800;margin-bottom:20px}
+.modal{background:var(--card);color:var(--ink);border:1px solid var(--border);border-radius:4px;padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.4)}
+.modal-title{font-size:19px;font-weight:800;margin-bottom:20px;color:var(--ink)}
 .modal-label{font-size:12px;color:var(--sub);margin-bottom:6px;display:block;font-weight:600}
-.modal-inp{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;padding:10px 14px;font-family:inherit;outline:none;margin-bottom:14px}
-.modal-inp[type="date"]{color-scheme:dark;color:#e8eaf6}
+.modal-inp{width:100%;background:rgba(0,0,0,.03);border:1px solid var(--border);border-radius:2px;color:var(--ink);font-size:14px;padding:10px 14px;font-family:inherit;outline:none;margin-bottom:14px}
+.modal-inp[type="date"]{color-scheme:light;color:var(--ink)}
 .modal-inp:focus{border-color:var(--accent)}
 .modal-btns{display:flex;gap:10px;margin-top:4px}
-.modal-btn{flex:1;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
-.modal-btn.primary{background:var(--accent);color:#fff}
-.modal-btn.primary:hover{background:#7986cb}
-.modal-btn.cancel{background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--text)}
-.modal-btn.cancel:hover{background:rgba(255,255,255,.1)}
+.modal-btn{flex:1;border:none;border-radius:2px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
+.modal-btn.primary{background:var(--stamp);color:#fff}
+.modal-btn.primary:hover{background:var(--accent)}
+.modal-btn.cancel{background:rgba(0,0,0,.05);border:1px solid var(--border);color:var(--ink)}
+.modal-btn.cancel:hover{background:rgba(0,0,0,.1)}
 
 /* ── TAB TYPE SELECTOR ── */
 .tab-type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
 .tab-type-card{background:var(--surface);border:2px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:.2s}
-.tab-type-card:hover,.tab-type-card.on{border-color:var(--accent);background:rgba(92,107,192,.1)}
+.tab-type-card:hover,.tab-type-card.on{border-color:var(--accent);background:rgba(43,110,106,.1)}
 .tab-type-card .icon{font-size:24px;margin-bottom:6px}
 .tab-type-card .label{font-size:12px;font-weight:700}
 
 /* ── EMOJI PICKER ── */
 .emoji-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
 .emoji-opt{font-size:24px;cursor:pointer;padding:4px;border-radius:8px;transition:.2s}
-.emoji-opt:hover,.emoji-opt.on{background:rgba(92,107,192,.2)}
+.emoji-opt:hover,.emoji-opt.on{background:rgba(43,110,106,.2)}
 
 /* ── COLOR PICKER ── */
 .color-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
@@ -389,7 +394,7 @@ textarea.f-inp{resize:vertical;min-height:60px}
 .empty-state p{font-size:14px}
 
 /* ── MISC ── */
-.badge{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(92,107,192,.15);color:var(--accent2);font-weight:700}
+.badge{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(43,110,106,.15);color:var(--accent2);font-weight:700}
 
 /* ── RESPONSIVE (mobile) ── */
 @media(max-width:600px){
@@ -865,7 +870,7 @@ function openBgPicker() {
     ${dest ? `
     <div style="font-size:12px;color:#7b80a0;margin-bottom:6px">목적지 자동 추천</div>
     <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap" id="bgAutoPreview"></div>
-    <button class="f-btn" id="bgAutoBtn" style="width:100%;margin-bottom:14px;background:linear-gradient(135deg,#5c6bc0,#7986cb)" onclick="autoSetBg()">✨ '${dest}' 대표 이미지로 자동 설정</button>
+    <button class="f-btn" id="bgAutoBtn" style="width:100%;margin-bottom:14px;background:linear-gradient(135deg,var(--accent),var(--accent2))" onclick="autoSetBg()">✨ '${dest}' 대표 이미지로 자동 설정</button>
     <div style="border-top:1px solid #2a2f52;margin-bottom:14px"></div>` : ''}
     <div style="font-size:12px;color:#7b80a0;margin-bottom:6px">이미지 URL 직접 입력</div>
     <div style="display:flex;gap:8px;margin-bottom:12px">
@@ -915,7 +920,7 @@ async function loadWikiImages(dest, preview) {
       el.style.cssText = 'width:calc(33% - 4px);height:64px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:.15s';
       el.title = '이 이미지로 설정';
       el.onclick = () => applyBgUrl(img.full);
-      el.onmouseover = () => el.style.borderColor = '#7986cb';
+      el.onmouseover = () => el.style.borderColor = 'var(--accent2)';
       el.onmouseout = () => el.style.borderColor = 'transparent';
       preview.appendChild(el);
     });
@@ -1092,7 +1097,7 @@ function startRenameTab(e, id) {
 
   const inp = document.createElement('input');
   inp.value = tab.title;
-  inp.style.cssText = 'background:rgba(255,255,255,.15);border:none;border-bottom:2px solid #7986cb;outline:none;color:#fff;font-size:13px;font-weight:700;font-family:inherit;width:80px;padding:0 2px';
+  inp.style.cssText = 'background:rgba(255,255,255,.15);border:none;border-bottom:2px solid var(--accent2);outline:none;color:#fff;font-size:13px;font-weight:700;font-family:inherit;width:80px;padding:0 2px';
   label.replaceWith(inp);
   inp.focus();
   inp.select();
@@ -1176,8 +1181,8 @@ async function renderSchedule(container, tab, items) {
     <div class="pane-header">
       <div class="pane-title">📅 ${tab.title}</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="add-btn" style="font-size:12px;background:rgba(92,107,192,.2);border:1px solid var(--accent);color:var(--text)" onclick="document.getElementById('schedXlsInput').click()">📊 Excel 가져오기</button>
-        <button class="add-btn" style="font-size:12px;background:rgba(92,107,192,.2);border:1px solid var(--accent);color:var(--text)" onclick="document.getElementById('schedSheetBox').classList.toggle('open')">🔗 구글시트 연결</button>
+        <button class="add-btn" style="font-size:12px;background:rgba(43,110,106,.2);border:1px solid var(--accent);color:var(--text)" onclick="document.getElementById('schedXlsInput').click()">📊 Excel 가져오기</button>
+        <button class="add-btn" style="font-size:12px;background:rgba(43,110,106,.2);border:1px solid var(--accent);color:var(--text)" onclick="document.getElementById('schedSheetBox').classList.toggle('open')">🔗 구글시트 연결</button>
         <button class="pane-collapse-btn" onclick="toggleAllPS('pw-sched-${tab.id}',this)">접기 ▲</button>
       </div>
     </div>
@@ -1314,15 +1319,15 @@ function addSchedDate() {
     <div style="display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.06);border:1px solid #3a3f6b;border-radius:8px;padding:7px 12px">
       <input id="dpY" maxlength="4" placeholder="YYYY" inputmode="numeric"
         style="background:none;border:none;color:#e8eaf6;font-size:15px;font-weight:700;width:48px;outline:none;text-align:center;font-family:inherit">
-      <span style="color:#5c6bc0;font-weight:700">-</span>
+      <span style="color:var(--accent);font-weight:700">-</span>
       <input id="dpM" maxlength="2" placeholder="MM" inputmode="numeric"
         style="background:none;border:none;color:#e8eaf6;font-size:15px;font-weight:700;width:30px;outline:none;text-align:center;font-family:inherit">
-      <span style="color:#5c6bc0;font-weight:700">-</span>
+      <span style="color:var(--accent);font-weight:700">-</span>
       <input id="dpD" maxlength="2" placeholder="DD" inputmode="numeric"
         style="background:none;border:none;color:#e8eaf6;font-size:15px;font-weight:700;width:30px;outline:none;text-align:center;font-family:inherit">
     </div>
     <input id="datePickerLabel" placeholder="또는 직접 입력 (예: 1일차)" style="background:rgba(255,255,255,.06);border:1px solid #3a3f6b;border-radius:8px;color:#e8eaf6;font-size:13px;padding:7px 10px;font-family:inherit;outline:none;width:100%">
-    <button onclick="confirmAddSchedDate()" style="background:#5c6bc0;color:#fff;border:none;border-radius:8px;padding:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;width:100%">추가</button>
+    <button onclick="confirmAddSchedDate()" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;width:100%">추가</button>
   `;
 
   document.body.appendChild(pop);
@@ -1399,11 +1404,11 @@ function renderSchedItems(items, date) {
         </div>
         <div class="sched-item-actions">
           ${hasGeo?`<a class="del-btn" style="background:rgba(67,160,71,.15);color:#66bb6a;text-decoration:none;display:inline-flex;align-items:center" href="https://www.google.com/maps?q=${item.data.lat},${item.data.lng}" target="_blank" rel="noopener noreferrer">📍 구글맵</a>`:''}
-          <select class="del-btn" style="background:rgba(92,107,192,.15);color:#9fa8da;cursor:pointer" onchange="if(this.value)moveSchedItem('${item.id}',this.value)">
+          <select class="del-btn" style="background:rgba(43,110,106,.15);color:#9fa8da;cursor:pointer" onchange="if(this.value)moveSchedItem('${item.id}',this.value)">
             <option value="">📅 이동</option>
             ${schedDates.filter(d=>d!==item.data.date).map(d=>`<option value="${d}">${d}</option>`).join('')}
           </select>
-          <button class="del-btn" style="background:rgba(92,107,192,.15);color:#9fa8da" onclick="editSchedItem('${item.id}')">수정</button>
+          <button class="del-btn" style="background:rgba(43,110,106,.15);color:#9fa8da" onclick="editSchedItem('${item.id}')">수정</button>
           <button class="del-btn" onclick="deleteItem('${item.id}','${currentTab.id}')">삭제</button>
         </div>
       </div>`;
@@ -1712,7 +1717,7 @@ async function searchPlace(q) {
         const name = p.display_name.split(',').slice(0,3).join(', ');
         return `<div onclick="selectPlace('${p.display_name.replace(/'/g,"\\'")}',${p.lat},${p.lon})"
           style="padding:9px 14px;font-size:13px;color:#e0e2f5;cursor:pointer;border-bottom:1px solid #2a2f50;transition:.15s"
-          onmouseover="this.style.background='rgba(92,107,192,.2)'" onmouseout="this.style.background=''">${name}</div>`;
+          onmouseover="this.style.background='rgba(43,110,106,.2)'" onmouseout="this.style.background=''">${name}</div>`;
       }).join('');
     } catch(e) { dd.innerHTML = `<div style="padding:10px 14px;font-size:12px;color:#7b80a0">검색 실패</div>`; }
   }, 350);
@@ -1846,7 +1851,7 @@ function renderChecklist(container, tab, items) {
             <select class="f-inp" id="clCat" style="max-width:160px" onchange="handleCatSelect(this,'${tab.id}')">
               <option value="">카테고리 선택</option>
               ${catOptions}
-              <option value="__add__" style="color:#7986cb;font-weight:700">＋ 직접 추가...</option>
+              <option value="__add__" style="color:var(--accent2);font-weight:700">＋ 직접 추가...</option>
             </select>
             <button class="f-btn" onclick="addClItem('${tab.id}')">추가</button>
           </div>
@@ -1855,7 +1860,7 @@ function renderChecklist(container, tab, items) {
     </div>
     ${customCats.length ? `<div style="margin-bottom:12px;display:flex;flex-wrap:wrap;gap:6px;align-items:center">
       <span style="font-size:11px;color:#7b80a0">내 카테고리:</span>
-      ${customCats.map(c=>`<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(92,107,192,.15);border:1px solid #3a3f6b;border-radius:8px;padding:3px 10px;font-size:12px;color:#9fa8da">${c}<span onclick="removeCat('${tab.id}','${c}')" style="cursor:pointer;opacity:.6;margin-left:2px" title="삭제">✕</span></span>`).join('')}
+      ${customCats.map(c=>`<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(43,110,106,.15);border:1px solid #3a3f6b;border-radius:8px;padding:3px 10px;font-size:12px;color:#9fa8da">${c}<span onclick="removeCat('${tab.id}','${c}')" style="cursor:pointer;opacity:.6;margin-left:2px" title="삭제">✕</span></span>`).join('')}
     </div>` : ''}
     <div class="cl-list">${groupHtml}
       ${!items.length?`<div class="empty-state"><div class="icon">✅</div><p>준비물을 추가해 보세요</p></div>`:''}
@@ -1910,8 +1915,8 @@ function openAddCatModal(tabId) {
 
 function selectCatEmoji(el, emoji) {
   document.querySelectorAll('#catEmojiGrid span').forEach(s => s.style.borderColor = 'transparent');
-  el.style.borderColor = '#7986cb';
-  el.style.background = 'rgba(92,107,192,.25)';
+  el.style.borderColor = 'var(--accent2)';
+  el.style.background = 'rgba(43,110,106,.25)';
   document.getElementById('catEmojiPreview').textContent = emoji;
   document.getElementById('catEmojiPreview').dataset.emoji = emoji;
 }
@@ -2337,7 +2342,7 @@ function renderFlight(container, tab, items) {
       <div class="flight-leg-head">
         <span>${isReturn?'🛬 오는 편':'🛫 가는 편'} · ${d.date||''} · ${d.flightNo||''}</span>
         <span class="flight-leg-actions">
-          <button class="del-btn" style="background:rgba(92,107,192,.15);color:#9fa8da" onclick="editFlightLeg('${item.id}','${tab.id}')">수정</button>
+          <button class="del-btn" style="background:rgba(43,110,106,.15);color:#9fa8da" onclick="editFlightLeg('${item.id}','${tab.id}')">수정</button>
           <button class="del-btn" onclick="deleteItem('${item.id}','${tab.id}')">삭제</button>
         </span>
       </div>
@@ -2527,7 +2532,7 @@ function renderCards(container, tab, items) {
           data-placeholder="설명 추가"
         >${item.data.detail||''}</div>
         <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap;align-items:center">
-          <span style="font-size:11px;color:#7986cb;display:flex;align-items:center;gap:3px">🔗${item.data.link
+          <span style="font-size:11px;color:var(--accent2);display:flex;align-items:center;gap:3px">🔗${item.data.link
             ? `<a href="${item.data.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" ondblclick="event.preventDefault();event.stopPropagation();editCardLink('${item.id}')" style="color:inherit;text-decoration:underline;cursor:pointer" title="더블클릭하면 수정">${item.data.link}</a>`
             : `<span onclick="event.stopPropagation();editCardLink('${item.id}')" style="cursor:pointer;opacity:.6">링크 추가</span>`
           }</span>
@@ -2604,7 +2609,7 @@ function renderCards(container, tab, items) {
         </div>
         <div id="cardEmojiPicker" style="display:none;background:#1e2240;border:1px solid #3a3f6b;border-radius:12px;padding:12px;margin-bottom:12px;flex-wrap:wrap;gap:4px">
           ${CAT_EMOJIS.concat(['🏨','🍽️','☕','🍷','🚇','🚕','🚶','🧭','💰','📞','🎵','🎨','⛪','🏛️','🌸','🌊','🏔️','🗼','🎡','🛒','💈','🎪']).map(e=>
-            `<span onclick="setCardIcon('${e}')" style="font-size:22px;cursor:pointer;padding:4px;border-radius:6px;transition:.1s" onmouseover="this.style.background='rgba(92,107,192,.3)'" onmouseout="this.style.background=''">${e}</span>`
+            `<span onclick="setCardIcon('${e}')" style="font-size:22px;cursor:pointer;padding:4px;border-radius:6px;transition:.1s" onmouseover="this.style.background='rgba(43,110,106,.3)'" onmouseout="this.style.background=''">${e}</span>`
           ).join('')}
         </div>
       </div>
@@ -2638,7 +2643,7 @@ async function cardPlaceSearch(input) {
     box.innerHTML = list.map(p => `
       <div onclick="selectCardPlace('${p.display_name.replace(/'/g,'`')}',${p.lat},${p.lon})"
         style="padding:8px 12px;cursor:pointer;font-size:12px;color:#c5cae9;border-bottom:1px solid #252940"
-        onmouseover="this.style.background='rgba(92,107,192,.2)'" onmouseout="this.style.background=''">
+        onmouseover="this.style.background='rgba(43,110,106,.2)'" onmouseout="this.style.background=''">
         📍 ${p.display_name}
       </div>`).join('');
   } catch(e) { box.style.display = 'none'; }
@@ -2693,7 +2698,7 @@ const LAYER_PALETTE = ['#e53935','#43a047','#fb8c00','#1e88e5','#8e24aa','#00acc
 let mapAllItems = [], mapActiveLayers = new Set(), mapLayerColors = {};
 
 function getLayerColor(layer) {
-  if (!layer) return '#5c6bc0';
+  if (!layer) return 'var(--accent)';
   if (!mapLayerColors[layer]) {
     const idx = Object.keys(mapLayerColors).length % LAYER_PALETTE.length;
     mapLayerColors[layer] = LAYER_PALETTE[idx];
@@ -2981,7 +2986,7 @@ async function mapPlaceSearch(q) {
         const addr = parts.slice(1,3).join(', ');
         return `<div onclick='selectMapSearchPlace(${JSON.stringify(name)},${JSON.stringify(addr)},${p.lat},${p.lon})'
           style="padding:9px 14px;font-size:13px;color:#e0e2f5;cursor:pointer;border-bottom:1px solid #2a2f50"
-          onmouseover="this.style.background='rgba(92,107,192,.2)'" onmouseout="this.style.background=''">
+          onmouseover="this.style.background='rgba(43,110,106,.2)'" onmouseout="this.style.background=''">
           <div style="font-weight:700">${name}</div><div style="font-size:11px;color:#9fa8da">${addr}</div>
         </div>`;
       }).join('');
