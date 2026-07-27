@@ -240,18 +240,6 @@ window.addEventListener('DOMContentLoaded', () => {
     </div>
     <div class="hub-sec-body" id="hs-planning-body">
       <div class="project-grid" id="grid-planning">
-        <!-- 광저우·마카오 고정 카드 -->
-        <a class="project-card" id="guangzhouCard" href="guangzhou.html" style="background:linear-gradient(135deg,#1a237e,#880e4f,#b71c1c)">
-          <div class="project-card-actions" onclick="event.preventDefault()">
-            <span class="card-act-btn" title="삭제" onclick="deleteFixedCard('guangzhou', event)">🗑️</span>
-          </div>
-          <div class="project-card-cover" id="guangzhouCover" style="height:110px"></div>
-          <div class="project-card-body">
-            <div class="project-card-name">광저우·마카오 가족여행</div>
-            <div class="project-card-dest" id="guangzhouDest">🌏 광저우 · 마카오 · 코타이</div>
-            <div class="project-card-dates">2027.01 예정 · 3박4일 · 13~15명</div>
-          </div>
-        </a>
         <a class="project-card" id="plannerLocalCard" href="planner-local.html" style="background:linear-gradient(135deg,#37474f,#546e7a)">
           <div class="project-card-actions" onclick="event.preventDefault()">
             <span class="card-act-btn" title="삭제" onclick="deleteFixedCard('plannerLocal', event)">🗑️</span>
@@ -421,7 +409,7 @@ function getStatus(p) {
 }
 
 // ── 전용 페이지 연결 (이름 → 페이지) ──
-const PAGE_LINKS = { '샤먼 가족여행': 'xiamen.html' };
+const PAGE_LINKS = { '샤먼 가족여행': '중국여행/xiamen.html', '광저우': '중국여행/guangzhou.html', '광저우·마카오 가족여행': '중국여행/guangzhou.html' };
 
 // ── 카드 HTML ──
 function cardHTML(p) {
@@ -485,10 +473,10 @@ function renderProjects(list) {
     el.innerHTML = cardHTML(p);
     planGrid.insertBefore(el.firstElementChild, newCard);
   });
-  const guangzhouShown = document.getElementById('guangzhouCard') ? 1 : 0;
-  document.getElementById('cnt-planning').textContent = (guangzhouShown + planning.length) + '개';
+  const plannerLocalShown = document.getElementById('plannerLocalCard') ? 1 : 0;
+  document.getElementById('cnt-planning').textContent = (plannerLocalShown + planning.length) + '개';
   // 계획 중이 없으면 안내 텍스트
-  if (planning.length === 0 && guangzhouShown === 0) {
+  if (planning.length === 0 && plannerLocalShown === 0) {
     const empty = document.createElement('div');
     empty.className = 'hub-empty';
     empty.textContent = '계획 중인 여행이 없습니다';
@@ -588,8 +576,8 @@ async function deleteProject(id, e) {
 
 // ── 고정 카드 삭제(숨김) ──
 const HIDE_KEY = 'hub-hidden-fixed-cards';
-const FIXED_CARD_LABELS = { pt: '포르투갈 7박 8일', guangzhou: '광저우·마카오 가족여행', plannerLocal: '내 여행 만들기 (로그인 불필요)' };
-const FIXED_CARD_ELS = { pt: 'ptCard', guangzhou: 'guangzhouCard', plannerLocal: 'plannerLocalCard' };
+const FIXED_CARD_LABELS = { pt: '포르투갈 7박 8일', plannerLocal: '내 여행 만들기 (로그인 불필요)' };
+const FIXED_CARD_ELS = { pt: 'ptCard', plannerLocal: 'plannerLocalCard' };
 
 function getHiddenFixedCards() {
   return JSON.parse(localStorage.getItem(HIDE_KEY) || '[]');
@@ -889,7 +877,6 @@ function updateSectionCounts() {
 restoreCollapseStates();
 applyHiddenFixedCards();
 loadPtCard();
-applyCountryCover(document.getElementById('guangzhouCover'), document.getElementById('guangzhouDest')?.textContent);
 loadProjects().then(() => {
   applyHubOrder();
   initDraggable();
