@@ -1281,7 +1281,98 @@ function renderSchedDates(items) {
     `<div class="date-tab${d===currentSchedDate?' on':''}" onclick="switchSchedDate('${d}', this)">
       ${d}
     </div>`
-  ).join('') + `<button class="add-btn" style="font-size:11px;padding:5px 12px" onclick="addSchedDate()">＋ 날짜</button>`;
+  ).join('') + `<button class="add-btn" style="font-size:11px;padding:5px 12px" onclick="addSchedDate()">＋ 날짜</button>`
+    + (schedDates.length > 1 ? `<button class="add-btn" style="font-size:11px;padding:5px 12px;background:rgba(92,107,192,.15);border:1px solid var(--accent)" onclick="openSwapDatesPopup()">🔀 날짜 교환/이동</button>` : '');
+}
+
+function openSwapDatesPopup() {
+  const existing = document.getElementById('dateSwapPop');
+  if (existing) { existing.remove(); return; }
+  if (schedDates.length < 2) { alert('교환/이동하려면 날짜가 2개 이상 있어야 합니다'); return; }
+
+  const btn = event.currentTarget;
+  const pop = document.createElement('div');
+  pop.id = 'dateSwapPop';
+  pop.style.cssText = 'position:absolute;z-index:999;background:#1e2240;border:1px solid #3a3f6b;border-radius:12px;padding:14px;box-shadow:0 8px 32px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:10px;min-width:260px';
+
+  const rect = btn.getBoundingClientRect();
+  pop.style.top = (rect.bottom + window.scrollY + 6) + 'px';
+  pop.style.left = rect.left + 'px';
+
+  const opts = schedDates.map(d => `<option value="${d}">${d}</option>`).join('');
+  pop.innerHTML = `
+    <div style="font-size:12px;font-weight:700;color:#9fa8da">날짜 전체 이동 / 교환</div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <select id="swapDateA" class="f-sel" style="flex:1">${opts}</select>
+      <span style="color:#5c6bc0;font-weight:700">↔</span>
+      <select id="swapDateB" class="f-sel" style="flex:1">${opts}</select>
+    </div>
+    <div style="font-size:11px;color:var(--sub);line-height:1.5">
+      <b style="color:#9fa8da">교환</b>: 두 날짜의 일정을 서로 맞바꿉니다<br>
+      <b style="color:#9fa8da">이동</b>: 왼쪽 날짜의 일정을 오른쪽 날짜로 모두 옮깁니다(오른쪽에 있던 기존 일정과 합쳐짐)
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="confirmSwapDates()" style="flex:1;background:#5c6bc0;color:#fff;border:none;border-radius:8px;padding:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🔀 교환</button>
+      <button onclick="confirmMoveDate()" style="flex:1;background:rgba(255,255,255,.08);border:1px solid #3a3f6b;color:var(--text);border-radius:8px;padding:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">➡️ 이동</button>
+    </div>
+  `;
+
+  document.body.appendChild(pop);
+  if (schedDates.length > 1) {
+    const aSel = pop.querySelector('#swapDateA');
+    if (currentSchedDate) aSel.value = currentSchedDate;
+    const bSel = pop.querySelector('#swapDateB');
+    bSel.selectedIndex = bSel.value === aSel.value ? 1 % schedDates.length : bSel.selectedIndex;
+    if (bSel.value === aSel.value) bSel.selectedIndex = (schedDates.indexOf(aSel.value) + 1) % schedDates.length;
+  }
+
+  setTimeout(() => document.addEventListener('click', function outsideClick(e) {
+    if (!pop.contains(e.target) && e.target !== btn) { pop.remove(); document.removeEventListener('click', outsideClick); }
+  }), 100);
+}
+
+async function confirmSwapDates() {
+  const a = document.getElementById('swapDateA')?.value;
+  const b = document.getElementById('swapDateB')?.value;
+  document.getElementById('dateSwapPop')?.remove();
+  if (!a || !b || a === b) { alert('서로 다른 두 날짜를 선택하세요'); return; }
+  if (!confirm(`${a} ↔ ${b} 일정을 서로 교환할까요?`)) return;
+  await swapSchedDates(a, b);
+}
+
+async function confirmMoveDate() {
+  const a = document.getElementById('swapDateA')?.value;
+  const b = document.getElementById('swapDateB')?.value;
+  document.getElementById('dateSwapPop')?.remove();
+  if (!a || !b || a === b) { alert('서로 다른 두 날짜를 선택하세요'); return; }
+  if (!confirm(`${a}의 모든 일정을 ${b}로 이동할까요? (${b}의 기존 일정과 합쳐집니다)`)) return;
+  await moveAllSchedItems(a, b);
+}
+
+async function swapSchedDates(dateA, dateB) {
+  const items = await sbGet('tab_items', `tab_id=eq.${currentTab.id}&order=sort_order.asc,created_at.asc`);
+  const itemsToA = items.filter(i => i.data.date === dateB);
+  const itemsToB = items.filter(i => i.data.date === dateA);
+  await Promise.all([
+    ...itemsToA.map(i => sbPatch('tab_items', i.id, { data: { ...i.data, date: dateA } })),
+    ...itemsToB.map(i => sbPatch('tab_items', i.id, { data: { ...i.data, date: dateB } }))
+  ]);
+  const newItems = await sbGet('tab_items', `tab_id=eq.${currentTab.id}&order=sort_order.asc,created_at.asc`);
+  currentSchedDate = dateA;
+  renderSchedDates(newItems);
+  document.querySelectorAll('.date-tab').forEach(x => x.classList.toggle('on', x.textContent.trim() === dateA));
+  renderSchedItems(newItems, currentSchedDate);
+}
+
+async function moveAllSchedItems(fromDate, toDate) {
+  const items = await sbGet('tab_items', `tab_id=eq.${currentTab.id}&order=sort_order.asc,created_at.asc`);
+  const toMove = items.filter(i => i.data.date === fromDate);
+  await Promise.all(toMove.map(i => sbPatch('tab_items', i.id, { data: { ...i.data, date: toDate } })));
+  const newItems = await sbGet('tab_items', `tab_id=eq.${currentTab.id}&order=sort_order.asc,created_at.asc`);
+  currentSchedDate = toDate;
+  renderSchedDates(newItems);
+  document.querySelectorAll('.date-tab').forEach(x => x.classList.toggle('on', x.textContent.trim() === toDate));
+  renderSchedItems(newItems, currentSchedDate);
 }
 
 async function switchSchedDate(d, el) {
