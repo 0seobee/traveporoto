@@ -3485,12 +3485,11 @@ let gifts = [];
 let editingId = null;
 
 async function saveGifts() {
-  await fetch(`${SB_URL}/rest/v1/gifts`, {
-    method: 'DELETE', headers: { ...SB_H, 'Prefer': '' }
-  });
   if (!gifts.length) return;
-  await fetch(`${SB_URL}/rest/v1/gifts`, {
-    method: 'POST', headers: SB_HR, body: JSON.stringify(gifts)
+  await fetch(`${SB_URL}/rest/v1/gifts?on_conflict=id`, {
+    method: 'POST',
+    headers: { ...SB_H, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify(gifts)
   });
 }
 
@@ -3546,7 +3545,7 @@ async function toggleDone(id) {
 
 async function deleteGift(id) {
   gifts = gifts.filter(g => g.id !== id);
-  await saveGifts();
+  await fetch(`${SB_URL}/rest/v1/gifts?id=eq.${id}`, { method: 'DELETE', headers: SB_H });
   renderGifts();
 }
 
@@ -3851,12 +3850,11 @@ let clItems = [];
 let clFilter_ = 'all';
 
 async function saveCL() {
-  await fetch(`${SB_URL}/rest/v1/checklist`, {
-    method: 'DELETE', headers: { ...SB_H, 'Prefer': '' }
-  });
   if (!clItems.length) return;
-  await fetch(`${SB_URL}/rest/v1/checklist`, {
-    method: 'POST', headers: SB_HR, body: JSON.stringify(clItems)
+  await fetch(`${SB_URL}/rest/v1/checklist?on_conflict=id`, {
+    method: 'POST',
+    headers: { ...SB_H, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify(clItems)
   });
 }
 
@@ -3906,7 +3904,8 @@ async function clToggle(id) {
 
 async function clDelete(id) {
   clItems = clItems.filter(i=>i.id!==id);
-  await saveCL(); renderCL();
+  await fetch(`${SB_URL}/rest/v1/checklist?id=eq.${id}`, { method: 'DELETE', headers: SB_H });
+  renderCL();
 }
 
 async function clAdd() {
