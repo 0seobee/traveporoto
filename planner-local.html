@@ -156,6 +156,30 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;background:rgba(18,24,31,.92
 .pane-wrap{padding:24px;max-width:1000px;margin:0 auto}
 .pane-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
 .pane-title{font-size:18px;font-weight:800}
+.pane-title.editable{cursor:text;border-radius:4px;padding:2px 6px;margin-left:-6px;display:inline-flex;align-items:center;gap:6px;transition:.15s}
+.pane-title.editable:hover{background:rgba(43,110,106,.12)}
+.pane-title-pen{font-size:12px;color:var(--sub);opacity:0;transition:.15s}
+.pane-title.editable:hover .pane-title-pen{opacity:.85}
+.pane-title-input{background:transparent;border:none;border-bottom:2px solid var(--accent);outline:none;color:var(--text);font-size:18px;font-weight:800;font-family:inherit;padding:0 2px;min-width:140px;max-width:100%}
+
+/* ── TABLE SETUP (표 만들기) ── */
+.tbl-setup{display:flex;flex-direction:column;gap:18px}
+.tbl-step-label{font-size:12px;font-weight:700;color:var(--sub);letter-spacing:.02em;margin-bottom:8px;display:block}
+.tbl-preset-row{display:flex;flex-wrap:wrap;gap:8px}
+.tbl-preset{border:1px dashed var(--border);background:transparent;color:var(--sub);border-radius:14px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:.2s;text-align:left;line-height:1.4}
+.tbl-preset:hover{border-color:var(--accent);color:var(--accent2);background:rgba(43,110,106,.10)}
+.tbl-preset small{display:block;font-size:10.5px;opacity:.7;font-weight:500;margin-top:2px}
+.tbl-chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-height:36px;margin-bottom:12px}
+.tbl-chip{display:inline-flex;align-items:center;gap:4px;background:rgba(43,110,106,.14);border:1px solid rgba(43,110,106,.35);color:var(--text);border-radius:14px;padding:5px 8px 5px 12px;font-size:13px;font-weight:600}
+.tbl-chip .mv{cursor:pointer;opacity:.4;font-size:12px;padding:0 1px;user-select:none}
+.tbl-chip .mv:hover{opacity:1;color:var(--accent2)}
+.tbl-chip .x{cursor:pointer;opacity:.55;font-size:12px;padding:0 3px;user-select:none}
+.tbl-chip .x:hover{opacity:1;color:var(--stamp)}
+.tbl-chips-empty{font-size:12.5px;color:var(--sub)}
+.tbl-hint{font-size:11.5px;color:var(--sub);line-height:1.6;margin-top:6px}
+.tbl-preview-cell{color:var(--sub);opacity:.5;font-style:italic}
+.f-btn[disabled]{opacity:.4;cursor:not-allowed}
+.f-btn[disabled]:hover{background:var(--accent)}
 .add-btn{background:var(--accent);color:#fff;border:none;border-radius:20px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
 .add-btn:hover{background:var(--accent2)}
 .del-btn{background:rgba(229,57,53,.12);border:1px solid rgba(229,57,53,.25);color:#ef9a9a;border-radius:8px;padding:3px 8px;font-size:11px;cursor:pointer;font-family:inherit;transition:.2s}
@@ -434,6 +458,8 @@ textarea.f-inp{resize:vertical;min-height:60px}
   .pane-wrap{padding:14px 12px}
   .pane-header{margin-bottom:14px}
   .pane-title{font-size:16px}
+  .pane-title-input{font-size:16px;min-width:100px}
+  .pane-title-pen{opacity:.6}
 
   /* FORM */
   .form-box{padding:14px 12px}
@@ -1088,6 +1114,51 @@ function initTabBarDrag() {
   });
 }
 
+// ── 탭 제목 인라인 편집 (본문 헤더 제목 클릭) ──
+function paneTitleHtml(tab) {
+  const icon = TAB_ICONS[tab.type] || '\u{1F4C4}';
+  return `<div class="pane-title editable" id="pane-title-${tab.id}" title="클릭해서 제목 변경" onclick="startRenamePaneTitle('${tab.id}')">${icon} ${tab.title}<span class="pane-title-pen">\u270E</span></div>`;
+}
+
+function startRenamePaneTitle(id) {
+  const el = document.getElementById(`pane-title-${id}`);
+  const tab = tabs.find(t => t.id === id);
+  if (!el || !tab || el.dataset.editing) return;
+  el.dataset.editing = '1';
+  el.classList.remove('editable');
+
+  const icon = TAB_ICONS[tab.type] || '\u{1F4C4}';
+  el.innerHTML = `${icon} `;
+  const inp = document.createElement('input');
+  inp.className = 'pane-title-input';
+  inp.value = tab.title;
+  el.appendChild(inp);
+  inp.focus();
+  inp.select();
+
+  let done = false;
+  const finish = async (save) => {
+    if (done) return;
+    done = true;
+    const newTitle = inp.value.trim();
+    if (save && newTitle && newTitle !== tab.title) {
+      tab.title = newTitle;
+      await sbPatch('tabs', id, { title: newTitle });
+    }
+    el.innerHTML = `${icon} ${tab.title}<span class="pane-title-pen">\u270E</span>`;
+    el.classList.add('editable');
+    delete el.dataset.editing;
+    renderTabBar();
+    if (currentTab?.id === id) document.getElementById(`tab-btn-${id}`)?.classList.add('on');
+  };
+  inp.onblur = () => finish(true);
+  inp.onkeydown = e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') { e.preventDefault(); inp.blur(); }
+    if (e.key === 'Escape') { finish(false); inp.blur(); }
+  };
+}
+
 function startRenameTab(e, id) {
   e.stopPropagation();
   const btn = document.getElementById(`tab-btn-${id}`);
@@ -1179,7 +1250,7 @@ async function renderSchedule(container, tab, items) {
   const sfId = `ps-sf-${tab.id}`;
   container.innerHTML = `<div class="pane-wrap" id="pw-sched-${tab.id}">
     <div class="pane-header">
-      <div class="pane-title">📅 ${tab.title}</div>
+      ${paneTitleHtml(tab)}
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="add-btn" style="font-size:12px;background:rgba(43,110,106,.2);border:1px solid var(--accent);color:var(--text)" onclick="document.getElementById('schedXlsInput').click()">📊 Excel 가져오기</button>
         <button class="add-btn" style="font-size:12px;background:rgba(43,110,106,.2);border:1px solid var(--accent);color:var(--text)" onclick="document.getElementById('schedSheetBox').classList.toggle('open')">🔗 구글시트 연결</button>
@@ -1832,7 +1903,7 @@ function renderChecklist(container, tab, items) {
 
   container.innerHTML = `<div class="pane-wrap" id="pw-cl-${tab.id}">
     <div class="pane-header">
-      <div class="pane-title">✅ ${tab.title}</div>
+      ${paneTitleHtml(tab)}
       <div style="display:flex;align-items:center;gap:8px">
         <span class="badge">${done}/${items.length} · ${pct}%</span>
         <button class="pane-collapse-btn" onclick="toggleAllPS('pw-cl-${tab.id}',this)">접기 ▲</button>
@@ -2047,7 +2118,7 @@ function renderList(container, tab, items) {
     </tr>`).join('');
   container.innerHTML = `<div class="pane-wrap" id="pw-list-${tab.id}">
     <div class="pane-header">
-      <div class="pane-title">📋 ${tab.title}</div>
+      ${paneTitleHtml(tab)}
       <div style="display:flex;align-items:center;gap:8px">
         <span class="badge">${items.length}개</span>
         <button class="pane-collapse-btn" onclick="toggleAllPS('pw-list-${tab.id}',this)">접기 ▲</button>
@@ -2139,18 +2210,132 @@ async function saveItemField(e, id, field) {
 }
 
 // ── TABLE (custom columns) ──
+// ── TABLE 만들기 — 열 칩 빌더 ──
+const TABLE_PRESETS = [
+  { icon: '\u{1F465}', name: '참석자 명단', cols: ['구분', '이름', '연락처', '비고'] },
+  { icon: '\u{1F3E8}', name: '숙소 배정', cols: ['방 번호', '인원', '이름', '비고'] },
+  { icon: '\u{1F392}', name: '준비물 분담', cols: ['항목', '담당', '수량', '비고'] },
+  { icon: '\u{1F4B8}', name: '경비 정산', cols: ['항목', '금액', '결제자', '비고'] },
+  { icon: '\u{1F68C}', name: '교통·예약', cols: ['날짜', '구간', '수단', '예약번호'] },
+];
+
+let tblDraftCols = [];
+
+function tblDraftAreaHtml(tabId) {
+  const chips = tblDraftCols.length
+    ? tblDraftCols.map((c, i) => `
+        <span class="tbl-chip">
+          ${i > 0 ? `<span class="mv" title="앞으로" onclick="tblDraftMove('${tabId}',${i},-1)">‹</span>` : ''}
+          ${c}
+          ${i < tblDraftCols.length - 1 ? `<span class="mv" title="뒤로" onclick="tblDraftMove('${tabId}',${i},1)">›</span>` : ''}
+          <span class="x" title="삭제" onclick="tblDraftRemove('${tabId}',${i})">✕</span>
+        </span>`).join('')
+    : `<span class="tbl-chips-empty">아직 열이 없습니다. 위에서 추가해 주세요.</span>`;
+
+  const preview = tblDraftCols.length
+    ? `<div class="list-table-wrap">
+         <table class="list-table">
+           <thead><tr>${tblDraftCols.map(c => `<th>${c}</th>`).join('')}</tr></thead>
+           <tbody><tr>${tblDraftCols.map(() => `<td class="tbl-preview-cell">입력값</td>`).join('')}</tr></tbody>
+         </table>
+       </div>`
+    : '';
+
+  return `
+    <span class="tbl-step-label">3. 미리보기 — 이런 표가 만들어집니다</span>
+    <div class="tbl-chips">${chips}</div>
+    ${preview}
+    <div class="form-row" style="margin-top:14px">
+      <button class="f-btn" onclick="createTableColumns('${tabId}')" ${tblDraftCols.length ? '' : 'disabled'}>표 만들기</button>
+      ${tblDraftCols.length ? `<button class="f-btn secondary" onclick="tblDraftClear('${tabId}')">모두 지우기</button>` : ''}
+    </div>`;
+}
+
+function tblDraftRender(tabId) {
+  const area = document.getElementById(`tblDraftArea-${tabId}`);
+  if (area) area.innerHTML = tblDraftAreaHtml(tabId);
+}
+
+function tblDraftPush(names) {
+  let added = 0;
+  names.forEach(n => {
+    const name = String(n).trim();
+    if (!name) return;
+    if (tblDraftCols.includes(name)) return;
+    tblDraftCols.push(name);
+    added++;
+  });
+  return added;
+}
+
+function tblDraftAdd(tabId) {
+  const inp = document.getElementById('tblColInput');
+  if (!inp) return;
+  const raw = inp.value.trim();
+  if (!raw) { inp.focus(); return; }
+  tblDraftPush(raw.split(/[,，\t\n]/));
+  inp.value = '';
+  tblDraftRender(tabId);
+  inp.focus();
+}
+
+function tblDraftPreset(tabId, idx) {
+  const preset = TABLE_PRESETS[idx];
+  if (!preset) return;
+  tblDraftPush(preset.cols);
+  tblDraftRender(tabId);
+  document.getElementById('tblColInput')?.focus();
+}
+
+function tblDraftRemove(tabId, idx) {
+  tblDraftCols.splice(idx, 1);
+  tblDraftRender(tabId);
+}
+
+function tblDraftMove(tabId, idx, dir) {
+  const to = idx + dir;
+  if (to < 0 || to >= tblDraftCols.length) return;
+  const [c] = tblDraftCols.splice(idx, 1);
+  tblDraftCols.splice(to, 0, c);
+  tblDraftRender(tabId);
+}
+
+function tblDraftClear(tabId) {
+  tblDraftCols = [];
+  tblDraftRender(tabId);
+  document.getElementById('tblColInput')?.focus();
+}
+
 function renderTable(container, tab, items) {
   const metaItem = items.find(i => i.data.__meta);
   if (!metaItem) {
+    tblDraftCols = [];
     container.innerHTML = `
       <div class="pane-wrap" id="pw-table-${tab.id}">
-        <div class="pane-header"><div class="pane-title">🧮 ${tab.title}</div></div>
-        <div class="form-box">
-          <label class="modal-label">컬럼(열) 이름을 쉼표(,)로 구분해 입력하세요</label>
-          <input class="f-inp" id="tblColsInput" placeholder="예: 방 번호, 인원, 이름, 비고" style="width:100%;margin-bottom:10px">
-          <button class="f-btn" onclick="createTableColumns('${tab.id}')">테이블 만들기</button>
+        <div class="pane-header">${paneTitleHtml(tab)}</div>
+        <div class="form-box tbl-setup">
+          <div>
+            <span class="tbl-step-label">1. 자주 쓰는 표로 시작하기 (선택)</span>
+            <div class="tbl-preset-row">
+              ${TABLE_PRESETS.map((p, i) => `
+                <button type="button" class="tbl-preset" onclick="tblDraftPreset('${tab.id}',${i})">
+                  ${p.icon} ${p.name}<small>${p.cols.join(' · ')}</small>
+                </button>`).join('')}
+            </div>
+          </div>
+          <div>
+            <span class="tbl-step-label">2. 열(칸) 이름 추가하기</span>
+            <div class="form-row">
+              <input class="f-inp" id="tblColInput" placeholder="예: 이름  — 입력 후 Enter" autocomplete="off"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();tblDraftAdd('${tab.id}');}">
+              <button class="f-btn" onclick="tblDraftAdd('${tab.id}')">＋ 열 추가</button>
+            </div>
+            <div class="tbl-hint">Enter를 누를 때마다 열이 하나씩 추가됩니다. 여러 개를 한 번에 넣고 싶으면 쉼표로 구분해 붙여넣으셔도 됩니다.</div>
+          </div>
+          <div id="tblDraftArea-${tab.id}">${tblDraftAreaHtml(tab.id)}</div>
         </div>
       </div>`;
+    if (window.matchMedia('(pointer:fine)').matches) setTimeout(() => document.getElementById('tblColInput')?.focus(), 60);
     return;
   }
   const columns = metaItem.data.columns || [];
@@ -2178,7 +2363,7 @@ function renderTable(container, tab, items) {
 
   container.innerHTML = `<div class="pane-wrap" id="pw-table-${tab.id}">
     <div class="pane-header">
-      <div class="pane-title">🧮 ${tab.title}</div>
+      ${paneTitleHtml(tab)}
       <div style="display:flex;align-items:center;gap:8px">
         <span class="badge">${rows.length}개</span>
         <button class="pane-collapse-btn" onclick="toggleAllPS('pw-table-${tab.id}',this)">접기 ▲</button>
@@ -2186,14 +2371,15 @@ function renderTable(container, tab, items) {
     </div>
     <div class="ps" id="ps-tcm-${tab.id}">
       <div class="ps-header" onclick="togglePS('ps-tcm-${tab.id}')">
-        <span class="ps-title">🔧 컬럼 관리</span>
+        <span class="ps-title">🔧 열(컬럼) 관리</span>
         <span class="ps-arrow">▼</span>
       </div>
       <div class="ps-body">
         ${colMgrHtml}
         <div class="form-row" style="margin-top:10px">
-          <input class="f-inp" id="tblNewColInput" placeholder="새 컬럼 이름">
-          <button class="f-btn" onclick="addTableColumn('${tab.id}')">컬럼 추가</button>
+          <input class="f-inp" id="tblNewColInput" placeholder="새 열 이름 (쉼표로 여러 개 한 번에)" autocomplete="off"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();addTableColumn('${tab.id}');}">
+          <button class="f-btn" onclick="addTableColumn('${tab.id}')">＋ 열 추가</button>
         </div>
       </div>
     </div>
@@ -2238,9 +2424,11 @@ async function reloadTable(tabId) {
 }
 
 async function createTableColumns(tabId) {
-  const raw = document.getElementById('tblColsInput').value.trim();
-  const columns = raw.split(',').map(s=>s.trim()).filter(Boolean);
-  if (!columns.length) { alert('컬럼 이름을 입력하세요'); return; }
+  const pending = document.getElementById('tblColInput')?.value.trim();
+  if (pending) tblDraftPush(pending.split(/[,，\t\n]/));
+  const columns = [...tblDraftCols];
+  if (!columns.length) { alert('열 이름을 하나 이상 추가하세요'); return; }
+  tblDraftCols = [];
   await sbPost('tab_items', { tab_id: tabId, data: { __meta: true, columns }, sort_order: -1 });
   await reloadTable(tabId);
 }
@@ -2273,13 +2461,17 @@ async function saveTableCell(e, id, encCol) {
 
 async function addTableColumn(tabId) {
   const input = document.getElementById('tblNewColInput');
-  const name = input.value.trim();
-  if (!name) { alert('컬럼 이름을 입력하세요'); return; }
+  const names = input.value.split(/[,，\t\n]/).map(s=>s.trim()).filter(Boolean);
+  if (!names.length) { alert('열 이름을 입력하세요'); return; }
   const metas = await sbGet('tab_items', `tab_id=eq.${tabId}&data->>__meta=eq.true`);
   const meta = metas[0];
   if (!meta) return;
-  if ((meta.data.columns||[]).includes(name)) { alert('이미 있는 컬럼 이름입니다'); return; }
-  const columns = [...(meta.data.columns||[]), name];
+  const columns = [...(meta.data.columns||[])];
+  const dup = names.filter(n => columns.includes(n));
+  const fresh = names.filter(n => !columns.includes(n));
+  if (!fresh.length) { alert('이미 있는 열 이름입니다'); return; }
+  if (dup.length) alert(`이미 있는 열은 건너뜁니다: ${dup.join(', ')}`);
+  columns.push(...fresh);
   await sbPatch('tab_items', meta.id, { data: { ...meta.data, columns } });
   await reloadTable(tabId);
 }
@@ -2366,7 +2558,7 @@ function renderFlight(container, tab, items) {
   container.innerHTML = `<div class="pane-wrap" id="pw-flight-${tab.id}">
     <div class="pane-header">
       <div>
-        <div class="pane-title">✈️ ${tab.title}</div>
+        ${paneTitleHtml(tab)}
         ${summaryParts.length?`<div style="font-size:12px;color:var(--sub);margin-top:4px">${summaryParts.join(' · ')}</div>`:''}
       </div>
       <button class="pane-collapse-btn" onclick="toggleAllPS('pw-flight-${tab.id}',this)">접기 ▲</button>
@@ -2573,7 +2765,7 @@ function renderCards(container, tab, items) {
 
   container.innerHTML = `<div class="pane-wrap" id="pw-card-${tab.id}">
     <div class="pane-header">
-      <div class="pane-title">🃏 ${tab.title}</div>
+      ${paneTitleHtml(tab)}
       <div style="display:flex;align-items:center;gap:8px">
         <span class="badge">${items.length}개</span>
         <button class="pane-collapse-btn" onclick="toggleAllPS('pw-card-${tab.id}',this)">접기 ▲</button>
@@ -3059,7 +3251,7 @@ function renderFiles(container, tab, items) {
   };
   container.innerHTML = `<div class="pane-wrap" id="pw-file-${tab.id}">
     <div class="pane-header">
-      <div class="pane-title">📎 ${tab.title}</div>
+      ${paneTitleHtml(tab)}
       <div style="display:flex;align-items:center;gap:8px">
         <span class="badge">${items.length}개</span>
         <button class="pane-collapse-btn" onclick="toggleAllPS('pw-file-${tab.id}',this)">접기 ▲</button>
@@ -3152,7 +3344,7 @@ async function renderGallery(container, tab) {
   const nick = localStorage.getItem(NICK_KEY);
   container.innerHTML = `<div class="pane-wrap" id="pw-gal-${tab.id}">
     <div class="pane-header">
-      <div class="pane-title">📷 ${tab.title}</div>
+      ${paneTitleHtml(tab)}
       <div style="display:flex;align-items:center;gap:8px">
         <span class="badge">${galPhotos.length}장</span>
       </div>
@@ -3411,7 +3603,7 @@ function renderBudget(container, tab, items) {
 
   container.innerHTML = `<div class="pane-wrap" id="pw-budget-${tab.id}">
     <div class="pane-header">
-      <div class="pane-title">💰 ${tab.title}</div>
+      ${paneTitleHtml(tab)}
       <div style="display:flex;align-items:center;gap:10px">
         <label style="font-size:12px;color:var(--sub);display:flex;align-items:center;gap:6px">인원 수
           <input class="f-inp" id="bPeople-${tab.id}" type="number" min="1" value="${peopleCount}"
