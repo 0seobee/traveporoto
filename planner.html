@@ -47,7 +47,7 @@ body.light nav a[href="hub.html"]{background:rgba(0,0,0,.05)!important;color:var
 body.light .f-inp option{background:#fff;color:var(--text)}
 body.light .cl-check{border-color:#b8bedd}
 body.light .tab-del{color:var(--sub)}
-body.light .map-sidebar-header .badge{background:rgba(43,110,106,.15)}
+body.light .map-panel-head .badge{background:rgba(43,110,106,.15)}
 body.light .slide-nav,body.light .slide-counter{color:#fff}
 
 /* ── NAV ── */
@@ -314,35 +314,40 @@ body.light .tbl-ord-inp{background:rgba(0,0,0,.04)}
 .sched-item-actions{display:flex;gap:4px;flex-shrink:0}
 
 /* ── MAP ── */
-.map-wrap{display:flex;flex-direction:column;height:calc(100vh - 160px)}
+/* 지도는 위에 전체 폭, 장소 관련 패널은 아래 가로 3단 */
+.map-wrap{display:flex;flex-direction:column}
 .map-layer-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .map-layer-btn{border:none;border-radius:16px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;opacity:.45;color:#fff}
 .map-layer-btn.on{opacity:1}
-.map-layout{display:grid;grid-template-columns:1fr 300px;gap:0;flex:1;overflow:hidden}
-@media(max-width:768px){.map-layout{grid-template-columns:1fr}}
-#tab-map-el{width:100%;height:100%;min-height:400px}
-.map-sidebar{background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
-.map-sidebar-header{padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px}
-.map-sidebar-header .badge{font-size:11px;background:rgba(43,110,106,.2);color:var(--accent2);border-radius:10px;padding:1px 8px}
+.map-stage{height:clamp(320px,56vh,620px);position:relative}
+#tab-map-el{width:100%;height:100%}
+.map-panels{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,1fr) minmax(0,1fr);gap:12px;padding:12px;background:var(--surface);border-top:1px solid var(--border);align-items:start}
+@media(max-width:1000px){.map-panels{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+@media(max-width:700px){.map-panels{grid-template-columns:1fr}}
+.map-panel{background:var(--card);border:1px solid var(--border);border-radius:3px;display:flex;flex-direction:column;min-width:0;box-shadow:0 1px 0 var(--border),0 6px 16px rgba(0,0,0,.18)}
+.map-panel-head{padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;font-weight:800;display:flex;align-items:center;gap:6px}
+.map-panel-head .badge{font-size:11px;background:rgba(43,110,106,.2);color:var(--accent2);border-radius:10px;padding:1px 8px}
+.map-panel-body{padding:12px}
 .map-kml-btn{margin-left:auto;background:rgba(43,110,106,.15);border:1px solid var(--accent);color:var(--accent2);border-radius:12px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:.2s}
 .map-kml-btn:hover{background:rgba(43,110,106,.3)}
-.map-sync-box{border-bottom:1px solid var(--border);padding:12px 14px;display:flex;flex-direction:column;gap:7px;background:rgba(43,110,106,.05)}
-.map-sync-title{font-size:12px;font-weight:800;color:var(--accent2)}
+.map-sync-box{padding:12px;display:flex;flex-direction:column;gap:7px}
 .map-sync-box .f-inp{width:100%;font-size:12px}
 .map-sync-box .f-btn{width:100%;font-size:12px;padding:7px}
 .map-sync-box .f-btn:disabled{opacity:.6;cursor:default}
 .map-sync-auto{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--sub);cursor:pointer}
 .map-sync-auto input{cursor:pointer}
 .map-sync-note{font-size:10.5px;color:var(--sub);line-height:1.5}
-.map-place-list{flex:1;overflow-y:auto;padding:8px}
+/* 넓어진 폭을 살려 장소를 카드 그리드로 여러 줄 표시 */
+.map-place-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;padding:12px;max-height:330px;overflow-y:auto;align-content:start}
+.map-place-list:empty{display:none}
 .map-place-list::-webkit-scrollbar{width:4px}
 .map-place-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-.map-place-item{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:10px 12px;margin-bottom:6px;cursor:pointer;transition:.2s}
+.map-place-item{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:10px 12px;cursor:pointer;transition:.2s;min-width:0}
 .map-place-item:hover{border-color:var(--accent)}
 .map-place-name{font-size:13px;font-weight:700;margin-bottom:2px}
 .map-place-desc{font-size:11px;color:var(--sub)}
 .map-place-layer{display:inline-block;font-size:10px;font-weight:700;border-radius:8px;padding:1px 7px;color:#fff;margin-top:4px}
-.map-add-form{padding:12px;border-top:1px solid var(--border)}
+.map-add-form{padding:12px}
 .map-add-form .f-inp{margin-bottom:6px;width:100%}
 .map-coord-row{display:flex;gap:6px;margin-bottom:6px}
 .map-coord-hint{font-size:10px;color:var(--sub);margin-bottom:6px}
@@ -516,7 +521,9 @@ body.light .tbl-ord-inp{background:rgba(0,0,0,.04)}
   .icard-grid{grid-template-columns:1fr}
 
   /* MAP */
-  .map-wrap{height:calc(100vh - 140px)}
+  .map-stage{height:clamp(280px,48vh,420px)}
+  .map-panels{padding:10px;gap:10px}
+  .map-place-list{grid-template-columns:1fr 1fr;max-height:260px}
   .map-add-form .f-inp{font-size:16px}
 
   /* SLIDES */
@@ -3288,16 +3295,22 @@ function renderMap(container, tab, items) {
 
   container.innerHTML = `<div class="map-wrap">
     ${layerBarHtml}
-    <div class="map-layout">
-      <div id="tab-map-el"></div>
-      <div class="map-sidebar">
-        <div class="map-sidebar-header">
+    <div class="map-stage"><div id="tab-map-el"></div></div>
+    <input type="file" id="kmlFileInput" accept=".kml,.kmz" style="display:none" onchange="importKML(this,'${tab.id}')">
+    <div class="map-panels">
+
+      <div class="map-panel">
+        <div class="map-panel-head">
           📍 장소 목록 <span class="badge" id="mapCount">${items.length}곳</span>
           <button class="map-kml-btn" onclick="document.getElementById('kmlFileInput').click()">📂 KML 가져오기</button>
         </div>
-        <input type="file" id="kmlFileInput" accept=".kml,.kmz" style="display:none" onchange="importKML(this,'${tab.id}')">
+        <div class="map-place-list" id="mapPlaceList">${renderPlaceList(items, tab.id)}</div>
+        ${!items.length ? `<div class="map-panel-body" style="font-size:12px;color:var(--sub);line-height:1.6">아직 등록된 장소가 없습니다.<br>구글 My Maps 를 연결하거나 오른쪽에서 직접 추가해 보세요.</div>` : ''}
+      </div>
+
+      <div class="map-panel">
+        <div class="map-panel-head">🗺️ 구글 My Maps 연결</div>
         <div class="map-sync-box">
-          <div class="map-sync-title">🗺️ 구글 My Maps 연결</div>
           <input class="f-inp" id="mapKmlUrl" placeholder="구글 My Maps 공유 URL 붙여넣기"
             value="${(mapKmlUrl || '').replace(/"/g, '&quot;')}" autocomplete="off">
           <button class="f-btn" id="mapSyncBtn" onclick="syncMapFromGoogle('${tab.id}')">🔄 구글맵에서 새로고침</button>
@@ -3309,9 +3322,11 @@ function renderMap(container, tab, items) {
             ? `마지막 동기화: ${new Date(mapKmlSyncedAt).toLocaleString('ko-KR')}`
             : '구글맵을 수정한 뒤 새로고침하면 최신 내용이 반영됩니다. 지도는 “링크가 있는 모든 사용자”로 공개되어 있어야 합니다.'}</div>
         </div>
-        <div class="map-place-list" id="mapPlaceList">${renderPlaceList(items, tab.id)}</div>
+      </div>
+
+      <div class="map-panel">
+        <div class="map-panel-head">＋ 장소 추가</div>
         <div class="map-add-form">
-          <div style="font-size:12px;font-weight:700;color:var(--accent2);margin-bottom:8px">＋ 장소 추가</div>
           <div style="position:relative;margin-bottom:6px">
             <input class="f-inp" id="mSearch" placeholder="🔍 장소 이름으로 검색" style="width:100%" autocomplete="off"
               oninput="mapPlaceSearch(this.value)" onblur="setTimeout(()=>document.getElementById('mSearchDropdown').innerHTML='',200)">
@@ -3332,9 +3347,12 @@ function renderMap(container, tab, items) {
           <button class="f-btn" style="width:100%" onclick="addMapPlace('${tab.id}')">추가</button>
         </div>
       </div>
+
     </div>
   </div>`;
   initLeafletTab(items, tab.id);
+  // 레이아웃이 바뀐 직후 지도 크기 재계산 (타일이 잘려 보이는 것 방지)
+  setTimeout(() => leafletMap && leafletMap.invalidateSize(), 60);
 
   // 자동 가져오기: 페이지 열고 그 탭에서 한 번만 (재렌더 루프 방지)
   if (mapAutoSync && mapKmlUrl && !mapAutoSyncedTabs.has(tab.id)) {
