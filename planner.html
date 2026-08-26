@@ -337,11 +337,21 @@ body.light .tbl-ord-inp{background:rgba(0,0,0,.04)}
 .map-sync-auto{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--sub);cursor:pointer}
 .map-sync-auto input{cursor:pointer}
 .map-sync-note{font-size:10.5px;color:var(--sub);line-height:1.5}
-/* 넓어진 폭을 살려 장소를 카드 그리드로 여러 줄 표시 */
-.map-place-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;padding:12px;max-height:330px;overflow-y:auto;align-content:start}
+/* 레이어별로 묶고, 묶음 안에서는 넓은 폭을 살려 카드 그리드로 표시 */
+.map-place-list{display:flex;flex-direction:column;gap:14px;padding:12px;max-height:360px;overflow-y:auto}
+.map-place-group{min-width:0}
+.map-place-group-head{display:flex;align-items:center;gap:7px;margin-bottom:7px;padding:2px 4px 5px;border-bottom:1px solid var(--border);cursor:pointer;border-radius:3px;transition:.15s;user-select:none}
+.map-place-group-head:hover{background:rgba(43,110,106,.07)}
+.map-place-group-arrow{font-size:9px;color:var(--sub);flex:none;transition:transform .18s}
+.map-place-group.collapsed .map-place-group-arrow{transform:rotate(-90deg)}
+.map-place-group.collapsed .map-place-grid{display:none}
+.map-place-group.collapsed .map-place-group-head{margin-bottom:0}
+.map-place-group-dot{width:9px;height:9px;border-radius:50%;flex:none}
+.map-place-group-name{font-size:12px;font-weight:800;color:var(--text)}
+.map-place-group-count{font-size:10.5px;color:var(--sub);background:rgba(128,128,160,.12);border-radius:9px;padding:1px 7px}
+.map-place-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
 .map-place-list:empty{display:none}
-.map-place-list::-webkit-scrollbar{width:4px}
-.map-place-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+/* 스크롤바는 공용 .scroll-list 스타일(굵고 잘 보이는 막대)을 그대로 사용 */
 .map-place-item{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:10px 12px;cursor:pointer;transition:.2s;min-width:0}
 .map-place-item:hover{border-color:var(--accent)}
 .map-place-name{font-size:13px;font-weight:700;margin-bottom:2px}
@@ -523,7 +533,8 @@ body.light .tbl-ord-inp{background:rgba(0,0,0,.04)}
   /* MAP */
   .map-stage{height:clamp(280px,48vh,420px)}
   .map-panels{padding:10px;gap:10px}
-  .map-place-list{grid-template-columns:1fr 1fr;max-height:260px}
+  .map-place-grid{grid-template-columns:1fr 1fr}
+  .map-place-list{max-height:300px}
   .map-add-form .f-inp{font-size:16px}
 
   /* SLIDES */
@@ -3302,9 +3313,10 @@ function renderMap(container, tab, items) {
       <div class="map-panel">
         <div class="map-panel-head">
           📍 장소 목록 <span class="badge" id="mapCount">${items.length}곳</span>
-          <button class="map-kml-btn" onclick="document.getElementById('kmlFileInput').click()">📂 KML 가져오기</button>
+          <button class="map-kml-btn" style="margin-left:auto" onclick="toggleAllMapGroups('${tab.id}',this)">접기 ▲</button>
+          <button class="map-kml-btn" style="margin-left:0" onclick="document.getElementById('kmlFileInput').click()">📂 KML 가져오기</button>
         </div>
-        <div class="map-place-list" id="mapPlaceList">${renderPlaceList(items, tab.id)}</div>
+        <div class="map-place-list scroll-list" id="mapPlaceList">${renderPlaceList(items, tab.id)}</div>
         ${!items.length ? `<div class="map-panel-body" style="font-size:12px;color:var(--sub);line-height:1.6">아직 등록된 장소가 없습니다.<br>구글 My Maps 를 연결하거나 오른쪽에서 직접 추가해 보세요.</div>` : ''}
       </div>
 
@@ -3361,19 +3373,86 @@ function renderMap(container, tab, items) {
   }
 }
 
+// 장소 목록을 레이어별로 묶어서 표시 (레이어 없는 장소는 맨 뒤)
 function renderPlaceList(items, tabId) {
-  return items.map(item => {
-    const color = getLayerColor(item.data.layer||'');
-    const layerBadge = item.data.layer ? `<div class="map-place-layer" style="background:${color}">${item.data.layer}</div>` : '';
-    return `<div class="map-place-item" id="mpi-${item.id}" onclick="focusMarker(${item.data.lat},${item.data.lng})">
+  if (!items.length) return '';
+
+  const card = item => `<div class="map-place-item" id="mpi-${item.id}" onclick="focusMarker(${item.data.lat},${item.data.lng})">
       <div class="map-place-name">${item.data.name||''}</div>
-      <div class="map-place-desc">${item.data.desc||''}</div>
-      ${layerBadge}
+      ${item.data.desc ? `<div class="map-place-desc">${item.data.desc}</div>` : ''}
       <div style="display:flex;justify-content:flex-end;margin-top:4px">
         <button class="del-btn" onclick="event.stopPropagation();deleteItem('${item.id}','${tabId}')">삭제</button>
       </div>
     </div>`;
+
+  const groups = new Map();
+  items.forEach(item => {
+    const l = item.data.layer || '';
+    if (!groups.has(l)) groups.set(l, []);
+    groups.get(l).push(item);
+  });
+
+  // 레이어 이름 순 (01.07 → 01.08 처럼 숫자 포함도 자연스럽게), 레이어 없음은 마지막
+  const keys = [...groups.keys()].sort((a, b) => {
+    if (a === '') return 1;
+    if (b === '') return -1;
+    return a.localeCompare(b, 'ko', { numeric: true });
+  });
+
+  // 레이어가 아예 없는 지도면 묶음 머리글 없이 평평하게
+  if (keys.length === 1 && keys[0] === '') {
+    return `<div class="map-place-group" data-layer=""><div class="map-place-grid">${items.map(card).join('')}</div></div>`;
+  }
+
+  const collapsed = getCollapsedLayers(tabId);
+
+  return keys.map(l => {
+    const list = groups.get(l);
+    const color = l ? getLayerColor(l) : 'var(--sub)';
+    const enc = encodeURIComponent(l);
+    const isOff = collapsed.has(l);
+    return `<div class="map-place-group${isOff ? ' collapsed' : ''}" data-layer="${enc}">
+      <div class="map-place-group-head" onclick="toggleMapGroup(this,'${tabId}','${enc}')" title="클릭하면 접거나 펼칩니다">
+        <span class="map-place-group-arrow">▼</span>
+        <span class="map-place-group-dot" style="background:${color}"></span>
+        <span class="map-place-group-name">${l || '레이어 없음'}</span>
+        <span class="map-place-group-count">${list.length}곳</span>
+      </div>
+      <div class="map-place-grid">${list.map(card).join('')}</div>
+    </div>`;
   }).join('');
+}
+
+// ── 레이어 묶음 접기 (탭별로 브라우저에 기억) ──
+function collapsedLayersKey(tabId) { return 'map-layer-collapsed-' + tabId; }
+
+function getCollapsedLayers(tabId) {
+  try { return new Set(JSON.parse(localStorage.getItem(collapsedLayersKey(tabId)) || '[]')); }
+  catch (e) { return new Set(); }
+}
+
+function toggleMapGroup(headEl, tabId, enc) {
+  const layer = decodeURIComponent(enc);
+  const group = headEl.closest('.map-place-group');
+  if (!group) return;
+  const nowCollapsed = group.classList.toggle('collapsed');
+  const set = getCollapsedLayers(tabId);
+  if (nowCollapsed) set.add(layer); else set.delete(layer);
+  try { localStorage.setItem(collapsedLayersKey(tabId), JSON.stringify([...set])); } catch (e) {}
+}
+
+// 모두 접기 / 모두 펼치기
+function toggleAllMapGroups(tabId, btn) {
+  const groups = [...document.querySelectorAll('.map-place-group')];
+  if (!groups.length) return;
+  const anyOpen = groups.some(g => !g.classList.contains('collapsed'));
+  const set = new Set();
+  groups.forEach(g => {
+    g.classList.toggle('collapsed', anyOpen);
+    if (anyOpen) set.add(decodeURIComponent(g.dataset.layer || ''));
+  });
+  try { localStorage.setItem(collapsedLayersKey(tabId), JSON.stringify([...set])); } catch (e) {}
+  if (btn) btn.textContent = anyOpen ? '펼치기 ▼' : '접기 ▲';
 }
 
 function toggleMapLayer(btn, layer) {
@@ -3388,10 +3467,10 @@ function toggleMapLayer(btn, layer) {
   });
   const visible = mapAllItems.filter(i => mapActiveLayers.has(i.data.layer||''));
   document.getElementById('mapCount').textContent = `${visible.length}곳`;
-  // 목록도 필터
-  mapAllItems.forEach(item => {
-    const el = document.getElementById('mpi-'+item.id);
-    if (el) el.style.display = mapActiveLayers.has(item.data.layer||'') ? '' : 'none';
+  // 목록도 필터 — 레이어별 묶음 단위로 숨긴다 (머리글만 남는 것 방지)
+  document.querySelectorAll('.map-place-group').forEach(g => {
+    const l = decodeURIComponent(g.dataset.layer || '');
+    g.style.display = mapActiveLayers.has(l) ? '' : 'none';
   });
 }
 
