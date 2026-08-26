@@ -326,6 +326,14 @@ body.light .tbl-ord-inp{background:rgba(0,0,0,.04)}
 .map-sidebar-header .badge{font-size:11px;background:rgba(43,110,106,.2);color:var(--accent2);border-radius:10px;padding:1px 8px}
 .map-kml-btn{margin-left:auto;background:rgba(43,110,106,.15);border:1px solid var(--accent);color:var(--accent2);border-radius:12px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:.2s}
 .map-kml-btn:hover{background:rgba(43,110,106,.3)}
+.map-sync-box{border-bottom:1px solid var(--border);padding:12px 14px;display:flex;flex-direction:column;gap:7px;background:rgba(43,110,106,.05)}
+.map-sync-title{font-size:12px;font-weight:800;color:var(--accent2)}
+.map-sync-box .f-inp{width:100%;font-size:12px}
+.map-sync-box .f-btn{width:100%;font-size:12px;padding:7px}
+.map-sync-box .f-btn:disabled{opacity:.6;cursor:default}
+.map-sync-auto{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--sub);cursor:pointer}
+.map-sync-auto input{cursor:pointer}
+.map-sync-note{font-size:10.5px;color:var(--sub);line-height:1.5}
 .map-place-list{flex:1;overflow-y:auto;padding:8px}
 .map-place-list::-webkit-scrollbar{width:4px}
 .map-place-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
@@ -3256,7 +3264,17 @@ function getLayerColor(layer) {
   return mapLayerColors[layer];
 }
 
+// 지도 탭 구글맵 연동 상태
+let mapMetaId = null, mapKmlUrl = '', mapKmlSyncedAt = '', mapAutoSync = false;
+let mapAutoSyncedTabs = new Set();
+
 function renderMap(container, tab, items) {
+  const meta = items.find(i => i.data.__meta);
+  mapMetaId = meta ? meta.id : null;
+  mapKmlUrl = meta?.data.kmlUrl || '';
+  mapKmlSyncedAt = meta?.data.syncedAt || '';
+  mapAutoSync = !!meta?.data.autoSync;
+  items = items.filter(i => !i.data.__meta);   // 설정 행은 장소가 아님
   mapAllItems = items;
   mapLayerColors = {};
   const layers = [...new Set(items.map(i => i.data.layer||'').filter(Boolean))];
@@ -3278,6 +3296,19 @@ function renderMap(container, tab, items) {
           <button class="map-kml-btn" onclick="document.getElementById('kmlFileInput').click()">📂 KML 가져오기</button>
         </div>
         <input type="file" id="kmlFileInput" accept=".kml,.kmz" style="display:none" onchange="importKML(this,'${tab.id}')">
+        <div class="map-sync-box">
+          <div class="map-sync-title">🗺️ 구글 My Maps 연결</div>
+          <input class="f-inp" id="mapKmlUrl" placeholder="구글 My Maps 공유 URL 붙여넣기"
+            value="${(mapKmlUrl || '').replace(/"/g, '&quot;')}" autocomplete="off">
+          <button class="f-btn" id="mapSyncBtn" onclick="syncMapFromGoogle('${tab.id}')">🔄 구글맵에서 새로고침</button>
+          <label class="map-sync-auto">
+            <input type="checkbox" ${mapAutoSync ? 'checked' : ''} onchange="setMapAutoSync('${tab.id}',this.checked)">
+            페이지 열 때 자동으로 가져오기
+          </label>
+          <div class="map-sync-note">${mapKmlSyncedAt
+            ? `마지막 동기화: ${new Date(mapKmlSyncedAt).toLocaleString('ko-KR')}`
+            : '구글맵을 수정한 뒤 새로고침하면 최신 내용이 반영됩니다. 지도는 “링크가 있는 모든 사용자”로 공개되어 있어야 합니다.'}</div>
+        </div>
         <div class="map-place-list" id="mapPlaceList">${renderPlaceList(items, tab.id)}</div>
         <div class="map-add-form">
           <div style="font-size:12px;font-weight:700;color:var(--accent2);margin-bottom:8px">＋ 장소 추가</div>
@@ -3304,6 +3335,12 @@ function renderMap(container, tab, items) {
     </div>
   </div>`;
   initLeafletTab(items, tab.id);
+
+  // 자동 가져오기: 페이지 열고 그 탭에서 한 번만 (재렌더 루프 방지)
+  if (mapAutoSync && mapKmlUrl && !mapAutoSyncedTabs.has(tab.id)) {
+    mapAutoSyncedTabs.add(tab.id);
+    syncMapFromGoogle(tab.id, true);
+  }
 }
 
 function renderPlaceList(items, tabId) {
@@ -3375,26 +3412,10 @@ function focusMarker(lat, lng) {
   if (leafletMap && lat && lng) leafletMap.setView([lat, lng], 15);
 }
 
-// ── KML 가져오기 ──
-async function importKML(input, tabId) {
-  const file = input.files[0];
-  if (!file) return;
-  input.value = '';
-
-  let text;
-  if (file.name.toLowerCase().endsWith('.kmz')) {
-    // KMZ = ZIP 압축 해제 후 doc.kml 추출
-    const zip = await JSZip.loadAsync(await file.arrayBuffer());
-    const kmlFile = zip.file(/\.kml$/i)[0];
-    if (!kmlFile) { alert('KMZ 안에 KML 파일이 없습니다.'); return; }
-    text = await kmlFile.async('text');
-  } else {
-    text = await file.text();
-  }
-
+// ── KML 파싱 (파일 가져오기 · 구글맵 동기화 공용) ──
+function parseKmlPlaces(text) {
   const parser = new DOMParser();
   const xml = parser.parseFromString(text, 'text/xml');
-
   const places = [];
 
   // 태그명으로 첫 번째 자식 텍스트 반환 (네임스페이스 무관)
@@ -3435,97 +3456,164 @@ async function importKML(input, tabId) {
     }
   }
 
-  // NetworkLink 감지 → href에서 실제 KML 로드
-  const netLinks = xml.getElementsByTagName('NetworkLink');
-  if (netLinks.length > 0 && places.length === 0) {
-    const hrefEls = xml.getElementsByTagName('href');
-    const urls = [];
-    for (let i = 0; i < hrefEls.length; i++) {
-      const u = hrefEls[i].textContent.trim();
-      if (u.startsWith('http')) urls.push(u);
-    }
-    if (urls.length === 0) { alert('NetworkLink URL을 찾지 못했습니다.'); return; }
-
-    // CORS 프록시를 통해 실제 KML 데이터 가져오기
-    const proxies = [
-      u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
-      u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-      u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
-    ];
-    for (const url of urls) {
-      let fetched = false;
-      for (const makeProxy of proxies) {
-        try {
-          const res = await fetch(makeProxy(url));
-          if (!res.ok) continue;
-          const kmlText = await res.text();
-          if (!kmlText.includes('<')) continue;
-          const xml2 = parser.parseFromString(kmlText, 'text/xml');
-          const docEls2 = xml2.getElementsByTagName('Document');
-          const root2 = docEls2.length ? docEls2[0] : xml2.documentElement;
-          let hasFolders2 = false;
-          for (const child of root2.children) {
-            const tag = child.localName || child.tagName;
-            if (tag === 'Folder') { parseFolder(child, '기타'); hasFolders2 = true; }
-          }
-          if (!hasFolders2) {
-            const allPm = xml2.getElementsByTagName('Placemark');
-            for (let i = 0; i < allPm.length; i++) {
-              const p = extractPlace(allPm[i], '기타');
-              if (p) places.push(p);
-            }
-          }
-          if (places.length > 0) { fetched = true; break; }
-        } catch(e) { console.warn('KML fetch 실패:', e); }
-      }
-      if (fetched) break;
-      // 모든 프록시 실패 시 URL 직접 안내
-      if (!fetched && places.length === 0) {
-        const directUrl = url.includes('forcekml') ? url : url + (url.includes('?') ? '&' : '?') + 'forcekml=1';
-        if (window.confirm(`자동 가져오기에 실패했습니다.\n\n아래 방법으로 직접 KML 파일을 다운받아 가져오기 해주세요:\n\n1. 아래 URL을 브라우저 주소창에 붙여넣기\n2. 파일이 다운로드되면 그 파일로 다시 KML 가져오기\n\n[확인]을 누르면 URL이 클립보드에 복사됩니다.`)) {
-          navigator.clipboard.writeText(directUrl).catch(()=>{});
-        }
-      }
-    }
-  } else {
-    // 일반 KML: Document 또는 최상위에서 시작
-    const docEls = xml.getElementsByTagName('Document');
-    const root = docEls.length ? docEls[0] : xml.documentElement;
-    let hasFolders = false;
-    for (const child of root.children) {
-      const tag = child.localName || child.tagName;
-      if (tag === 'Folder') { parseFolder(child, '기타'); hasFolders = true; }
-    }
-    if (!hasFolders) {
-      const allPm = xml.getElementsByTagName('Placemark');
-      for (let i = 0; i < allPm.length; i++) {
-        const p = extractPlace(allPm[i], '기타');
-        if (p) places.push(p);
-      }
+  const docEls = xml.getElementsByTagName('Document');
+  const root = docEls.length ? docEls[0] : xml.documentElement;
+  let hasFolders = false;
+  for (const child of root.children) {
+    const tag = child.localName || child.tagName;
+    if (tag === 'Folder') { parseFolder(child, '기타'); hasFolders = true; }
+  }
+  if (!hasFolders) {
+    const allPm = xml.getElementsByTagName('Placemark');
+    for (let i = 0; i < allPm.length; i++) {
+      const p = extractPlace(allPm[i], '기타');
+      if (p) places.push(p);
     }
   }
+  return { places, xml };
+}
 
-  if (places.length === 0) {
-    alert('가져올 장소가 없습니다.\n\n구글 My Maps에서 KML 내보내기 시 "네트워크 링크 유지" 옵션을 해제하거나,\n지도가 공개(공유) 상태인지 확인해 주세요.');
-    return;
+// KML 안의 NetworkLink(구글 My Maps 원본 참조) 주소 추출
+function findKmlNetworkLinkUrl(xml) {
+  if (!xml.getElementsByTagName('NetworkLink').length) return '';
+  const hrefEls = xml.getElementsByTagName('href');
+  for (let i = 0; i < hrefEls.length; i++) {
+    const u = hrefEls[i].textContent.trim();
+    if (u.startsWith('http')) return u;
+  }
+  return '';
+}
+
+// 구글 My Maps KML 을 우리 서버(/api/kml) 경유로 받아온다
+async function fetchGoogleKml(url) {
+  const res = await fetch(`/api/kml?url=${encodeURIComponent(url)}`);
+  if (!res.ok) {
+    let msg = '';
+    try { msg = (await res.json()).error || ''; } catch (e) {}
+    throw new Error(msg || `가져오기에 실패했습니다 (HTTP ${res.status})`);
+  }
+  return res.text();
+}
+
+// 구글맵에서 가져온 장소만 교체하고, 직접 추가한 장소는 보존한다
+async function replaceKmlPlaces(tabId, places, sourceUrl, silent) {
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  const rowsOnly = items.filter(i => !i.data.__meta);
+  const fromKml = rowsOnly.filter(i => i.data.source === 'kml');
+  const manual = rowsOnly.length - fromKml.length;
+
+  if (!silent) {
+    const msg = `구글맵에서 장소 ${places.length}곳을 읽었습니다.\n\n`
+      + `· 구글맵에서 가져왔던 ${fromKml.length}곳 → 최신 내용으로 교체\n`
+      + `· 직접 추가하신 ${manual}곳 → 그대로 유지\n\n계속할까요?`;
+    if (!window.confirm(msg)) return false;
   }
 
-  if (!window.confirm(`${places.length}개 장소를 가져오시겠습니까?\n\n기존 장소는 유지됩니다.`)) return;
+  for (const o of fromKml) await sbDelete('tab_items', o.id);
 
-  // Supabase 일괄 저장
-  const rows = places.map((p, i) => ({ tab_id: tabId, data: p, sort_order: i }));
-  const batchSize = 50;
-  for (let i = 0; i < rows.length; i += batchSize) {
+  const rows = places.map((p, i) => ({ tab_id: tabId, data: { ...p, source: 'kml' }, sort_order: i }));
+  for (let i = 0; i < rows.length; i += 50) {
     await fetch(`${SB_URL}/rest/v1/tab_items`, {
       method: 'POST',
       headers: SB_H,
-      body: JSON.stringify(rows.slice(i, i + batchSize))
+      body: JSON.stringify(rows.slice(i, i + 50))
     });
   }
 
-  // 지도 새로고침
-  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
-  renderMap(document.getElementById('tabContent'), currentTab, items);
+  await saveMapMeta(tabId, { kmlUrl: sourceUrl || mapKmlUrl, syncedAt: new Date().toISOString() });
+  const fresh = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderMap(document.getElementById('tabContent'), currentTab, fresh);
+  return true;
+}
+
+// ── KML 파일 가져오기 ──
+async function importKML(input, tabId) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+
+  let text;
+  if (file.name.toLowerCase().endsWith('.kmz')) {
+    // KMZ = ZIP 압축 해제 후 doc.kml 추출
+    const zip = await JSZip.loadAsync(await file.arrayBuffer());
+    const kmlFile = zip.file(/\.kml$/i)[0];
+    if (!kmlFile) { alert('KMZ 안에 KML 파일이 없습니다.'); return; }
+    text = await kmlFile.async('text');
+  } else {
+    text = await file.text();
+  }
+
+  let { places, xml } = parseKmlPlaces(text);
+  let sourceUrl = '';
+
+  // 장소 없이 NetworkLink 만 있는 파일이면 구글 원본을 직접 받아온다
+  if (!places.length) {
+    const link = findKmlNetworkLinkUrl(xml);
+    if (link) {
+      sourceUrl = link;
+      try {
+        places = parseKmlPlaces(await fetchGoogleKml(link)).places;
+      } catch (e) {
+        alert(`구글맵에서 원본을 가져오지 못했습니다.\n\n${e.message || e}`);
+        return;
+      }
+    }
+  }
+
+  if (!places.length) {
+    alert('가져올 장소가 없습니다.\n\n구글 My Maps 지도가 "링크가 있는 모든 사용자"로\n공개되어 있는지 확인해 주세요.');
+    return;
+  }
+
+  await replaceKmlPlaces(tabId, places, sourceUrl);
+}
+
+// ── 구글맵에서 새로고침 (저장해 둔 My Maps 주소로 최신 내용 반영) ──
+async function syncMapFromGoogle(tabId, silent) {
+  const inp = document.getElementById('mapKmlUrl');
+  const url = ((inp ? inp.value : mapKmlUrl) || '').trim();
+  if (!url) {
+    if (!silent) alert('구글 My Maps 공유 URL 을 먼저 입력해 주세요.');
+    return;
+  }
+  const btn = document.getElementById('mapSyncBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ 가져오는 중…'; }
+  try {
+    const { places } = parseKmlPlaces(await fetchGoogleKml(url));
+    if (!places.length) {
+      throw new Error('가져올 장소가 없습니다.\n지도가 "링크가 있는 모든 사용자"로 공개되어 있는지 확인해 주세요.');
+    }
+    mapKmlUrl = url;
+    await replaceKmlPlaces(tabId, places, url, silent);
+  } catch (e) {
+    if (!silent) alert(`구글맵 동기화에 실패했습니다.\n\n${e.message || e}`);
+    else console.warn('구글맵 자동 동기화 실패:', e);
+    if (btn) { btn.disabled = false; btn.textContent = '🔄 구글맵에서 새로고침'; }
+  }
+}
+
+async function setMapAutoSync(tabId, on) {
+  await saveMapMeta(tabId, { autoSync: !!on });
+}
+
+// 지도 탭 설정(__meta 행)에 구글맵 주소·자동동기화·마지막 시각 보관
+async function saveMapMeta(tabId, patch) {
+  const data = {
+    __meta: true,
+    kmlUrl: mapKmlUrl,
+    autoSync: mapAutoSync,
+    syncedAt: mapKmlSyncedAt,
+    ...patch
+  };
+  mapKmlUrl = data.kmlUrl || '';
+  mapAutoSync = !!data.autoSync;
+  mapKmlSyncedAt = data.syncedAt || '';
+  if (mapMetaId) {
+    await sbPatch('tab_items', mapMetaId, { data });
+  } else {
+    const res = await sbPost('tab_items', { tab_id: tabId, data, sort_order: -1 });
+    if (res && res[0]) mapMetaId = res[0].id;
+  }
 }
 
 let mapPlaceSearchTimer = null;
