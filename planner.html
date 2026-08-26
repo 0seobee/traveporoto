@@ -294,6 +294,11 @@ body.light .tbl-ord-inp{background:rgba(0,0,0,.04)}
 .sched-cost-card{color:#42a5f5}
 /* ── SCHEDULE ── */
 .sched-dates{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+.date-tab{cursor:grab;user-select:none}
+.date-tab:active{cursor:grabbing}
+.date-tab.dragging{opacity:.45;outline:2px dashed var(--accent2);outline-offset:2px}
+.date-tab-del{line-height:1;border-radius:50%;width:15px;height:15px;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.date-tab-del:hover{background:rgba(193,68,44,.85);color:#fff;opacity:1}
 .date-tab{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:6px}
 .date-tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .date-tab-del{background:none;border:none;color:inherit;cursor:pointer;font-size:11px;opacity:.6;padding:0}
@@ -1267,9 +1272,13 @@ async function renderTabContent(tab) {
 let schedDates = [], currentSchedDate = null, currentPayMethod = 'cash';
 
 async function renderSchedule(container, tab, items) {
-  schedDates = [...new Set(items.map(i => i.data.date).filter(Boolean))].sort();
-  if (schedDates.length === 0 && items.length > 0) schedDates = ['날짜 없음'];
-  currentSchedDate = schedDates[0] || null;
+  loadSchedMeta(items);
+  const rows = items.filter(i => !i.data.__meta);
+  schedDates = orderSchedDates([...new Set(rows.map(i => i.data.date).filter(Boolean))]);
+  if (schedDates.length === 0 && rows.length > 0) schedDates = ['날짜 없음'];
+  // 삭제·순서변경 후에도 보던 날짜를 유지 (없어졌으면 첫 날짜로)
+  currentSchedDate = (currentSchedDate && schedDates.includes(currentSchedDate))
+    ? currentSchedDate : (schedDates[0] || null);
 
   const sfId = `ps-sf-${tab.id}`;
   container.innerHTML = `<div class="pane-wrap" id="pw-sched-${tab.id}">
@@ -1359,21 +1368,130 @@ async function renderSchedule(container, tab, items) {
   initPS([`ps-si-${tab.id}`, `ps-sf-${tab.id}`]);
 }
 
+// ── 날짜 탭 순서 저장 (tab_items 의 __meta 행에 dateOrder 로 보관) ──
+let schedDateOrder = [], schedMetaId = null, schedDateDragEndAt = 0;
+
+function loadSchedMeta(items) {
+  const meta = items.find(i => i.data.__meta);
+  schedMetaId = meta ? meta.id : null;
+  schedDateOrder = (meta && Array.isArray(meta.data.dateOrder)) ? meta.data.dateOrder : [];
+}
+
+// 저장된 순서를 먼저, 그 뒤에 새로 생긴 날짜를 날짜순으로 붙인다.
+// 저장된 날짜는 일정이 하나도 없어도 탭으로 남는다(빈 날짜 유지).
+function orderSchedDates(dates) {
+  const rest = dates.filter(d => !schedDateOrder.includes(d)).sort();
+  return [...schedDateOrder, ...rest];
+}
+
+async function saveSchedDateOrder(tabId, order) {
+  schedDateOrder = order;
+  if (schedMetaId) {
+    await sbPatch('tab_items', schedMetaId, { data: { __meta: true, dateOrder: order } });
+  } else {
+    const res = await sbPost('tab_items', { tab_id: tabId, data: { __meta: true, dateOrder: order }, sort_order: -1 });
+    if (res && res[0]) schedMetaId = res[0].id;
+  }
+}
+
 function renderSchedDates(items) {
+  const rows = (items || []).filter(i => !i.data.__meta);
   // items가 있으면 그 날짜로 갱신, 없으면 기존 schedDates 유지
-  if (items.length > 0) {
-    const fromItems = [...new Set(items.map(i => i.data.date).filter(Boolean))].sort();
+  if (rows.length > 0) {
+    const fromItems = [...new Set(rows.map(i => i.data.date).filter(Boolean))];
     // 로컬에서 추가된 날짜도 병합
-    schedDates = [...new Set([...fromItems, ...schedDates])].sort();
+    schedDates = orderSchedDates([...new Set([...fromItems, ...schedDates])]);
+  } else {
+    schedDates = orderSchedDates(schedDates);
   }
   const el = document.getElementById('schedDates');
   if (!el) return;
-  el.innerHTML = schedDates.map(d =>
-    `<div class="date-tab${d===currentSchedDate?' on':''}" onclick="switchSchedDate('${d}', this)">
-      ${d}
-    </div>`
-  ).join('') + `<button class="add-btn" style="font-size:11px;padding:5px 12px" onclick="addSchedDate()">＋ 날짜</button>`
+  el.innerHTML = schedDates.map(d => {
+    const enc = encodeURIComponent(d);
+    return `<div class="date-tab${d===currentSchedDate?' on':''}" data-date="${enc}"
+      onclick="switchSchedDate('${enc}', this)" title="끌어서 순서 변경 · ✕ 로 삭제">
+      <span class="date-tab-label">${d}</span>
+      <button class="date-tab-del" title="이 날짜 삭제"
+        onclick="event.stopPropagation();deleteSchedDate('${enc}')">✕</button>
+    </div>`;
+  }).join('') + `<button class="add-btn" style="font-size:11px;padding:5px 12px" onclick="addSchedDate()">＋ 날짜</button>`
     + (schedDates.length > 1 ? `<button class="add-btn" style="font-size:11px;padding:5px 12px;background:rgba(43,110,106,.15);border:1px solid var(--accent)" onclick="openSwapDatesPopup()">🔀 날짜 교환/이동</button>` : '');
+  initSchedDateDrag();
+}
+
+// 날짜 탭 삭제 — 그 날짜의 일정도 함께 지운다
+async function deleteSchedDate(enc) {
+  const d = decodeURIComponent(enc);
+  const tabId = currentTab.id;
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  const victims = items.filter(i => !i.data.__meta && i.data.date === d);
+  const msg = victims.length
+    ? `'${d}' 날짜를 삭제할까요?\n이 날짜에 등록된 일정 ${victims.length}개도 함께 삭제됩니다.\n되돌릴 수 없습니다.`
+    : `'${d}' 날짜를 목록에서 삭제할까요?`;
+  if (!confirm(msg)) return;
+  for (const v of victims) await sbDelete('tab_items', v.id);
+  const order = schedDates.filter(x => x !== d);
+  schedDates = order;
+  if (currentSchedDate === d) currentSchedDate = order[0] || null;
+  await saveSchedDateOrder(tabId, order);
+  const fresh = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  renderSchedule(document.getElementById('tabContent'), currentTab, fresh);
+}
+
+// 날짜 탭 드래그로 순서 변경 (가로 배치 — 마우스 즉시 / 터치 200ms 롱프레스)
+function initSchedDateDrag() {
+  const wrap = document.getElementById('schedDates');
+  if (!wrap) return;
+  let dragEl = null, activePointerId = null, longPressTimer = null;
+  let startX = 0, startY = 0, moved = false;
+
+  wrap.querySelectorAll('.date-tab').forEach(el => {
+    el.addEventListener('pointerdown', e => {
+      if (e.target.closest('.date-tab-del')) return;   // ✕ 는 삭제 전용
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      activePointerId = e.pointerId;
+      startX = e.clientX; startY = e.clientY; moved = false;
+      clearTimeout(longPressTimer);
+      const start = () => {
+        dragEl = el;
+        el.classList.add('dragging');
+        el.style.touchAction = 'none';
+        try { el.setPointerCapture(e.pointerId); } catch (err) {}
+      };
+      if (e.pointerType !== 'mouse') longPressTimer = setTimeout(start, 200); else start();
+    });
+
+    el.addEventListener('pointermove', e => {
+      if (activePointerId === null || e.pointerId !== activePointerId || !dragEl) return;
+      if (!moved && Math.abs(e.clientX - startX) < 5 && Math.abs(e.clientY - startY) < 5) return;
+      moved = true;
+      e.preventDefault();
+      const hit = document.elementFromPoint(e.clientX, e.clientY);
+      const over = hit?.closest('.date-tab');
+      if (over && over !== dragEl && over.parentElement === wrap) {
+        const r = over.getBoundingClientRect();
+        const after = e.clientX > r.left + r.width / 2;
+        wrap.insertBefore(dragEl, after ? over.nextSibling : over);
+      }
+    });
+
+    ['pointerup', 'pointercancel'].forEach(evt => el.addEventListener(evt, async e => {
+      if (activePointerId === null || e.pointerId !== activePointerId) return;
+      clearTimeout(longPressTimer);
+      try { el.releasePointerCapture(e.pointerId); } catch (err) {}
+      activePointerId = null;
+      if (!dragEl) return;
+      dragEl.classList.remove('dragging');
+      dragEl.style.touchAction = '';
+      dragEl = null;
+      if (!moved) return;                    // 그냥 클릭이면 순서 저장하지 않음
+      schedDateDragEndAt = Date.now();       // 드래그 뒤 따라오는 click 무시용
+      const order = [...wrap.querySelectorAll('.date-tab')].map(x => decodeURIComponent(x.dataset.date));
+      schedDates = order;
+      await saveSchedDateOrder(currentTab.id, order);
+      renderSchedDates([]);
+    }));
+  });
 }
 
 function openSwapDatesPopup() {
@@ -1451,7 +1569,7 @@ async function swapSchedDates(dateA, dateB) {
   const newItems = await sbGet('tab_items', `tab_id=eq.${currentTab.id}&order=sort_order.asc,created_at.asc`);
   currentSchedDate = dateA;
   renderSchedDates(newItems);
-  document.querySelectorAll('.date-tab').forEach(x => x.classList.toggle('on', x.textContent.trim() === dateA));
+  document.querySelectorAll('.date-tab').forEach(x => x.classList.toggle('on', decodeURIComponent(x.dataset.date || '') === dateA));
   renderSchedItems(newItems, currentSchedDate);
 }
 
@@ -1462,11 +1580,13 @@ async function moveAllSchedItems(fromDate, toDate) {
   const newItems = await sbGet('tab_items', `tab_id=eq.${currentTab.id}&order=sort_order.asc,created_at.asc`);
   currentSchedDate = toDate;
   renderSchedDates(newItems);
-  document.querySelectorAll('.date-tab').forEach(x => x.classList.toggle('on', x.textContent.trim() === toDate));
+  document.querySelectorAll('.date-tab').forEach(x => x.classList.toggle('on', decodeURIComponent(x.dataset.date || '') === toDate));
   renderSchedItems(newItems, currentSchedDate);
 }
 
-async function switchSchedDate(d, el) {
+async function switchSchedDate(enc, el) {
+  if (Date.now() - schedDateDragEndAt < 300) return;   // 드래그 직후의 click 은 무시
+  const d = decodeURIComponent(enc);
   document.querySelectorAll('.date-tab').forEach(x=>x.classList.remove('on'));
   el.classList.add('on');
   currentSchedDate = d;
@@ -1542,7 +1662,7 @@ function addSchedDate() {
   }), 100);
 }
 
-function confirmAddSchedDate() {
+async function confirmAddSchedDate() {
   const y = document.getElementById('dpY')?.value;
   const m = document.getElementById('dpM')?.value;
   const d = document.getElementById('dpD')?.value;
@@ -1555,13 +1675,17 @@ function confirmAddSchedDate() {
   // sDate 기본값 설정
   const dateInput = document.getElementById('sDate');
   if (dateInput && label.match(/^\d{4}-\d{2}-\d{2}$/)) dateInput.value = label;
+  // 일정이 없는 날짜도 새로고침 후 남도록 순서에 저장
+  await saveSchedDateOrder(currentTab.id, [...schedDates]);
   renderSchedDates([]);
+  renderSchedItems([], currentSchedDate);
 }
 
 let schedItemsCache = [];
 let schedEditingId = null;
 
 function renderSchedItems(items, date) {
+  items = (items || []).filter(i => !i.data.__meta);   // 날짜순서 저장용 메타행은 일정이 아님
   schedItemsCache = items;
   const el = document.getElementById('schedItems');
   if (!el) return;
@@ -1964,7 +2088,7 @@ async function batchInsertSchedItems(items, tabId) {
   }
   const allItems = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
   renderSchedDates(allItems);
-  renderSchedItems(allItems, currentSchedDate || allItems[0]?.data?.date);
+  renderSchedItems(allItems, currentSchedDate || allItems.find(i => !i.data.__meta)?.data?.date);
 }
 
 // ── CHECKLIST ──
