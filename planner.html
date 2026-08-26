@@ -257,6 +257,21 @@ textarea.f-inp{resize:vertical;min-height:60px}
 .list-table tr:hover td{background:rgba(255,255,255,.02)}
 .budget-drag-handle{cursor:grab;color:var(--sub);text-align:center;width:20px;touch-action:none;user-select:none}
 .budget-row.dragging{opacity:.4}
+/* 표 행 순서 편집 (드래그 + 번호 직접 입력 + 열 정렬) */
+.tbl-ord-cell{width:66px;white-space:nowrap;text-align:center;padding:6px 6px!important}
+.tbl-grip{cursor:grab;color:var(--sub);touch-action:none;user-select:none;font-size:13px;padding:0 3px;vertical-align:middle}
+.tbl-grip:active{cursor:grabbing}
+.tbl-row.dragging{opacity:.45}
+.tbl-row.dragging td{background:rgba(43,110,106,.14)}
+.tbl-ord-inp{width:34px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;font-family:inherit;text-align:center;padding:3px 2px;outline:none;vertical-align:middle;-moz-appearance:textfield}
+.tbl-ord-inp::-webkit-outer-spin-button,.tbl-ord-inp::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.tbl-ord-inp:focus{border-color:var(--accent);background:rgba(43,110,106,.14)}
+.tbl-th-inner{display:inline-flex;align-items:center;gap:4px}
+.tbl-sort-btn{background:none;border:none;color:var(--sub);cursor:pointer;font-size:11px;padding:0 2px;font-family:inherit;opacity:.5;transition:.2s}
+.tbl-sort-btn:hover{opacity:1;color:var(--accent2)}
+.tbl-sort-btn.on{opacity:1;color:var(--accent2)}
+.tbl-order-hint{font-size:11px;color:var(--sub);margin-top:8px;line-height:1.6}
+body.light .tbl-ord-inp{background:rgba(0,0,0,.04)}
 .list-table td.list-editable{cursor:text}
 .list-table td.list-editable:hover{background:rgba(43,110,106,.08)}
 .list-table td.list-editable:focus{outline:2px solid var(--accent);outline-offset:-2px;background:rgba(43,110,106,.12)}
@@ -2452,8 +2467,22 @@ function renderTable(container, tab, items) {
       <button class="del-btn" onclick="deleteTableColumn('${tab.id}','${encodeURIComponent(c)}')">삭제</button>
     </div>`).join('');
 
-  const rowsHtml = rows.map(item => `
-    <tr>
+  const sortState = tblSortState[tab.id] || {};
+  const headHtml = columns.map(c => {
+    const on = sortState.col === c;
+    const arrow = on ? (sortState.dir === 'asc' ? '▲' : '▼') : '↕';
+    return `<th><span class="tbl-th-inner">${c}<button class="tbl-sort-btn${on?' on':''}" title="이 열 기준으로 정렬"
+      onclick="tblSortByColumn('${tab.id}','${encodeURIComponent(c)}')">${arrow}</button></span></th>`;
+  }).join('');
+
+  const rowsHtml = rows.map((item, idx) => `
+    <tr class="tbl-row" data-id="${item.id}">
+      <td class="tbl-ord-cell">
+        <span class="tbl-grip" title="드래그해서 순서 변경">⠿</span>
+        <input class="tbl-ord-inp" type="number" min="1" max="${rows.length}" value="${idx+1}"
+          title="번호를 바꾸면 그 자리로 이동합니다" onclick="this.select()"
+          onchange="tblMoveToPosition('${tab.id}','${item.id}',this.value)">
+      </td>
       ${columns.map(c => `<td class="list-editable" contenteditable="true" spellcheck="false"
           onblur="saveTableCell(event,'${item.id}','${encodeURIComponent(c)}')"
           onkeydown="if(event.key==='Enter'){event.preventDefault();event.target.blur();}"
@@ -2508,15 +2537,116 @@ function renderTable(container, tab, items) {
       <div class="ps-body">
         <div class="list-table-wrap">
           <table class="list-table">
-            <thead><tr>${columns.map(c=>`<th>${c}</th>`).join('')}<th></th></tr></thead>
-            <tbody>${rowsHtml}</tbody>
+            <thead><tr><th class="tbl-ord-cell">순서</th>${headHtml}<th></th></tr></thead>
+            <tbody class="tbl-tbody" data-tab="${tab.id}">${rowsHtml}</tbody>
           </table>
         </div>
+        ${rows.length ? `<div class="tbl-order-hint">⠿ 를 잡고 끌어서 옮기거나, 번호 칸에 원하는 순서를 입력하면 그 자리로 이동합니다. 열 제목의 ↕ 를 누르면 그 열 기준으로 정렬돼요.</div>` : ''}
         ${!rows.length ? `<div class="empty-state"><div class="icon">🧮</div><p>항목을 추가해 보세요</p></div>` : ''}
       </div>
     </div>
   </div>`;
   initPS([`ps-tcm-${tab.id}`, `ps-tf-${tab.id}`, `ps-tt-${tab.id}`]);
+  initTableDrag(container, tab.id);
+}
+
+// ── 표 행 순서 편집 (드래그 · 번호 입력 · 열 정렬) ──
+let tblSortState = {};
+
+async function persistTableOrder(tabId, ids) {
+  await Promise.all(ids.map((id, i) => sbPatch('tab_items', id, { sort_order: i + 1 })));
+}
+
+async function tblMoveToPosition(tabId, itemId, rawPos) {
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  const rows = items.filter(i => !i.data.__meta);
+  const from = rows.findIndex(r => r.id === itemId);
+  let to = parseInt(rawPos, 10) - 1;
+  if (from < 0 || isNaN(to)) { await reloadTable(tabId); return; }
+  to = Math.max(0, Math.min(rows.length - 1, to));
+  if (to === from) { await reloadTable(tabId); return; }
+  const ids = rows.map(r => r.id);
+  ids.splice(to, 0, ids.splice(from, 1)[0]);
+  await persistTableOrder(tabId, ids);
+  await reloadTable(tabId);
+}
+
+async function tblSortByColumn(tabId, encCol) {
+  const col = decodeURIComponent(encCol);
+  const cur = tblSortState[tabId] || {};
+  const dir = (cur.col === col && cur.dir === 'asc') ? 'desc' : 'asc';
+  tblSortState[tabId] = { col, dir };
+  const items = await sbGet('tab_items', `tab_id=eq.${tabId}&order=sort_order.asc,created_at.asc`);
+  const rows = items.filter(i => !i.data.__meta);
+  const val = r => String((r.data.cells && r.data.cells[col]) || '').trim();
+  const isNum = s => s !== '' && /^-?[\d,]+(\.\d+)?$/.test(s);
+  const sorted = [...rows].sort((a, b) => {
+    const x = val(a), y = val(b);
+    if (x === '' && y === '') return 0;
+    if (x === '') return 1;   // 빈 값은 항상 뒤로
+    if (y === '') return -1;
+    const cmp = (isNum(x) && isNum(y))
+      ? parseFloat(x.replace(/,/g,'')) - parseFloat(y.replace(/,/g,''))
+      : x.localeCompare(y, 'ko');
+    return dir === 'asc' ? cmp : -cmp;
+  });
+  await persistTableOrder(tabId, sorted.map(r => r.id));
+  await reloadTable(tabId);
+}
+
+// 드래그 이동 (Pointer Events — 마우스 + 터치 공용, 예산 탭과 같은 방식)
+function initTableDrag(container, tabId) {
+  const tbody = container.querySelector('.tbl-tbody');
+  if (!tbody) return;
+  let dragRow = null, activePointerId = null, longPressTimer = null;
+
+  async function endDrag() {
+    if (!dragRow) return;
+    dragRow.classList.remove('dragging');
+    dragRow.style.touchAction = '';
+    dragRow = null;
+    const ids = [...tbody.querySelectorAll('.tbl-row')].map(r => r.dataset.id);
+    await persistTableOrder(tabId, ids);
+    await reloadTable(tabId);
+  }
+
+  tbody.querySelectorAll('.tbl-row').forEach(row => {
+    row.addEventListener('pointerdown', e => {
+      if (!e.target.closest('.tbl-grip')) return;
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      e.preventDefault();
+      const isTouch = e.pointerType !== 'mouse';
+      activePointerId = e.pointerId;
+      clearTimeout(longPressTimer);
+      const start = () => {
+        dragRow = row;
+        row.classList.add('dragging');
+        row.style.touchAction = 'none';
+        try { row.setPointerCapture(e.pointerId); } catch (err) {}
+      };
+      if (isTouch) longPressTimer = setTimeout(start, 150); else start();
+    });
+
+    row.addEventListener('pointermove', e => {
+      if (activePointerId === null || e.pointerId !== activePointerId || !dragRow) return;
+      e.preventDefault();
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const overRow = el?.closest('.tbl-row');
+      if (overRow && overRow !== dragRow && overRow.parentElement === tbody) {
+        const rect = overRow.getBoundingClientRect();
+        const after = e.clientY > rect.top + rect.height / 2;
+        tbody.insertBefore(dragRow, after ? overRow.nextSibling : overRow);
+      }
+    });
+
+    ['pointerup', 'pointercancel'].forEach(evt => row.addEventListener(evt, e => {
+      if (activePointerId === null || e.pointerId !== activePointerId) return;
+      clearTimeout(longPressTimer);
+      try { row.releasePointerCapture(e.pointerId); } catch (err) {}
+      activePointerId = null;
+      endDrag();
+    }));
+  });
 }
 
 async function reloadTable(tabId) {
@@ -2546,7 +2676,9 @@ async function addTableRow(tabId) {
     cells[col] = val;
   });
   if (!hasValue) { alert('값을 하나 이상 입력하세요'); return; }
-  await sbPost('tab_items', { tab_id: tabId, data: { cells }, sort_order: 0 });
+  const existing = await sbGet('tab_items', `tab_id=eq.${tabId}&select=sort_order`);
+  const maxOrder = existing.reduce((m, i) => Math.max(m, i.sort_order || 0), 0);
+  await sbPost('tab_items', { tab_id: tabId, data: { cells }, sort_order: maxOrder + 1 });
   await reloadTable(tabId);
 }
 
