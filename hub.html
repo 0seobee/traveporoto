@@ -103,6 +103,14 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(18,24,31,.92
 .card-act-btn{background:rgba(28,23,18,.55);border:none;color:#f5efe2;border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:.2s;text-decoration:none}
 .card-act-btn:hover{background:var(--stamp)}
 .card-act-btn.edit:hover{background:var(--accent)}
+.card-act-btn.move:hover{background:var(--brass)}
+/* 카드를 다른 칸(진행중/계획중/완료)으로 옮기는 메뉴 */
+.move-menu{position:absolute;z-index:999;background:var(--card);border:1px solid var(--brass);border-radius:10px;padding:8px;box-shadow:0 10px 30px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:3px;min-width:170px}
+.move-menu-title{font-size:11px;font-weight:800;color:var(--paper-sub);padding:2px 6px 6px}
+.move-menu-item{display:flex;align-items:center;gap:6px;background:none;border:none;border-radius:7px;color:var(--ink);font-size:13px;font-weight:600;font-family:inherit;text-align:left;padding:8px 10px;cursor:pointer;transition:.15s;width:100%}
+.move-menu-item:hover:not(:disabled){background:rgba(43,110,106,.14)}
+.move-menu-item:disabled{opacity:.5;cursor:default}
+.move-menu-item span{font-size:10.5px;color:var(--paper-sub);font-weight:600}
 
 /* 새 여행 추가 카드 */
 .new-card{border:2px dashed var(--border);background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:200px;color:var(--sub);font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:.2s}
@@ -215,6 +223,7 @@ window.addEventListener('DOMContentLoaded', () => {
         <!-- 포르투갈 고정 카드 -->
         <a class="pt-card" id="ptCard" href="proto.html">
           <div class="pt-card-actions" onclick="event.preventDefault()">
+            <span class="card-act-btn move" title="다른 칸으로 이동" onclick="openMoveMenu('ptCard',event)">⇄</span>
             <span class="card-act-btn edit" title="편집" onclick="openPtEditModal(event)">✏️</span>
             <span class="card-act-btn" title="삭제" onclick="deleteFixedCard('pt', event)">🗑️</span>
           </div>
@@ -245,6 +254,7 @@ window.addEventListener('DOMContentLoaded', () => {
       <div class="project-grid" id="grid-planning">
         <a class="project-card" id="plannerLocalCard" href="planner-local.html" style="background:linear-gradient(135deg,#37474f,#546e7a)">
           <div class="project-card-actions" onclick="event.preventDefault()">
+            <span class="card-act-btn move" title="다른 칸으로 이동" onclick="openMoveMenu('plannerLocalCard',event)">⇄</span>
             <span class="card-act-btn" title="삭제" onclick="deleteFixedCard('plannerLocal', event)">🗑️</span>
           </div>
           <div class="project-card-cover" style="background:transparent;height:100px">🧳</div>
@@ -402,6 +412,8 @@ function dday(start) {
 
 // ── 프로젝트 상태 판별 ──
 function getStatus(p) {
+  // 사용자가 직접 옮긴 값이 서버에 저장돼 있으면 그것을 우선한다 (projects.status)
+  if (p.status === 'active' || p.status === 'planning' || p.status === 'done') return p.status;
   const now = new Date(); now.setHours(0,0,0,0);
   const start = p.start_date ? new Date(p.start_date) : null;
   const end   = p.end_date   ? new Date(p.end_date)   : null;
@@ -426,6 +438,7 @@ function cardHTML(p) {
   return `<a class="project-card" data-id="${p.id}" href="${PAGE_LINKS[p.name] || `planner.html?project=${p.id}`}">
     <div class="project-card-cover${country ? ' code-cover' : ''}" style="${coverStyle}">${coverContent}</div>
     <div class="project-card-actions" onclick="event.preventDefault()">
+      <span class="card-act-btn move" title="다른 칸으로 이동" onclick="openMoveMenu('${p.id}',event)">⇄</span>
       <span class="card-act-btn edit" title="편집" onclick="openEditModal('${p.id}',event)">✏️</span>
       <span class="card-act-btn" title="삭제" onclick="deleteProject('${p.id}',event)">🗑️</span>
     </div>
@@ -657,6 +670,104 @@ function openPtEditModal(e) {
   document.getElementById('projectModal').classList.add('open');
 }
 
+// ── 카드를 다른 칸으로 이동 (드래그 대신 확실하게 옮기는 방법) ──
+const HUB_SECTIONS = [
+  ['active',   '🔥 진행 중'],
+  ['planning', '🗓️ 계획 중'],
+  ['done',     '✅ 완료']
+];
+
+function hubCardById(id) {
+  if (id === 'ptCard' || id === '__pt__') return document.getElementById('ptCard');
+  if (id === 'plannerLocalCard') return document.getElementById('plannerLocalCard');
+  return document.querySelector(`.project-card[data-id="${id}"]`);
+}
+
+// 각 칸이 비면 안내문을 넣고, 카드가 있으면 빼준다
+function refreshHubEmptyNotices() {
+  const labels = {
+    'grid-active':   '진행 중인 여행이 없습니다',
+    'grid-planning': '계획 중인 여행이 없습니다',
+    'grid-done':     '완료된 여행이 없습니다'
+  };
+  Object.entries(labels).forEach(([gid, text]) => {
+    const g = document.getElementById(gid);
+    if (!g) return;
+    g.querySelectorAll('.hub-empty').forEach(el => el.remove());
+    if (!g.querySelector('.project-card, .pt-card')) {
+      const empty = document.createElement('div');
+      empty.className = 'hub-empty';
+      empty.textContent = text;
+      const newCard = g.querySelector('.new-card');
+      if (newCard) g.insertBefore(empty, newCard); else g.appendChild(empty);
+    }
+  });
+}
+
+let moveMenuEl = null;
+function closeMoveMenu() { if (moveMenuEl) { moveMenuEl.remove(); moveMenuEl = null; } }
+
+function openMoveMenu(id, ev) {
+  if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+  const alreadyOpen = moveMenuEl && moveMenuEl.dataset.for === id;
+  closeMoveMenu();
+  if (alreadyOpen) return;
+
+  const card = hubCardById(id);
+  if (!card) return;
+  const current = (card.closest('.project-grid')?.id || '').replace('grid-', '');
+
+  const pop = document.createElement('div');
+  pop.className = 'move-menu';
+  pop.dataset.for = id;
+  pop.innerHTML = `<div class="move-menu-title">어느 칸으로 옮길까요?</div>` +
+    HUB_SECTIONS.map(([s, label]) => `<button class="move-menu-item" ${s === current ? 'disabled' : ''}
+      onclick="moveProjectToSection('${id}','${s}',event)">${label}${s === current ? ' <span>(현재)</span>' : ''}</button>`).join('');
+  document.body.appendChild(pop);
+
+  const r = ev.currentTarget.getBoundingClientRect();
+  pop.style.top = (r.bottom + window.scrollY + 6) + 'px';
+  pop.style.left = Math.max(8, Math.min(r.left + window.scrollX - 120, window.innerWidth - 190)) + 'px';
+  moveMenuEl = pop;
+
+  setTimeout(() => document.addEventListener('click', function outside(e) {
+    if (!pop.contains(e.target)) { closeMoveMenu(); document.removeEventListener('click', outside); }
+  }), 60);
+}
+
+async function moveProjectToSection(id, section, ev) {
+  if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+  closeMoveMenu();
+  const card = hubCardById(id);
+  const grid = document.getElementById('grid-' + section);
+  if (!card || !grid) return;
+
+  // 접힌 칸으로 옮기면 펼쳐서 결과가 보이게 한다
+  const body = grid.closest('.hub-sec-body');
+  if (body && body.classList.contains('collapsed')) {
+    body.classList.remove('collapsed');
+    const btn = document.querySelector(`[onclick*="${body.id}"] .hub-sec-toggle`);
+    if (btn) btn.textContent = '▼';
+  }
+
+  const newCard = grid.querySelector('.new-card');
+  if (newCard) grid.insertBefore(card, newCard); else grid.appendChild(card);
+
+  refreshHubEmptyNotices();
+  saveHubOrder();
+
+  // 서버에도 저장해 두면 다른 기기에서도 유지된다.
+  // projects.status 컬럼이 아직 없으면 조용히 실패시키고 로컬 저장만 유지한다.
+  if (id !== 'ptCard' && id !== '__pt__' && id !== 'plannerLocalCard') {
+    try {
+      await fetch(`${SB_URL}/rest/v1/projects?id=eq.${id}`, {
+        method: 'PATCH', headers: SB_H, body: JSON.stringify({ status: section })
+      });
+    } catch (e) { /* 컬럼 없음 등 — 로컬 저장으로 충분히 동작 */ }
+  }
+  card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
 // ── 드래그 앤 드롭 (Pointer Events — 마우스 + 터치 공용) ──
 const ORDER_KEY = 'pt-hub-order';
 
@@ -857,7 +968,8 @@ function saveHubOrder() {
     if (!grid) return;
     [...grid.children].forEach((card, i) => {
       if (card.classList.contains('new-card') || card.classList.contains('hub-empty')) return;
-      const id = card.dataset.id || (card.id === 'ptCard' ? '__pt__' : null);
+      // 고정 카드(포르투갈·내 여행 만들기)도 id 로 저장해 위치가 유지되게 한다
+      const id = card.dataset.id || card.id || null;
       if (id) order[id] = { section, index: i };
     });
   });
@@ -890,7 +1002,9 @@ function applyHubOrder() {
   const allCards = {};
   document.querySelectorAll('.project-card[data-id]').forEach(c => { allCards[c.dataset.id] = c; });
   const ptCard = document.getElementById('ptCard');
-  if (ptCard) allCards['__pt__'] = ptCard;
+  if (ptCard) { allCards['__pt__'] = ptCard; allCards['ptCard'] = ptCard; }   // 구버전 키(__pt__)도 계속 인식
+  const plCard = document.getElementById('plannerLocalCard');
+  if (plCard) allCards['plannerLocalCard'] = plCard;
 
   Object.entries(order)
     .sort((a, b) => a[1].index - b[1].index)
