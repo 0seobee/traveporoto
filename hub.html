@@ -701,6 +701,37 @@ function initDraggable() {
     });
   }
 
+  // ── 드래그 중 화면 가장자리 자동 스크롤 ──
+  // 진행중/계획중/완료 섹션은 세로로 1000px 이상 떨어져 있어서, 자동 스크롤이 없으면
+  // 목표 섹션이 화면 밖에 있을 때 elementFromPoint 가 null 이라 아예 드롭할 수 없다.
+  let autoScrollRAF = null, lastPointerX = 0, lastPointerY = 0;
+
+  function startAutoScroll() {
+    if (autoScrollRAF) return;
+    const EDGE = 100;      // 가장자리 감지 범위(px)
+    const MAX_SPEED = 26;  // 프레임당 최대 스크롤(px)
+    const step = () => {
+      if (!dragCard) { stopAutoScroll(); return; }
+      const h = window.innerHeight;
+      let v = 0;
+      if (lastPointerY < EDGE) v = -Math.ceil((EDGE - lastPointerY) / EDGE * MAX_SPEED);
+      else if (lastPointerY > h - EDGE) v = Math.ceil((lastPointerY - (h - EDGE)) / EDGE * MAX_SPEED);
+      if (v !== 0) {
+        const before = window.scrollY;
+        window.scrollBy(0, v);
+        // 스크롤로 새로 드러난 영역 기준으로 위치 재계산
+        if (window.scrollY !== before) moveDrag(lastPointerX, lastPointerY);
+      }
+      autoScrollRAF = requestAnimationFrame(step);
+    };
+    autoScrollRAF = requestAnimationFrame(step);
+  }
+
+  function stopAutoScroll() {
+    if (autoScrollRAF) cancelAnimationFrame(autoScrollRAF);
+    autoScrollRAF = null;
+  }
+
   function startDrag(card) {
     dragCard = card;
     card.classList.add('dragging');
@@ -708,6 +739,7 @@ function initDraggable() {
     GRIDS.forEach(g => g && g.classList.add('drag-active'));
     expandCollapsedSections();
     clearEmptyNotices();
+    startAutoScroll();
   }
   function moveDrag(clientX, clientY) {
     if (!dragCard) return;
@@ -733,6 +765,7 @@ function initDraggable() {
   }
   function endDrag() {
     if (!dragCard) return;
+    stopAutoScroll();
     dragCard.classList.remove('dragging');
     dragCard.style.touchAction = 'pan-y';
     GRIDS.forEach(g => g && g.classList.remove('drag-active'));
@@ -758,6 +791,7 @@ function initDraggable() {
       if (e.pointerType === 'mouse' && e.button !== 0) return;
       isTouch = e.pointerType !== 'mouse';
       startX = e.clientX; startY = e.clientY; moved = false;
+      lastPointerX = e.clientX; lastPointerY = e.clientY;   // 터치 롱프레스는 move 없이 시작될 수 있음
       activePointerId = e.pointerId;
       clearTimeout(longPressTimer);
       // 터치: 롱프레스로 드래그 시작(스크롤과 구분) · 마우스: 이동량으로만 판단(아래 pointermove)
@@ -773,6 +807,7 @@ function initDraggable() {
 
     card.addEventListener('pointermove', e => {
       if (activePointerId === null || e.pointerId !== activePointerId) return;
+      lastPointerX = e.clientX; lastPointerY = e.clientY;   // 자동 스크롤용 현재 위치
       const dx = e.clientX - startX, dy = e.clientY - startY;
       if (!dragCard) {
         if (!isTouch && Math.hypot(dx, dy) > 6) {
